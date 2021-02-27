@@ -18,8 +18,8 @@ SEVENZIP = 7z a -mx=9 -bd -bso0
 CANDLE = candle -ext WixUtilExtension -nologo -o $@
 LIGHT = light -ext WixUtilExtension -nologo -o $@ -spdb
 MAGICK = magick
-IMAGEMAGICK_i686_DIR = C:\Program Files (x86)\ImageMagick-7.0.10-Q16-HDRI
-IMAGEMAGICK_x86_64_DIR = C:\Program Files\ImageMagick-7.0.10-Q16-HDRI
+IMAGEMAGICK_i686_DIR = C:\Program Files (x86)\ImageMagick-7.0.11-Q16-HDRI
+IMAGEMAGICK_x86_64_DIR = C:\Program Files\ImageMagick-7.0.11-Q16-HDRI
 PAINT_NET_DIR = C:\Program Files\paint.net
 ifdef V
 DO = mkdir -p $(@D) && 
