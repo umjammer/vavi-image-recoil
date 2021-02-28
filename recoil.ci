@@ -257,11 +257,14 @@ class Stream
 	}
 }
 
-/// Read-only stream with selectable endianess (little/big)
-/// for reading 16- and 32-bit integers.
-class EndianStream : Stream
+class GdosFntStream : Stream
 {
 	internal bool BigEndian;
+	internal int BitmapWidth;
+	internal int Width;
+	internal int LeftX;
+	internal int RightX;
+	internal int NextX;
 
 	/// Reads a 16-bit unsigned integer.
 	/// Returns -1 on EOF.
@@ -283,6 +286,25 @@ class EndianStream : Stream
 			: RECOIL.Get32LittleEndian(Content, ContentOffset);
 		ContentOffset += 4;
 		return value;
+	}
+
+	internal bool FitRow!()
+	{
+		LeftX = RightX;
+		do {
+			RightX = NextX;
+			NextX = ReadWord();
+			if (NextX < RightX)
+				return NextX < 0;
+			if (NextX > BitmapWidth) {
+				// The character table contains a position that exceeds the bitmap.
+				// Display only what we have in the bitmap.
+				// Example file: CZEC18LS.FNT
+				NextX = -1;
+				return true;
+			}
+		} while (NextX - LeftX <= Width);
+		return true;
 	}
 }
 
@@ -4173,7 +4195,7 @@ public class RECOIL
 	public const int MaxPlatformPaletteContentLength = 32768;
 
 	/// Maximum number of pixels in a decoded image.
-	const int MaxPixelsLength = 1701 * 1678;
+	const int MaxPixelsLength = 128 * 1024 * 1024;
 
 	/// Decoded image width.
 	int Width;
@@ -4182,7 +4204,10 @@ public class RECOIL
 	int Height;
 
 	/// Decoded image pixels as 0xRRGGBB.
-	int[MaxPixelsLength] Pixels;
+	int[]# Pixels;
+
+	/// Length of the currently allocated `Pixels`.
+	int PixelsLength = 0;
 
 	/// Platform and pixel ratio.
 	RECOILResolution Resolution;
@@ -4291,16 +4316,23 @@ public class RECOIL
 	}
 
 	/// Initializes decoded image size and resolution.
-	bool SetSize!(int width, int height, RECOILResolution resolution)
+	bool SetSize!(int width, int height, RECOILResolution resolution, int frames = 1)
 	{
-		if (width <= 0 || height <= 0 || height > MaxPixelsLength / width)
+		if (width <= 0 || height <= 0 || height > MaxPixelsLength / width / frames)
 			return false;
 		Width = width;
 		Height = height;
 		Resolution = resolution;
-		Frames = 1;
+		Frames = frames;
 		Colors = UnknownColors;
 		LeftSkip = 0;
+		int pixelsLength = width * height * frames;
+		// reuse if enough
+		if (PixelsLength < pixelsLength) {
+			Pixels = null; // free first
+			Pixels = new int[pixelsLength];
+			PixelsLength = pixelsLength;
+		}
 		return true;
 	}
 
@@ -4458,7 +4490,6 @@ public class RECOIL
 	bool ApplyBlend!()
 	{
 		int pixelsLength = Width * Height;
-		Frames = 2;
 		for (int i = 0; i < pixelsLength; i++) {
 			int rgb1 = Pixels[i];
 			int rgb2 = Pixels[pixelsLength + i];
@@ -5620,7 +5651,7 @@ public class RECOIL
 		int height = content[3] | content[4] << 8;
 		if (height == 0 || height > 272)
 			return false;
-		SetSize(width, height, resolution);
+		SetSize(width, height, resolution, 2);
 		byte[96 * 272 + 1] bitmap;
 		return DecodePphFrame(filename, "ODD", "odd", bitmap, content, 0)
 			&& DecodePphFrame(filename, "EVE", "eve", bitmap, content, height)
@@ -5688,9 +5719,9 @@ public class RECOIL
 	static int GetZxColor(int c)
 		=> (c >> 1 & 1) * 0xff0000 | (c >> 2 & 1) * 0x00ff00 | (c & 1) * 0x0000ff;
 
-	void SetZx!(RECOILResolution resolution)
+	void SetZx!(RECOILResolution resolution, int frames = 1)
 	{
-		SetSize(256, 192, resolution);
+		SetSize(256, 192, resolution, frames);
 		// The original ZX Spectrum palette has 16 entries: 8 normal + 8 bright.
 		// Here we layout them as ULAplus 64-entry palette
 		// so that we can share code in DecodeZx.
@@ -5809,7 +5840,7 @@ public class RECOIL
 	{
 		if (contentLength != 24578)
 			return false;
-		SetSize(512, 384, RECOILResolution.Timex1x2);
+		SetSize(512, 384, RECOILResolution.Timex1x2, 2);
 		DecodeTimexHires(content, 0, 0);
 		DecodeTimexHires(content, 0x3001, 384 * 512);
 		return ApplyBlend();
@@ -5837,7 +5868,7 @@ public class RECOIL
 	{
 		if (contentLength != 13824)
 			return false;
-		SetZx(RECOILResolution.Spectrum1x1);
+		SetZx(RECOILResolution.Spectrum1x1, 2);
 		DecodeZx(content, 0, 0x1800, ZxAttributes8x8, 0);
 		DecodeZx(content, 0x1b00, 0x3300, ZxAttributes8x8, 256 * 192);
 		return ApplyBlend();
@@ -5855,7 +5886,7 @@ public class RECOIL
 		case 1:
 			if (contentLength != 19456)
 				return false;
-			SetZx(RECOILResolution.Spectrum1x1);
+			SetZx(RECOILResolution.Spectrum1x1, 2);
 			DecodeZx(content, 0x100, 0x4900, ZxAttributesMg1, 0);
 			DecodeZx(content, 0x1900, 0x4a80, ZxAttributesMg1, 256 * 192);
 			return ApplyBlend();
@@ -5873,7 +5904,7 @@ public class RECOIL
 		}
 		if (contentLength != 256 + 2 * 6144 + (2 * 6144 >> attributesMode))
 			return false;
-		SetZx(RECOILResolution.Spectrum1x1);
+		SetZx(RECOILResolution.Spectrum1x1, 2);
 		DecodeZx(content, 0x100, 0x3100, attributesMode, 0);
 		DecodeZx(content, 0x1900, 0x3100 + (6144 >> attributesMode), attributesMode, 256 * 192);
 		return ApplyBlend();
@@ -5894,7 +5925,7 @@ public class RECOIL
 		if (contentLength != 1628 || content[0] != 0x76 || content[1] != 0xaf || content[2] != 0xd3 || content[3] != 0xfe
 		 || content[4] != 0x21 || content[5] != 0x00 || content[6] != 0x58)
 			return false;
-		SetZx(RECOILResolution.Spectrum1x1);
+		SetZx(RECOILResolution.Spectrum1x1, 2);
 		DecodeZx(content, ZxBitmapHlr, 0x5c, ZxAttributes8x8, 0);
 		DecodeZx(content, ZxBitmapHlr, 0x35c, ZxAttributes8x8, 256 * 192);
 		return ApplyBlend();
@@ -5904,7 +5935,7 @@ public class RECOIL
 	{
 		if (contentLength != 3072)
 			return false;
-		SetSize(256, 192, RECOILResolution.Spectrum4x4);
+		SetSize(256, 192, RECOILResolution.Spectrum4x4, 2);
 		for (int f = 0; f < 2; f++) {
 			for (int y = 0; y < 192; y++) {
 				for (int x = 0; x < 256; x++) {
@@ -6095,15 +6126,13 @@ public class RECOIL
 			frames = 1;
 			break;
 		case 18:
-			if (cells << 7 > MaxPixelsLength)
-				return false;
 			frames = 2;
 			break;
 		default:
 			return false;
 		}
 		if (contentLength != 7 + cells * bytesPerCell
-		 || !SetSize(columns << 3, rows << 3, RECOILResolution.Spectrum1x1))
+		 || !SetSize(columns << 3, rows << 3, RECOILResolution.Spectrum1x1, frames))
 			return false;
 		int contentOffset = 7;
 		for (int row = 0; row < rows; row++) {
@@ -6189,17 +6218,21 @@ public class RECOIL
 		if (contentLength < 6982)
 			return false;
 		if ((content[3] & 0x40) == 0) {
-			SetSize(256, 192, RECOILResolution.Spectrum1x1);
-			DecodeBspFrame(0, content, contentLength, 0x46, -1);
-			if (content[3] < 0x80)
-				return true;
+			if (content[3] < 0x80) {
+				SetSize(256, 192, RECOILResolution.Spectrum1x1);
+				return DecodeBspFrame(0, content, contentLength, 0x46, -1);
+			}
 			return contentLength == 13894
+				&& SetSize(256, 192, RECOILResolution.Spectrum1x1, 2)
+				&& DecodeBspFrame(0, content, contentLength, 0x46, -1)
 				&& DecodeBspFrame(256 * 192, content, contentLength, 0x1b46, -1)
 				&& ApplyBlend();
 		}
-		SetSize(384, 304, RECOILResolution.Spectrum1x1);
-		if (content[3] < 0x80)
+		if (content[3] < 0x80) {
+			SetSize(384, 304, RECOILResolution.Spectrum1x1);
 			return DecodeBspFrame(0, content, contentLength, 0x46, 0x1b46);
+		}
+		SetSize(384, 304, RECOILResolution.Spectrum1x1, 2);
 		return DecodeBspFrame(0, content, contentLength, 0x48, 0x3648)
 			&& DecodeBspFrame(384 * 304, content, contentLength, 0x1b48, content[0x46] | content[0x47] << 8)
 			&& ApplyBlend();
@@ -8851,7 +8884,7 @@ public class RECOIL
 	{
 		if (contentLength != 16194)
 			return false;
-		SetSize(320, 200, RECOILResolution.C641x1);
+		SetSize(320, 200, RECOILResolution.C641x1, 2);
 		DecodeC64HiresFrame(content, 2, -0x0c, 0);
 		DecodeC64HiresFrame(content, 0x2002, -0x0c, 320 * 200);
 		return ApplyBlend();
@@ -8986,7 +9019,7 @@ public class RECOIL
 	{
 		if (contentLength != 24578)
 			return false;
-		SetSize(320 , 200, RECOILResolution.C641x1);
+		SetSize(320 , 200, RECOILResolution.C641x1, 2);
 		DecodeC64HiresFrame(content, 2, 0x2402, 0);
 		DecodeC64HiresFrame(content, 0x4002, 0x2802, 320 * 200);
 		return ApplyBlend();
@@ -8996,7 +9029,7 @@ public class RECOIL
 	{
 		if (contentLength != 19434)
 			return false;
-		SetSize(320, 200, RECOILResolution.C641x1);
+		SetSize(320, 200, RECOILResolution.C641x1, 2);
 		DecodeC64MulticolorFrame(content, 0x402, 2, 0x4802, content[0x3ea], 0);
 		LeftSkip = -1;
 		DecodeC64MulticolorFrame(content, 0x2402, 0x4402, 0x4802, content[0x3ea], 320 * 200);
@@ -9020,7 +9053,7 @@ public class RECOIL
 		int shift = content[0x2744];
 		if (shift > 1)
 			return false;
-		SetSize(320, 200, shift == 0 ? RECOILResolution.C642x1 : RECOILResolution.C641x1);
+		SetSize(320, 200, shift == 0 ? RECOILResolution.C642x1 : RECOILResolution.C641x1, 2);
 		DecodeC64MulticolorFrame(content, 0x802, 0x402, 2, content[0x2742], 0);
 		LeftSkip = -shift;
 		DecodeC64MulticolorFrame(content, 0x2802, 0x402, 2, content[0x2742], 320 * 200);
@@ -9049,7 +9082,7 @@ public class RECOIL
 	{
 		if (contentLength != 4098)
 			return false;
-		SetSize(320, 56, RECOILResolution.C641x1);
+		SetSize(320, 56, RECOILResolution.C641x1, 2);
 		DecodeMleFrame(content, 2050, 0);
 		LeftSkip = -1;
 		DecodeMleFrame(content, 2, 320 * 56);
@@ -9090,7 +9123,7 @@ public class RECOIL
 	{
 		if (contentLength != 32770)
 			return false;
-		SetSize(320 - FliBugCharacters * 8, 200, RECOILResolution.C641x1);
+		SetSize(320 - FliBugCharacters * 8, 200, RECOILResolution.C641x1, 2);
 		DecodeC64HiresFrame(content, 2 + FliBugCharacters * 8, 0x2002 + FliBugCharacters, 0);
 		DecodeC64HiresFrame(content, 0x4002 + FliBugCharacters * 8, 0x6002 + FliBugCharacters, 296 * 200);
 		return ApplyBlend();
@@ -9169,14 +9202,15 @@ public class RECOIL
 	{
 		if (contentLength != 26115 || content[2] != 'f')
 			return false;
-		DecodeC64Multicolor(320 - FliBugCharacters * 8, content, 0x2503 + FliBugCharacters * 8, 0x503 + FliBugCharacters, 0x103 + FliBugCharacters, -3);
+		SetSize(320 - FliBugCharacters * 8, 200, RECOILResolution.C642x1, 2);
+		DecodeC64MulticolorFrame(content, 0x2503 + FliBugCharacters * 8, 0x503 + FliBugCharacters, 0x103 + FliBugCharacters, -3, 0);
 		DecodeC64MulticolorFrame(content, 0x2503 + FliBugCharacters * 8, 0x4503 + FliBugCharacters, 0x103 + FliBugCharacters, -0x6503, 296 * 200);
 		return ApplyBlend();
 	}
 
 	bool DecodeIfli!(byte[] content, int bitmap1Offset, int bitmap2Offset, int videoMatrix1Offset, int videoMatrix2Offset, int colorOffset, int background)
 	{
-		SetSize(320 - FliBugCharacters * 8, 200, RECOILResolution.C641x1);
+		SetSize(320 - FliBugCharacters * 8, 200, RECOILResolution.C641x1, 2);
 		DecodeC64MulticolorFrame(content, bitmap1Offset + FliBugCharacters * 8, videoMatrix1Offset + FliBugCharacters, colorOffset + FliBugCharacters, background, 0);
 		LeftSkip = -1;
 		DecodeC64MulticolorFrame(content, bitmap2Offset + FliBugCharacters * 8, videoMatrix2Offset + FliBugCharacters, colorOffset + FliBugCharacters, background, 296 * 200);
@@ -9858,7 +9892,7 @@ public class RECOIL
 	{
 		if (contentLength < 88 || content[0x3e] != 0x55 || content[0x3f] != 0x55)
 			return false;
-		EndianStream() stream;
+		GdosFntStream() stream;
 		// detect endianess assuming the point size is less than 256
 		if (content[3] == 0) {
 			if (content[2] == 0)
@@ -9903,34 +9937,27 @@ public class RECOIL
 			width = maxWidth;
 		stream.ContentOffset = characterOffset;
 		stream.ContentLength = characterEndOffset;
-		int leftX = 0;
-		int nextX = 0;
+		stream.BitmapWidth = bytesPerLine << 3;
+		stream.Width = width;
+		stream.NextX = stream.RightX = 0;
 		int row;
-		for (row = 0; nextX >= 0 && (row + height) * width <= MaxPixelsLength; row += height) {
-			int rightX; // the right boundary of a right-most character in this row
-			do {
-				rightX = nextX;
-				nextX = stream.ReadWord();
-				if (nextX < rightX) {
-					if (nextX < 0)
-						break;
-					return false;
-				}
-				if (nextX > bytesPerLine << 3) {
-					// The character table contains a position that exceeds the bitmap.
-					// Display only what we have in the bitmap.
-					// Example file: CZEC18LS.FNT
-					nextX = -1;
-					break;
-				}
-			} while (nextX - leftX <= width);
+		for (row = 0; stream.NextX >= 0; row += height) {
+			if (!stream.FitRow())
+				return false;
+		}
+		if (!SetSize(width, row, RECOILResolution.St1x1))
+			return false;
 
+		stream.ContentOffset = characterOffset;
+		stream.NextX = stream.RightX = 0;
+		for (row = 0; stream.NextX >= 0; row += height) {
+			stream.FitRow();
 			// paint row where leftX <= fontX < rightX
 			for (int y = 0; y < height; y++) {
 				for (int x = 0; x < width; x++) {
-					int fontX = leftX + x;
+					int fontX = stream.LeftX + x;
 					int c;
-					if (fontX < rightX) {
+					if (fontX < stream.RightX) {
 						int offset = bitmapOffset + y * bytesPerLine + (fontX >> 3);
 						c = (content[offset] >> (~fontX & 7) & 1) == 0 ? 0xffffff : 0;
 					}
@@ -9939,9 +9966,8 @@ public class RECOIL
 					Pixels[(row + y) * width + x] = c;
 				}
 			}
-			leftX = rightX;
 		}
-		return SetSize(width, row, RECOILResolution.St1x1);
+		return true;
 	}
 
 	static bool IsStePalette(byte[] content, int contentOffset, int colors)
@@ -10035,22 +10061,22 @@ public class RECOIL
 	static int GetStLowPixel(byte[] content, int contentOffset, int x)
 		=> GetBitplaneWordsPixel(content, contentOffset, x, 4);
 
-	bool DecodeStLowWithStride!(byte[] bitmap, int bitmapOffset, int bitmapStride, byte[] palette, int paletteOffset, int width, int height)
+	bool DecodeStLowWithStride!(byte[] bitmap, int bitmapOffset, int bitmapStride, byte[] palette, int paletteOffset, int width, int height, int frames)
 	{
-		SetSize(width, height, IsStePalette(palette, paletteOffset, 16) ? RECOILResolution.Ste1x1 : RECOILResolution.St1x1);
+		SetSize(width, height, IsStePalette(palette, paletteOffset, 16) ? RECOILResolution.Ste1x1 : RECOILResolution.St1x1, frames);
 		SetStPalette(palette, paletteOffset, 16);
 		DecodeBitplanes(bitmap, bitmapOffset, bitmapStride, 4, 0, width, height);
 		return true;
 	}
 
-	bool DecodeStLow!(byte[] bitmap, int bitmapOffset, byte[] palette, int paletteOffset, int width, int height)
-		=> DecodeStLowWithStride(bitmap, bitmapOffset, width + 15 >> 4 << 3, palette, paletteOffset, width, height);
+	bool DecodeStLow!(byte[] bitmap, int bitmapOffset, byte[] palette, int paletteOffset, int width, int height, int frames = 1)
+		=> DecodeStLowWithStride(bitmap, bitmapOffset, width + 15 >> 4 << 3, palette, paletteOffset, width, height, frames);
 
-	void DecodeStMedium!(byte[] bitmap, int bitmapOffset, byte[] palette, int paletteOffset, int width, int height, int blend)
+	void DecodeStMedium!(byte[] bitmap, int bitmapOffset, byte[] palette, int paletteOffset, int width, int height, int frames)
 	{
-		SetSize(width, height << 1, IsStePalette(palette, paletteOffset, 4) ? RECOILResolution.Ste1x2 : RECOILResolution.St1x2);
+		SetSize(width, height << 1, IsStePalette(palette, paletteOffset, 4) ? RECOILResolution.Ste1x2 : RECOILResolution.St1x2, frames);
 		SetStPalette(palette, paletteOffset, 4);
-		DecodeScaledBitplanes(bitmap, bitmapOffset, width, height << blend, 2, false, null);
+		DecodeScaledBitplanes(bitmap, bitmapOffset, width, height * frames, 2, false, null);
 	}
 
 	bool DecodeSrt!(byte[] content, int contentLength)
@@ -10059,7 +10085,7 @@ public class RECOIL
 		 || !IsStringAt(content, 0x7d00, "JHSy")
 		 || content[0x7d04] != 0 || content[0x7d05] != 1)
 			return false;
-		DecodeStMedium(content, 0, content, 32006, 640, 200, 0);
+		DecodeStMedium(content, 0, content, 32006, 640, 200, 1);
 		return true;
 	}
 
@@ -10069,7 +10095,7 @@ public class RECOIL
 		case 0:
 			return DecodeStLow(bitmap, bitmapOffset, palette, paletteOffset, 320, 200 << doubleHeight);
 		case 1:
-			DecodeStMedium(bitmap, bitmapOffset, palette, paletteOffset, 640, 200 << doubleHeight, 0);
+			DecodeStMedium(bitmap, bitmapOffset, palette, paletteOffset, 640, 200 << doubleHeight, 1);
 			return true;
 		case 2:
 			SetSize(640, 400 << doubleHeight, RECOILResolution.St1x1);
@@ -10236,7 +10262,7 @@ public class RECOIL
 
 	bool DecodeKid!(byte[] content, int contentLength)
 		=> contentLength == 63054 && content[0] == 'K' && content[1] == 'D'
-			&& DecodeStLowWithStride(content, 34, 230, content, 2, 448, 274);
+			&& DecodeStLowWithStride(content, 34, 230, content, 2, 448, 274, 1);
 
 	bool DecodeStPpp!(byte[] content, int contentLength)
 	{
@@ -10755,7 +10781,7 @@ public class RECOIL
 
 	bool DecodeStLowBlend!(byte[] bitmap, int bitmapOffset, byte[] palette, int paletteOffset, int width, int height)
 	{
-		DecodeStLow(bitmap, bitmapOffset, palette, paletteOffset, width, height);
+		DecodeStLow(bitmap, bitmapOffset, palette, paletteOffset, width, height, 2);
 		DecodeBitplanes(bitmap, bitmapOffset + (width >> 1) * height, width >> 1, 4, width * height, width, height);
 		return ApplyBlend();
 	}
@@ -10770,7 +10796,7 @@ public class RECOIL
 	{
 		if (contentLength != 113576 && contentLength != 113600)
 			return false;
-		DecodeStMedium(content, 8, content, 0, 832, 273, 1);
+		DecodeStMedium(content, 8, content, 0, 832, 273, 2);
 		return ApplyBlend();
 	}
 
@@ -10883,7 +10909,7 @@ public class RECOIL
 		 || unpacked[0] != 0 || unpacked[1] != 0
 		 || unpacked[secondPi1Offset] != 0 || unpacked[secondPi1Offset + 1] != 0)
 			return false;
-		SetSize(320, 200, IsStePalette(unpacked, 2, 16) || IsStePalette(unpacked, secondPi1Offset + 2, 16) ? RECOILResolution.Ste1x1 : RECOILResolution.St1x1);
+		SetSize(320, 200, IsStePalette(unpacked, 2, 16) || IsStePalette(unpacked, secondPi1Offset + 2, 16) ? RECOILResolution.Ste1x1 : RECOILResolution.St1x1, 2);
 		SetStPalette(unpacked, 2, 16);
 		DecodeBitplanes(unpacked, 34, 160, 4, 0, 320, 200);
 		SetStPalette(unpacked, secondPi1Offset + 2, 16);
@@ -11131,7 +11157,7 @@ public class RECOIL
 	{
 		if (contentLength != 115648)
 			return false;
-		SetSize(352, 278, IsStePalette(content, 0x17e40, 8896) ? RECOILResolution.Ste1x1 : RECOILResolution.St1x1);
+		SetSize(352, 278, IsStePalette(content, 0x17e40, 8896) ? RECOILResolution.Ste1x1 : RECOILResolution.St1x1, 2);
 		int bitmapOffset = 0;
 		for (int y = 0; y < 2 * 278; y++) {
 			if (y == 278)
@@ -11180,13 +11206,12 @@ public class RECOIL
 		byte[PcsStream.UnpackedLength] unpacked1;
 		if (!rle.UnpackPcs(unpacked1))
 			return false;
-		// FIXME: I only check if first screen's colors are STE
-		SetSize(320, 199, IsStePalette(unpacked1, 32000, 9616) ? RECOILResolution.Ste1x1 : RECOILResolution.St1x1);
-		DecodePcsScreen(unpacked1, 0);
-		if (content[4] == 0)
-			return true; // single screen
+		if (content[4] == 0) {
+			SetSize(320, 199, IsStePalette(unpacked1, 32000, 9616) ? RECOILResolution.Ste1x1 : RECOILResolution.St1x1);
+			DecodePcsScreen(unpacked1, 0);
+			return true;
+		}
 
-		// alternating screens
 		byte[PcsStream.UnpackedLength] unpacked2;
 		if (!rle.UnpackPcs(unpacked2))
 			return false;
@@ -11198,6 +11223,8 @@ public class RECOIL
 			for (int i = 32000; i < PcsStream.UnpackedLength; i++)
 				unpacked2[i] ^= unpacked1[i];
 		}
+		SetSize(320, 199, IsStePalette(unpacked1, 32000, 9616) || IsStePalette(unpacked2, 32000, 9616) ? RECOILResolution.Ste1x1 : RECOILResolution.St1x1, 2);
+		DecodePcsScreen(unpacked1, 0);
 		DecodePcsScreen(unpacked2, 320 * 199);
 		return ApplyBlend();
 	}
@@ -11278,7 +11305,7 @@ public class RECOIL
 				content = UnpackPbx(content, contentLength, unpacked, 0x6480, 8, 57728);
 				if (content == null)
 					return false;
-				SetSize(320, 200, RECOILResolution.St1x1);
+				SetSize(320, 200, RECOILResolution.St1x1, 2);
 				DecodePbx8(content, 128, 0x6480, 0);
 				DecodePbx8(content, 0x3280, 0x6480, 320 * 200);
 				return ApplyBlend();
@@ -11363,19 +11390,20 @@ public class RECOIL
 			return false;
 		int width = mode < 3 ? 320 : 416;
 		int height = mode < 3 ? 199 : 273;
+		int frames = 1 + ((content[4] >> 2) & 1);
 		const byte[4] modeColorsPerLine = { 52, 46, 54, 48 };
 		int paletteLength = modeColorsPerLine[mode] * height;
 		switch (content[4] & 3) {
 		case 0:
-			SetSize(width, height, RECOILResolution.St1x1);
+			SetSize(width, height, RECOILResolution.St1x1, frames);
 			paletteLength *= 9;
 			break;
 		case 1:
-			SetSize(width, height, RECOILResolution.Ste1x1);
+			SetSize(width, height, RECOILResolution.Ste1x1, frames);
 			paletteLength *= 12;
 			break;
 		case 3:
-			SetSize(width, height, RECOILResolution.Ste1x1);
+			SetSize(width, height, RECOILResolution.Ste1x1, frames);
 			Frames = 2;
 			paletteLength *= 15;
 			break;
@@ -11387,12 +11415,11 @@ public class RECOIL
 		if (paletteOffset < 12)
 			return false;
 		int pixelsLength = width * height;
-		if (contentLength != paletteOffset + (paletteLength + (pixelsLength >> 1) << (content[4] >> 2 & 1)))
+		if (contentLength != paletteOffset + (paletteLength + (pixelsLength >> 1)) * frames)
 			return false;
 
-		// alternating screens
 		DecodeMppScreen(content, paletteOffset, paletteLength, 0);
-		if ((content[4] & 4) == 0)
+		if (frames == 1)
 			return true;
 		DecodeMppScreen(content, paletteOffset + paletteLength + (pixelsLength >> 1), paletteLength, pixelsLength);
 		return ApplyBlend();
