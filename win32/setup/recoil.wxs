@@ -548,7 +548,7 @@
 		<?endif?>
 
 		<Feature Id="thumbrecoil" Title="Windows thumbnail provider" Level="0" ConfigurableDirectory="RECOIL.DIR" Description="Shows thumbnails in Windows Explorer." AllowAdvertise="no">
-			<Condition Level="1">VersionNT &gt;= 500</Condition><!-- Windows 2000 or newer -->
+			<Condition Level="1">VersionNT &gt;= 600</Condition><!-- Windows Vista or newer -->
 			<ComponentRef Id="thumbrecoil.dll" />
 			<ComponentRef Id="thumbrecoilXP.reg" />
 			<?ifdef $(var.THUMBRECOIL_VISTA) ?>
