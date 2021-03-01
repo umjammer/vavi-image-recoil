@@ -26,9 +26,7 @@ DO = mkdir -p $(@D) &&
 else
 DO = @echo $@ && mkdir -p $(@D) && 
 endif
-SIGNTOOL = signtool sign -d "RECOIL - Retro Computer Image Library $(VERSION)" -n "Open Source Developer, Piotr Fusik" 
-DO_SIGN_EXE = $(DO)$(SIGNTOOL) -t http://time.certum.pl -fd sha1 $^ && $(SIGNTOOL) -tr http://time.certum.pl -fd sha256 -td sha256 -as $^ && touch $@
-DO_SIGN_MSI = $(DO)$(SIGNTOOL) -tr http://time.certum.pl -fd sha256 -td sha256 $^ && touch $@
+DO_SIGN = $(DO)signtool sign -d "RECOIL - Retro Computer Image Library $(VERSION)" -n "Open Source Developer, Piotr Fusik" -tr http://time.certum.pl -fd sha256 -td sha256 $^ && touch $@
 
 WIN32_BIN = i686/recoil2png.exe i686/IM_MOD_RL_recoil_.dll i686/Xrecoil.usr i686/recoilwin.exe i686/thumbrecoil.dll i686/RECOIL.plg paint.net/RecoilPaintDotNet.dll
 WIN64_BIN = x86_64/recoil2png.exe x86_64/IM_MOD_RL_recoil_.dll x86_64/Xrecoil.usr x86_64/recoilwin.exe x86_64/thumbrecoil.dll x86_64/RECOIL.plg64 paint.net/RecoilPaintDotNet.dll
@@ -83,7 +81,7 @@ COPYING.txt: ../COPYING
 	$(DO)$(UNIX2DOS) <$< >$@
 
 signed: $(WIN32_BIN) $(WIN64_BIN)
-	$(DO_SIGN_EXE)
+	$(DO_SIGN)
 
 ../../recoil-$(VERSION)-win32.zip: COPYING.txt $(WIN32_BIN) signed
 	$(DO)$(RM) $@ && $(SEVENZIP) -tzip $@ COPYING.txt $(WIN32_BIN:%=./%)
@@ -121,7 +119,7 @@ srcdist: ../../recoil-$(VERSION).tar.gz
 	$(DO)$(RM) $@ && $(TAR) -c --numeric-owner --owner=0 --group=0 --mode=644 -C .. -T ../MANIFEST --transform=s,,recoil-$(VERSION)/, | $(SEVENZIP) -tgzip -si $@
 
 signed-msi: ../../recoil-$(VERSION)-win32.msi ../../recoil-$(VERSION)-win64.msi
-	$(DO_SIGN_MSI)
+	$(DO_SIGN)
 
 dist: srcdist ../../recoil-$(VERSION)-win32.zip ../../recoil-$(VERSION)-win64.zip signed-msi
 
