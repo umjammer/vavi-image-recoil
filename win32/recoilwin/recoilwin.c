@@ -33,6 +33,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if 1 // Windows XP compatibility
+errno_t wcscpy_s(wchar_t *dest, rsize_t destsz, const wchar_t *src)
+{
+	for (rsize_t i = 0; i < destsz; i++) {
+		if ((dest[i] = src[i]) == '\0')
+			return 0;
+	}
+	if (destsz > 0)
+		dest[0] = '\0';
+	return ERANGE;
+}
+#endif
+
 #include "recoil-win32.h"
 #include "formats.h"
 #include "pngsave.h"
@@ -540,7 +553,7 @@ static bool OpenPalette(LPCTSTR filename)
 	bool ok;
 #ifdef UNICODE
 	char utf8Filename[4096];
-	if (WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, filename, -1, utf8Filename, sizeof(utf8Filename), NULL, NULL) <= 0)
+	if (WideCharToMultiByte(CP_UTF8, 0, filename, -1, utf8Filename, sizeof(utf8Filename), NULL, NULL) <= 0)
 		return false;
 	ok = RECOIL_SetPlatformPalette(recoil, utf8Filename, content, content_len);
 #else

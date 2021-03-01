@@ -26,7 +26,7 @@
 bool RECOILWin32_IsOurFileW(LPCWSTR filename)
 {
 	char utf8Filename[4096];
-	return WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, filename, -1, utf8Filename, sizeof(utf8Filename), NULL, NULL) > 0
+	return WideCharToMultiByte(CP_UTF8, 0, filename, -1, utf8Filename, sizeof(utf8Filename), NULL, NULL) > 0
 		&& RECOIL_IsOurFile(utf8Filename);
 }
 
@@ -63,7 +63,7 @@ static int RECOILWin32_ReadFileA(const RECOIL *self, const char *filename, uint8
 static int RECOILWin32_ReadFileW(const RECOIL *self, const char *filename, uint8_t *content, int contentLength)
 {
 	WCHAR wideFilename[2048];
-	if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, filename, -1, wideFilename, sizeof(wideFilename) / sizeof(wideFilename[0])) <= 0)
+	if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, wideFilename, sizeof(wideFilename) / sizeof(wideFilename[0])) <= 0)
 		return -1;
 	return RECOILWin32_SlurpFileW(wideFilename, content, contentLength);
 }
@@ -78,7 +78,7 @@ bool RECOILWin32_DecodeA(RECOIL *self, const char *filename, uint8_t const *cont
 bool RECOILWin32_DecodeW(RECOIL *self, LPCWSTR filename, uint8_t const *content, int contentLength)
 {
 	char utf8Filename[4096];
-	if (WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, filename, -1, utf8Filename, sizeof(utf8Filename), NULL, NULL) <= 0)
+	if (WideCharToMultiByte(CP_UTF8, 0, filename, -1, utf8Filename, sizeof(utf8Filename), NULL, NULL) <= 0)
 		return false;
 	static const RECOILVtbl vtbl = { RECOILWin32_ReadFileW };
 	*(const RECOILVtbl **) self = &vtbl;
@@ -89,4 +89,3 @@ void RECOILWin32_GetPlatformW(const RECOIL *self, WCHAR (*platform)[RECOIL_MAX_P
 {
 	MultiByteToWideChar(CP_UTF8, 0, RECOIL_GetPlatform(self), -1, *platform, RECOIL_MAX_PLATFORM_LENGTH + 1);
 }
-
