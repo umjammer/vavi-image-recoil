@@ -1,7 +1,7 @@
 /*
  * by-platform.c - organize images into platform directories
  *
- * Copyright (C) 2017-2020  Piotr Fusik
+ * Copyright (C) 2017-2021  Piotr Fusik
  *
  * This file is part of RECOIL (Retro Computer Image Library),
  * see http://recoil.sourceforge.net
@@ -38,9 +38,7 @@ int main(int argc, char **argv)
 		char path[MAX_PATH];
 		snprintf(path, sizeof(path), "../../examples/%s", filename);
 		//puts(path);
-		static BYTE content[RECOIL_MAX_CONTENT_LENGTH];
-		int content_len = RECOILWin32_SlurpFileA(path, content, sizeof(content));
-		if (RECOILWin32_DecodeA(recoil, path, content, content_len)) {
+		if (RECOILWin32_LoadA(recoil, path)) {
 			const char *platform = RECOIL_GetPlatform(recoil);
 			char target[MAX_PATH];
 			snprintf(target, sizeof(target), "../../by-platform/%s", platform);

@@ -33,6 +33,8 @@
 
 #if THUMBRECOIL_VISTA
 #include <thumbcache.h>
+#include <limits.h>
+#include <stdlib.h>
 #endif
 
 #include "recoil-win32.h"
@@ -62,23 +64,20 @@ class CRECOILThumbProvider : IPersistFile, IExtractImage
 	, IInitializeWithStream, IThumbnailProvider
 #endif
 {
-	LONG m_cRef;
-	IStream *m_pstream;
+	LONG m_cRef = 1;
+#if THUMBRECOIL_VISTA
+	IStream *m_pstream = nullptr;
+#endif
 	RECOIL *m_pRecoil;
-	LPWSTR m_filename;
-	int m_contentLen;
-	uint8_t m_content[RECOIL_MAX_CONTENT_LENGTH];
+	LPWSTR m_filename = nullptr;
+	bool m_loaded = false;
 
-	HRESULT Decode(LPCWSTR pszFilename, HBITMAP *phBitmap)
+	HRESULT CreateBitmap(HBITMAP *phBitmap)
 	{
-		// decode
-		if (!RECOILWin32_DecodeW(m_pRecoil, pszFilename, m_content, m_contentLen))
-			return E_FAIL;
 		int width = RECOIL_GetWidth(m_pRecoil);
 		int height = RECOIL_GetHeight(m_pRecoil);
 		const int *pixels = RECOIL_GetPixels(m_pRecoil);
 
-		// convert to bitmap
 		BITMAPINFO bmi {};
 		bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
 		bmi.bmiHeader.biWidth = width;
@@ -99,7 +98,7 @@ class CRECOILThumbProvider : IPersistFile, IExtractImage
 
 public:
 
-	CRECOILThumbProvider() : m_cRef(1), m_pstream(nullptr), m_filename(nullptr)
+	CRECOILThumbProvider()
 	{
 		DllAddRef();
 		m_pRecoil = RECOIL_New();
@@ -107,8 +106,10 @@ public:
 
 	virtual ~CRECOILThumbProvider()
 	{
+#if THUMBRECOIL_VISTA
 		if (m_pstream != nullptr)
 			m_pstream->Release();
+#endif
 		free(m_filename);
 		RECOIL_Delete(m_pRecoil);
 		DllRelease();
@@ -173,17 +174,16 @@ public:
 		if (m_pRecoil == nullptr)
 			return E_OUTOFMEMORY;
 
+		m_loaded = false;
 		free(m_filename);
-		m_filename = nullptr;
-
-		m_contentLen = RECOILWin32_SlurpFileW(pszFileName, m_content, sizeof(m_content));
-		if (m_contentLen < 0)
-			return HRESULT_FROM_WIN32(GetLastError());
-
 		m_filename = _wcsdup(pszFileName);
 		if (m_filename == nullptr)
 			return E_OUTOFMEMORY;
 
+		if (!RECOILWin32_LoadW(m_pRecoil, m_filename))
+			return E_FAIL;
+
+		m_loaded = true;
 		return S_OK;
 	}
 
@@ -217,9 +217,9 @@ public:
 
 	STDMETHODIMP Extract(HBITMAP *phBmpImage)
 	{
-		if (m_filename == nullptr)
+		if (!m_loaded)
 			return E_UNEXPECTED;
-		return Decode(m_filename, phBmpImage);
+		return CreateBitmap(phBmpImage);
 	}
 
 #if THUMBRECOIL_VISTA
@@ -244,22 +244,37 @@ public:
 		if (m_pRecoil == nullptr)
 			return E_OUTOFMEMORY;
 
-		// get filename
+		// get filename and length
 		STATSTG statstg;
 		HRESULT hr = m_pstream->Stat(&statstg, STATFLAG_DEFAULT);
 		if (FAILED(hr))
 			return hr;
+		if (statstg.cbSize.QuadPart > INT_MAX) {
+			CoTaskMemFree(statstg.pwcsName);
+			return E_FAIL;
+		}
 
 		// get contents
-		hr = m_pstream->Read(m_content, sizeof(m_content), reinterpret_cast<ULONG *>(&m_contentLen));
+		int contentLen = statstg.cbSize.u.LowPart;
+		uint8_t *content = (uint8_t *) malloc(contentLen);
+		if (content == NULL) {
+			CoTaskMemFree(statstg.pwcsName);
+			return E_OUTOFMEMORY;
+		}
+		hr = m_pstream->Read(content, contentLen, reinterpret_cast<ULONG *>(&contentLen));
 		if (FAILED(hr)) {
 			CoTaskMemFree(statstg.pwcsName);
 			return hr;
 		}
 
 		// decode
-		hr = Decode(statstg.pwcsName, phbmp);
+		bool ok = RECOILWin32_DecodeW(m_pRecoil, statstg.pwcsName, content, contentLen);
+		free(content);
 		CoTaskMemFree(statstg.pwcsName);
+		if (!ok)
+			return E_FAIL;
+
+		hr = CreateBitmap(phbmp);
 		*pdwAlpha = WTSAT_RGB;
 		return hr;
 	}

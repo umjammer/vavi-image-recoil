@@ -1,7 +1,7 @@
 /*
  * Viewer.java - RECOIL for Android
  *
- * Copyright (C) 2013-2018  Piotr Fusik
+ * Copyright (C) 2013-2021  Piotr Fusik
  *
  * This file is part of RECOIL (Retro Computer Image Library),
  * see http://recoil.sourceforge.net
@@ -101,7 +101,7 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 						recoil = new FileRECOIL();
 				}
 				else
-					recoil = new StreamRECOIL(getContentResolver().openInputStream(uri));
+					recoil = new StreamRECOIL(getContentResolver(), uri);
 				if (!recoil.load(filename))
 					throw new RECOILException(getString(R.string.error_decoding_file, filename));
 			}

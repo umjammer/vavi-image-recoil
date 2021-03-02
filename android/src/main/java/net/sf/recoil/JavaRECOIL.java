@@ -1,7 +1,7 @@
 /*
  * JavaRECOIL.java - RECOIL for Android
  *
- * Copyright (C) 2015-2019  Piotr Fusik
+ * Copyright (C) 2015-2021  Piotr Fusik
  *
  * This file is part of RECOIL (Retro Computer Image Library),
  * see http://recoil.sourceforge.net
@@ -23,6 +23,10 @@
 
 package net.sf.recoil;
 
+import android.content.ContentResolver;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.OpenableColumns;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -65,7 +69,7 @@ abstract class JavaRECOIL extends RECOIL
 	boolean load(String filename) throws IOException
 	{
 		long longLength = getLength(filename);
-		if (longLength > MAX_CONTENT_LENGTH)
+		if (longLength > Integer.MAX_VALUE)
 			throw new IOException("File too long");
 		int contentLength = (int) longLength;
 		byte[] content = new byte[contentLength];
@@ -119,17 +123,31 @@ class ZipRECOIL extends JavaRECOIL
 
 class StreamRECOIL extends JavaRECOIL
 {
+	private final String filename;
+	private final long length;
 	private final InputStream stream;
 
-	StreamRECOIL(InputStream stream)
+	StreamRECOIL(ContentResolver contentResolver, Uri uri) throws FileNotFoundException
 	{
-		this.stream = stream;
+		Cursor cursor = contentResolver.query(uri, new String[] { OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE }, null, null, null);
+		if (cursor == null)
+			throw new FileNotFoundException();
+		try {
+			if (!cursor.moveToNext())
+				throw new FileNotFoundException();
+			this.filename = cursor.getString(0);
+			this.length = cursor.getLong(1);
+		}
+		finally {
+			cursor.close();
+		}
+		this.stream = contentResolver.openInputStream(uri);
 	}
 
 	@Override
 	long getLength(String filename)
 	{
-		return MAX_CONTENT_LENGTH;
+		return length;
 	}
 
 	@Override

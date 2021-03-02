@@ -4186,10 +4186,6 @@ public class RECOIL
 		SetNtsc(false);
 	}
 
-	/// Maximum length of a supported input file.
-	/// You may assume that files longer than this are not supported by RECOIL.
-	public const int MaxContentLength = 6 * 1024 * 1024;
-
 	/// Maximum length of a supported platform palette file.
 	// Largest VPL included with VICE 3.5 is 3112 bytes.
 	public const int MaxPlatformPaletteContentLength = 32768;
@@ -17512,7 +17508,6 @@ public class RECOIL
 	/// Checks whether the filename extension is supported by RECOIL.
 	/// `true` doesn't necessarily mean that the file contents is valid for RECOIL.
 	/// With this function you can avoid reading files which are known to be unsupported.
-	/// Another criterium is the maximum file size, `MaxContentLength`.
 	public static bool IsOurFile(
 		/// Name of the file to be checked.
 		string filename)

@@ -43,26 +43,16 @@ static void print_help(void)
 	);
 }
 
-static int load_file(const char *filename, void *buffer, size_t buffer_len)
+static bool load_palette(RECOIL *recoil, const char *filename)
 {
 	FILE *fp = fopen(filename, "rb");
 	if (fp == NULL) {
 		fprintf(stderr, "recoil2png: cannot open %s\n", filename);
-		return -1;
-	}
-	int len = fread(buffer, 1, buffer_len, fp);
-	fclose(fp);
-	return len;
-}
-
-static bool load_palette(RECOIL *recoil, const char *filename)
-{
-	uint8_t content[RECOIL_MAX_PLATFORM_PALETTE_CONTENT_LENGTH];
-	int content_len = load_file(filename, content, sizeof(content));
-	if (content_len < 0) {
-		/* error already printed */
 		return false;
 	}
+	uint8_t content[RECOIL_MAX_PLATFORM_PALETTE_CONTENT_LENGTH];
+	int content_len = fread(content, 1, sizeof(content), fp);
+	fclose(fp);
 	if (!RECOIL_SetPlatformPalette(recoil, filename, content, content_len)) {
 		fprintf(stderr, "recoil2png: %s: invalid palette file\n", filename);
 		return false;
@@ -72,13 +62,7 @@ static bool load_palette(RECOIL *recoil, const char *filename)
 
 static bool process_file(RECOIL *recoil, const char *input_file, const char *output_file)
 {
-	static uint8_t content[RECOIL_MAX_CONTENT_LENGTH];
-	int content_len = load_file(input_file, content, sizeof(content));
-	if (content_len < 0) {
-		/* error already printed */
-		return false;
-	}
-	if (!RECOIL_Decode(recoil, input_file, content, content_len)) {
+	if (!RECOILStdio_Load(recoil, input_file)) {
 		fprintf(stderr, "recoil2png: %s: file decoding error\n", input_file);
 		return false;
 	}

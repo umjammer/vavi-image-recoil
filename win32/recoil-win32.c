@@ -21,6 +21,9 @@
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <limits.h>
+#include <stdlib.h>
+
 #include "recoil-win32.h"
 
 bool RECOILWin32_IsOurFileW(LPCWSTR filename)
@@ -83,6 +86,51 @@ bool RECOILWin32_DecodeW(RECOIL *self, LPCWSTR filename, uint8_t const *content,
 	static const RECOILVtbl vtbl = { RECOILWin32_ReadFileW };
 	*(const RECOILVtbl **) self = &vtbl;
 	return RECOIL_Decode(self, utf8Filename, content, contentLength);
+}
+
+static uint8_t *RECOILWin32_AllocReadAndClose(HANDLE fh, int *outContentLength)
+{
+	LARGE_INTEGER fileLength;
+	if (!GetFileSizeEx(fh, &fileLength) || fileLength.QuadPart > INT_MAX) {
+		CloseHandle(fh);
+		return NULL;
+	}
+	int contentLength = fileLength.u.LowPart;
+	uint8_t *content = (uint8_t *) malloc(contentLength);
+	if (content == NULL) {
+		CloseHandle(fh);
+		return NULL;
+	}
+	if (RECOILWin32_ReadAndClose(fh, content, contentLength) != contentLength) {
+		free(content);
+		return NULL;
+	}
+	*outContentLength = contentLength;
+	return content;
+}
+
+bool RECOILWin32_LoadA(RECOIL *self, const char *filename)
+{
+	HANDLE fh = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+	int contentLength;
+	uint8_t *content = RECOILWin32_AllocReadAndClose(fh, &contentLength);
+	if (content == NULL)
+		return false;
+	bool ok = RECOILWin32_DecodeA(self, filename, content, contentLength);
+	free(content);
+	return ok;
+}
+
+bool RECOILWin32_LoadW(RECOIL *self, LPCWSTR filename)
+{
+	HANDLE fh = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+	int contentLength;
+	uint8_t *content = RECOILWin32_AllocReadAndClose(fh, &contentLength);
+	if (content == NULL)
+		return false;
+	bool ok = RECOILWin32_DecodeW(self, filename, content, contentLength);
+	free(content);
+	return ok;
 }
 
 void RECOILWin32_GetPlatformW(const RECOIL *self, WCHAR (*platform)[RECOIL_MAX_PLATFORM_LENGTH + 1])

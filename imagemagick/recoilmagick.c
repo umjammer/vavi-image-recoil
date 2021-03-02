@@ -21,6 +21,8 @@
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <limits.h>
+
 #include "recoil.h"
 #include "formats.h"
 
@@ -76,10 +78,8 @@ static Image *ReadRECOILImage(const ImageInfo *image_info, ExceptionInfo *except
 	}
 
 	MagickSizeType content_len = GetBlobSize(image);
-	if (content_len > RECOIL_MAX_CONTENT_LENGTH)
+	if (content_len == 0 || content_len > INT_MAX)
 		ThrowReaderException(CorruptImageError, "ImageTypeNotSupported");
-	if (content_len == 0) // failed to get file length
-		content_len = RECOIL_MAX_CONTENT_LENGTH;
 	RECOIL *recoil = RECOIL_New();
 	if (recoil == NULL)
 		ThrowReaderException(ResourceLimitError, "MemoryAllocationFailed");
@@ -88,8 +88,7 @@ static Image *ReadRECOILImage(const ImageInfo *image_info, ExceptionInfo *except
 		RECOIL_Delete(recoil);
 		ThrowReaderException(ResourceLimitError, "MemoryAllocationFailed");
 	}
-	content_len = ReadBlob(image, content_len, content);
-	if (content_len < 0) {
+	if (ReadBlob(image, content_len, content) != content_len) {
 		free(content);
 		RECOIL_Delete(recoil);
 		ThrowReaderException(CorruptImageError, "UnableToReadImageData");

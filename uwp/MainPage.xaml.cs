@@ -61,7 +61,7 @@ namespace RECOIL
 			byte[] content;
 			try {
 				ulong length = (await file.GetBasicPropertiesAsync()).Size;
-				if (length > Recoil.RECOIL.MaxContentLength) {
+				if (length > 0x7fffffc7) { // max byte array length according to https://docs.microsoft.com/en-us/dotnet/api/system.array?view=net-5.0
 					await new MessageDialog("File too long." + Disclaimer).ShowAsync();
 					return;
 				}

@@ -44,9 +44,6 @@
 
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "recoil-stdio.h"
 #include "formats.h"
 
@@ -116,42 +113,15 @@ DLL_EXPORT BOOL API gfpGetPluginInfo(
 
 DLL_EXPORT void * API gfpLoadPictureInit(const char *filename)
 {
-	FILE *fp = fopen(filename, "rb");
-	if (fp == NULL)
-		return NULL;
-	if (fseek(fp, 0, SEEK_END) != 0) {
-		fclose(fp);
-		return NULL;
-	}
-	int content_len = ftell(fp);
-	if (content_len > RECOIL_MAX_CONTENT_LENGTH
-	 || fseek(fp, 0, SEEK_SET) != 0) {
-		fclose(fp);
-		return NULL;
-	}
-
 	RECOIL *recoil = RECOILStdio_New();
-	if (recoil == NULL) {
-		fclose(fp);
+	if (recoil == NULL)
 		return NULL;
-	}
 
-	unsigned char *content = (unsigned char *) malloc(content_len);
-	if (content == NULL) {
-		RECOIL_Delete(recoil);
-		fclose(fp);
-		return NULL;
-	}
-	content_len = fread(content, 1, content_len, fp);
-	fclose(fp);
-
-	if (!RECOIL_Decode(recoil, filename, content, content_len)) {
-		free(content);
+	if (!RECOILStdio_Load(recoil, filename)) {
 		RECOIL_Delete(recoil);
 		return NULL;
 	}
 
-	free(content);
 	return recoil;
 }
 

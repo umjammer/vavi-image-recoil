@@ -332,15 +332,7 @@ static bool OpenImage(bool show_error)
 	SetMenuEnabled(IDM_FIRSTFILE, true);
 	SetMenuEnabled(IDM_LASTFILE, true);
 
-	static BYTE content[RECOIL_MAX_CONTENT_LENGTH];
-	int content_len = RECOILWin32_SlurpFile(image_filename, content, sizeof(content));
-	if (content_len < 0) {
-		if (show_error)
-			ShowError("Cannot open file");
-		return false;
-	}
-
-	image_loaded = RECOILWin32_Decode(recoil, image_filename, content, content_len);
+	image_loaded = RECOILWin32_Load(recoil, image_filename);
 	SetMenuEnabled(IDM_SAVEAS, image_loaded);
 	SetMenuEnabled(IDM_COPY, image_loaded);
 	SetMenuEnabled(IDM_FULLSCREEN, image_loaded);
@@ -464,7 +456,7 @@ static bool GetSiblingFile(LPTSTR filename, int dir)
 		return false;
 	do {
 		if ((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0
-		 && wfd.nFileSizeHigh == 0 && wfd.nFileSizeLow <= RECOIL_MAX_CONTENT_LENGTH
+		 && wfd.nFileSizeHigh == 0 && wfd.nFileSizeLow <= INT_MAX
 		 && RECOILWin32_IsOurFile(wfd.cFileName)
 		 && ((dir & 1) == 0 || _tcsicmp(wfd.cFileName, filename + path_len) * dir > 0)
 		 && (best[0] == '\0' || (_tcsicmp(wfd.cFileName, best) ^ dir) < 0))

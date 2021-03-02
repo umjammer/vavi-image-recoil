@@ -42,17 +42,8 @@ int main(int argc, char **argv)
 			return 0;
 		}
 
-		FILE *fp = fopen(arg, "rb");
-		if (fp == NULL) {
-			fprintf(stderr, "benchmark: cannot open %s\n", arg);
-			return 1;
-		}
-		static uint8_t content[RECOIL_MAX_CONTENT_LENGTH];
-		int content_len = fread(content, 1, sizeof(content), fp);
-		fclose(fp);
-
 		clock_t start_time = clock();
-		if (!RECOIL_Decode(recoil, arg, content, content_len)) {
+		if (!RECOILStdio_Load(recoil, arg)) {
 			fprintf(stderr, "benchmark: error decoding %s\n", arg);
 			return 1;
 		}
@@ -62,8 +53,6 @@ int main(int argc, char **argv)
 		RECOIL_ToPalette(recoil);
 		clock_t palette_time = clock();
 
-		RECOIL_Decode(recoil, arg, content, content_len);
-		clock_t decode2_time = clock();
 		RECOIL_ToPalette(recoil);
 		clock_t palette2_time = clock();
 		if (RECOIL_GetColors(recoil) != colors) {
@@ -72,13 +61,12 @@ int main(int argc, char **argv)
 		}
 		clock_t colors2_time = clock();
 
-		printf("%3dx%3d %4d colors Decode=%2ld,%2ld GetColors=%2ld,%2ld ToPalette=%2ld,%2ld %s\n",
+		printf("%3dx%3d %4d colors Decode=%2ld GetColors=%2ld,%2ld ToPalette=%2ld,%2ld %s\n",
 			RECOIL_GetWidth(recoil), RECOIL_GetHeight(recoil), colors,
 			(  decode_time -    start_time) * 1000L / CLOCKS_PER_SEC, /* RECOIL_Decode time */
-			( decode2_time -  palette_time) * 1000L / CLOCKS_PER_SEC, /* ditto, should be same */
 			(  colors_time -   decode_time) * 1000L / CLOCKS_PER_SEC, /* RECOIL_GetColors time */
 			( colors2_time - palette2_time) * 1000L / CLOCKS_PER_SEC, /* RECOIL_GetColors after RECOIL_Palette, should be smaller */
-			(palette2_time -  decode2_time) * 1000L / CLOCKS_PER_SEC, /* RECOIL_GetPalette time */
+			(palette2_time -  palette_time) * 1000L / CLOCKS_PER_SEC, /* RECOIL_GetPalette time */
 			( palette_time -   colors_time) * 1000L / CLOCKS_PER_SEC, /* RECOIL_GetPalette after RECOIL_GetColors, should be smaller */
 			arg);
 	}

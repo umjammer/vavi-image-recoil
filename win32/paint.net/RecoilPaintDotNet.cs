@@ -34,7 +34,7 @@ using Recoil;
 //[assembly: AssemblyDescription("Decodes images in native formats of vintage computers")]
 [assembly: AssemblyCompany("Piotr Fusik")]
 [assembly: AssemblyProduct("RECOIL")]
-[assembly: AssemblyCopyright("Copyright © 2013-2020")]
+[assembly: AssemblyCopyright("Copyright © 2013-2021")]
 [assembly: AssemblyVersion(RECOIL.Version + ".0")]
 [assembly: AssemblyFileVersion(RECOIL.Version + ".0")]
 
@@ -56,7 +56,7 @@ namespace Recoil.PaintDotNet
 		{
 			// Read.
 			long longLength = input.Length;
-			if (longLength > RECOIL.MaxContentLength)
+			if (longLength > 0x7fffffc7) // max byte array length according to https://docs.microsoft.com/en-us/dotnet/api/system.array?view=net-5.0
 				throw new Exception("File too long");
 			int contentLength = (int) longLength;
 			byte[] content = new byte[contentLength];
