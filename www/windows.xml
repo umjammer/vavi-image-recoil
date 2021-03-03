@@ -16,6 +16,10 @@
 	<span> </span>
 	<img src="recoilwin.png" alt="RECOILWin" />
 
+	<h2>Manual installation</h2>
+	<p>Alternatively to the above installers, you can download <download prefix="recoil-" suffix="-win64.zip" />
+	or <download prefix="recoil-" suffix="-win32.zip" /> and extract the files to proper locations.</p>
+
 	<h2>IrfanView plugin</h2>
 	<p>RECOIL is already included in the "Formats" <a href="http://www.irfanview.com/">IrfanView</a> plugin.</p>
 
