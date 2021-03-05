@@ -123,20 +123,18 @@ class ZipRECOIL extends JavaRECOIL
 
 class StreamRECOIL extends JavaRECOIL
 {
-	private final String filename;
 	private final long length;
 	private final InputStream stream;
 
 	StreamRECOIL(ContentResolver contentResolver, Uri uri) throws FileNotFoundException
 	{
-		Cursor cursor = contentResolver.query(uri, new String[] { OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE }, null, null, null);
+		Cursor cursor = contentResolver.query(uri, new String[] { OpenableColumns.SIZE }, null, null, null);
 		if (cursor == null)
 			throw new FileNotFoundException();
 		try {
 			if (!cursor.moveToNext())
 				throw new FileNotFoundException();
-			this.filename = cursor.getString(0);
-			this.length = cursor.getLong(1);
+			this.length = cursor.getLong(0);
 		}
 		finally {
 			cursor.close();
