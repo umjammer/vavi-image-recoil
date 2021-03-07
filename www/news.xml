@@ -1,4 +1,14 @@
 ﻿<page title="News">
+	<release project="RECOIL" version="6.1.0" date="2021-03-07">
+		<ul>
+			<li>Lifted limits on file size (from 6 MB to 2 GB) and number of pixels (from 3 MP to 134 MP)</li>
+			<li>New format: Tandy 1000 DeskMate Paint (PNT)</li>
+			<li>Apple silicon compatibility</li>
+			<li>win64.zip package</li>
+			<li>Restored Windows XP compatibility</li>
+		</ul>
+	</release>
+
 	<release project="RECOIL" version="6.0.0" date="2021-02-04">
 		<ul title="Rendering">
 			<li>PAL/NTSC can be selected in recoil2png and RECOILWin, affects Pixel Aspect Ratio and Atari 8-bit palette</li>

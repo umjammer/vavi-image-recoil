@@ -4159,7 +4159,7 @@ public class RECOIL
 	/// RECOIL version - major part.
 	public const int VersionMajor = 6;
 	/// RECOIL version - minor part.
-	public const int VersionMinor = 0;
+	public const int VersionMinor = 1;
 	/// RECOIL version - micro part.
 	public const int VersionMicro = 0;
 	/// RECOIL version as a string.
@@ -7072,6 +7072,7 @@ public class RECOIL
 			pixelsLength = Width * Height;
 			for (int i = 0; i < pixelsLength; i++) {
 				int c = content[16 + (i << 1)] | content[17 + (i << 1)] << 8;
+				// XGGGGGRR RRRBBBBB
 				int rgb = (c & 0x3e0) << 14 | (c & 0x7c00) << 1 | (c & 0x1f) << 3;
 				Pixels[i] = rgb | (rgb >> 5 & 0x070707);
 			}
