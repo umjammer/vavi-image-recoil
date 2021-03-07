@@ -2696,7 +2696,7 @@ class Q4Stream : RleStream
 		Bits = 0;
 		CodeBits = 3;
 		int unpackedLength = 0;
-		int[16384] offsets; // TODO: ushort
+		ushort[16384] offsets;
 		for (int codes = 17; codes < offsets.Length; codes++) {
 			int code = ReadCode();
 			if (code < 0 || code >= codes) {
@@ -2708,11 +2708,11 @@ class Q4Stream : RleStream
 			}
 
 			// LZW
+			if (unpackedLength >= Unpacked.Length)
+				return false;
 			offsets[codes] = unpackedLength;
 			if (code <= 16) {
 				// literal
-				if (unpackedLength >= Unpacked.Length)
-					return false;
 				Unpacked[unpackedLength++] = code;
 			}
 			else {
@@ -8345,7 +8345,7 @@ public class RECOIL
 		SetMagPalette(content, 48, 16);
 		int contentOffset = 1096;
 
-		int[8000] haveBuffer; // TODO: ushort
+		ushort[8000] haveBuffer;
 		BitStream() haveBlock;
 		haveBlock.Content = content;
 		haveBlock.ContentOffset = 96;
