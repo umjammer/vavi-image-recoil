@@ -44,6 +44,8 @@
 
 #endif
 
+#include <stddef.h>
+
 #include "recoil-stdio.h"
 #include "formats.h"
 
