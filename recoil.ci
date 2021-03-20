@@ -880,7 +880,7 @@ abstract class RleStream : BitStream
 	/// Uncompresses bytes to `unpacked[unpackedOffset]`,
 	/// `unpacked[unpackedOffset + unpackedStride]`,
 	/// `unpacked[unpackedOffset + 2 * unpackedStride]`,
-	/// ... until indexes are smaller than `unpackedEnd`.
+	/// ... as long as indexes are smaller than `unpackedEnd`.
 	/// Returns `true` on success, `false` on error.
 	internal bool Unpack!(byte[]! unpacked, int unpackedOffset, int unpackedStride, int unpackedEnd)
 	{
@@ -908,7 +908,7 @@ abstract class RleStream : BitStream
 	/// Uncompresses bytes to `unpacked[unpackedOffset]`, `unpacked[unpackedOffset + 1]`,
 	/// `unpacked[unpackedOffset + unpackedStride]`, `unpacked[unpackedOffset + unpackedStride + 1]`,
 	/// `unpacked[unpackedOffset + 2 * unpackedStride]`, `unpacked[unpackedOffset + 2 * unpackedStride + 1]`,
-	/// ... until indexes are smaller than `unpackedEnd`.
+	/// ... as long as indexes are smaller than `unpackedEnd`.
 	/// Returns `true` on success, `false` on error.
 	internal bool UnpackWords!(byte[]! unpacked, int unpackedOffset, int unpackedStride, int unpackedEnd)
 	{
