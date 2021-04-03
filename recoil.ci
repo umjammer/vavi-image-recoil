@@ -13644,6 +13644,9 @@ public class RECOIL
 		return true;
 	}
 
+	bool DecodeZm4!(byte[] content, int contentLength)
+		=> contentLength == 2048 && DecodeGr9x4(content, 0, 256, 256);
+
 	bool DecodeGr9p!(byte[] content, int contentLength)
 		=> contentLength == 2400 && DecodeGr9x4(content, 0, 320, 240);
 
@@ -17959,6 +17962,7 @@ public class RECOIL
 		case PackExt("XGA"):
 		case PackExt("XLP"):
 		case PackExt("ZIM"):
+		case PackExt("ZM4"):
 		case PackExt("ZP1"):
 		case PackExt("ZXP"):
 			return true;
@@ -18823,6 +18827,8 @@ public class RECOIL
 			return DecodeXlp(content, contentLength);
 		case PackExt("ZIM"):
 			return DecodeZim(content, contentLength);
+		case PackExt("ZM4"):
+			return DecodeZm4(content, contentLength);
 		case PackExt("ZP1"):
 			return DecodeZp1(content, contentLength);
 		case PackExt("ZXP"):

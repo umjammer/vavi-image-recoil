@@ -263,6 +263,7 @@
 		<format name="VertiZontal Interlacing" width="160" height="200" grayscale="31" frames="2"><ext>VZI</ext></format>
 		<format name="Blazing Paddles window" maxWidth="160" maxHeight="192" colors="4"><ext>WND</ext></format>
 		<format name="XL-Paint" width="160" maxHeight="200" colors="7" frames="2"><ext>XLP</ext></format>
+		<format name="Zoom-4 graphics editor" width="64" height="64" grayscale="16"><ext>ZM4</ext></format>
 	</platform>
 	<platform name="Atari 8-bit VBXE" href="http://gury.atari8.info/vbxe.php">
 		<format name="SlideShow for VBXE" width="320" height="240" colors="256"><ext>DAP</ext></format>
