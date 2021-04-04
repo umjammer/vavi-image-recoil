@@ -29,6 +29,9 @@ bin/XnViewMP:
 
 bin/Xrecoil.usr: ../Xrecoil.c ../formats.h ../recoil-stdio.c ../recoil-stdio.h ../recoil.c ../recoil.h
 	mkdir -p $(@D) && $(CC) $(CFLAGS) -o $@ -I .. -dynamiclib ../Xrecoil.c ../recoil-stdio.c ../recoil.c
+ifdef RECOIL_CODESIGNING_IDENTITY
+	codesign --options runtime -f -s "$(RECOIL_CODESIGNING_IDENTITY)" bin/Xrecoil.usr
+endif
 
 ../formats.h: ../formats.h.xsl ../formats.xml
 	xsltproc -o $@ ../formats.h.xsl ../formats.xml
