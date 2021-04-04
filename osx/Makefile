@@ -7,6 +7,11 @@ QLCODESIGN = bin/RECOIL.qlgenerator/Contents/_CodeSignature/CodeResources
 
 recoil-$(VERSION)-macos.dmg: bin/QuickLook $(QLCODESIGN) $(QLRECOIL) $(PLIST) bin/XnViewMP bin/Xrecoil.usr bin/bin bin/recoil2png
 	hdiutil create -volname recoil-$(VERSION)-macos -srcfolder bin -format UDBZ -fs HFS+ -imagekey bzip2-level=3 -ov $@
+ifdef RECOIL_NOTARIZING_USERNAME
+ifdef RECOIL_NOTARIZING_PASSWORD
+	xcrun altool --notarize-app --primary-bundle-id "net.sf.recoil.qlrecoil" --username $(RECOIL_NOTARIZING_USERNAME) --password $(RECOIL_NOTARIZING_PASSWORD) --file recoil-$(VERSION)-macos.dmg
+endif
+endif
 
 bin/QuickLook:
 	mkdir -p $(@D) && ln -s /Library/QuickLook $@
