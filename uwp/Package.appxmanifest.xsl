@@ -25,10 +25,6 @@
 				<Resource Language="x-generate" />
 			</Resources>
 
-			<Capabilities>
-				<uap:Capability Name="picturesLibrary" />
-			</Capabilities>
-
 			<Applications>
 				<Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="RECOIL.App">
 					<uap:VisualElements
