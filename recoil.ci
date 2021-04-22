@@ -6506,7 +6506,10 @@ public class RECOIL
 	{
 		if (contentLength < 14343 || content[0] != 0xfe || GetMsxHeader(content) < 0x37ff)
 			return false;
-		SetMsxPalette(content, 0x1b87, 16);
+		if (IsMsxPalette(content, 0x1b87))
+			SetMsxPalette(content, 0x1b87, 16);
+		else
+			SetMsxPalette(Msx2DefaultPalette, 0, 16);
 		DecodeSc2Sc4(content, 7, RECOILResolution.Msx21x1);
 		if (contentLength >= 16391)
 			DecodeMsxSprites(content, 4, 0x1e07, 0x3807);
