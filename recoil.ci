@@ -6504,11 +6504,12 @@ public class RECOIL
 
 	bool DecodeSc4!(byte[] content, int contentLength)
 	{
-		if (contentLength < 16391 || content[0] != 0xfe || GetMsxHeader(content) < 0x3fff)
+		if (contentLength < 14343 || content[0] != 0xfe || GetMsxHeader(content) < 0x37ff)
 			return false;
 		SetMsxPalette(content, 0x1b87, 16);
 		DecodeSc2Sc4(content, 7, RECOILResolution.Msx21x1);
-		DecodeMsxSprites(content, 4, 0x1e07, 0x3807);
+		if (contentLength >= 16391)
+			DecodeMsxSprites(content, 4, 0x1e07, 0x3807);
 		return true;
 	}
 
