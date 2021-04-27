@@ -13147,6 +13147,7 @@ public class RECOIL
 		GtiaColors[4] = 0x28;
 		GtiaColors[5] = 0xca;
 		GtiaColors[6] = 0x94;
+		GtiaColors[7] = 0x46;
 	}
 
 	void SetGr15DefaultColors!()
@@ -13353,12 +13354,12 @@ public class RECOIL
 		}
 	}
 
-	void DecodeAtari8Gr0!(byte[] characters, int charactersStride, byte[] font, int fontOffset, byte[]! frame)
+	void DecodeAtari8Gr0!(byte[] characters, int charactersOffset, int charactersStride, byte[] font, int fontOffset, byte[]! frame)
 	{
 		GtiaColors[6] = 0x00;
 		GtiaColors[5] = 0x0e;
 		for (int y = 0; y < Height; y += 8)
-			DecodeAtari8Gr0Line(characters, (y >> 3) * charactersStride, font, fontOffset, frame, y * Width, 8);
+			DecodeAtari8Gr0Line(characters, charactersOffset + (y >> 3) * charactersStride, font, fontOffset, frame, y * Width, 8);
 	}
 
 	void DecodeAtari8Gr1Line(byte[] content, int charactersOffset, byte[] font, int fontOffset, byte[]! frame, int frameOffset, int doubleLine)
@@ -14098,12 +14099,16 @@ public class RECOIL
 
 	bool DecodeMpl!(byte[] content, int contentLength)
 	{
+		if (contentLength < 13)
+			return false;
 		const int maxWidth = 56;
 		const int maxHeight = 40;
-		if (contentLength < 13 || contentLength > 9 + 4 * maxHeight)
-			return false;
 		int height = content[0];
-		if (9 + (height << 2) != contentLength)
+		if (height == 0 || height > maxHeight)
+			return false;
+		int bitmapOffset = contentLength - (height << 2);
+		if (bitmapOffset != 9 // old format
+		 && bitmapOffset != 14) // new format; TODO: sizes, multicolor
 			return false;
 		int minX = 255;
 		int maxX = 0;
@@ -14119,7 +14124,7 @@ public class RECOIL
 		SetSize(maxX + 8 - minX << 1, height, RECOILResolution.Xe2x1);
 		byte[maxWidth * 2 * maxHeight] frame = 0;
 		for (int i = 3; i >= 0; i--)
-			DecodeAtari8Player(content, 9 + i * height, content[5 + i], frame, content[1 + i] - minX << 1, height, false);
+			DecodeAtari8Player(content, bitmapOffset + i * height, content[5 + i], frame, content[1 + i] - minX << 1, height, false);
 		return ApplyAtari8Palette(frame);
 	}
 
@@ -15221,7 +15226,7 @@ public class RECOIL
 	{
 		SetSize(256, 32, RECOILResolution.Xe1x1);
 		byte[256 * 32] frame;
-		DecodeAtari8Gr0(characters, 32, font, fontOffset, frame);
+		DecodeAtari8Gr0(characters, 0, 32, font, fontOffset, frame);
 		return ApplyAtari8Palette(frame);
 	}
 
@@ -15251,7 +15256,7 @@ public class RECOIL
 			return false;
 		SetSize(128, 32, RECOILResolution.Xe1x1);
 		byte[128 * 32] frame;
-		DecodeAtari8Gr0(null, 16, content, 0, frame);
+		DecodeAtari8Gr0(null, 0, 16, content, 0, frame);
 		return ApplyAtari8Palette(frame);
 	}
 
@@ -15312,13 +15317,21 @@ public class RECOIL
 
 	bool DecodeGr1!(byte[] content, int contentLength, int doubleHeight)
 	{
-		if (contentLength != (480 >> doubleHeight))
+		int charsLength = 480 >> doubleHeight;
+		switch (contentLength - charsLength) {
+		case 0:
+			SetXeOsDefaultColors();
+			break;
+		case 5:
+			SetBakPF0123(content, charsLength);
+			break;
+		default:
 			return false;
+		}
 		SetSize(320, 192, doubleHeight == 0 ? RECOILResolution.Xe2x1 : RECOILResolution.Xe2x2);
 		byte[320 * 192] frame;
-		SetXeOsDefaultColors();
 		byte[] font = resource<byte[]>("atari8.fnt");
-		for (int offset = 0; offset < contentLength; offset += 20)
+		for (int offset = 0; offset < charsLength; offset += 20)
 			DecodeAtari8Gr1Line(content, offset, font, 0, frame, offset << 7 + doubleHeight, doubleHeight);
 		return ApplyAtari8Palette(frame);
 	}
@@ -15393,7 +15406,7 @@ public class RECOIL
 				characters[y * 11 + x] = ToAtari8Char(content[y * 16 + 5 + x]);
 		SetSize(88, 128, RECOILResolution.Xe1x1);
 		byte[88 * 128] frame;
-		DecodeAtari8Gr0(characters, 11, resource<byte[]>("atari8.fnt"), 0, frame);
+		DecodeAtari8Gr0(characters, 0, 11, resource<byte[]>("atari8.fnt"), 0, frame);
 		return ApplyAtari8Palette(frame);
 	}
 
@@ -15401,7 +15414,7 @@ public class RECOIL
 	{
 		SetSize(320, 192, RECOILResolution.Xe1x1);
 		byte[320 * 192] frame;
-		DecodeAtari8Gr0(content, 40, font, 0, frame);
+		DecodeAtari8Gr0(content, 0, 40, font, 0, frame);
 		ApplyAtari8Palette(frame);
 	}
 
@@ -15425,6 +15438,88 @@ public class RECOIL
 		}
 		DecodeAtari8Gr0Screen(content, font);
 		return true;
+	}
+
+	bool DecodeAn2!(byte[] content, int contentLength)
+	{
+		if (contentLength < 3)
+			return false;
+		int columns = content[0] + 1;
+		int rows = content[1] + 1;
+		if (columns > 40 || rows > 24)
+			return false;
+		SetSize(columns << 3, rows << 3, RECOILResolution.Xe1x1);
+		byte[320 * 192] frame;
+		DecodeAtari8Gr0(content, 2, columns, resource<byte[]>("atari8.fnt"), 0, frame);
+		return ApplyAtari8Palette(frame);
+	}
+
+	bool DecodeAn4!(byte[] content, int contentLength, int doubleHeight)
+	{
+		if (contentLength < 8)
+			return false;
+		int columns;
+		int rows;
+		int charactersOffset;
+		if (contentLength << doubleHeight == 960) {
+			columns = 40;
+			rows = 24 >> doubleHeight;
+			SetXeOsDefaultColors();
+			charactersOffset = 0;
+		}
+		else {
+			columns = content[0] + 1;
+			rows = content[1] + 1;
+			if (columns > 40 || rows << doubleHeight > 24)
+				return false;
+			SetBakPF0123(content, 2);
+			charactersOffset = 7;
+		}
+		if (doubleHeight == 0)
+			SetSize(columns << 3, rows << 3, RECOILResolution.Xe2x1);
+		else
+			SetSize(columns << 3, rows << 4, RECOILResolution.Xe2x2);
+		byte[320 * 192] frame;
+		byte[] font = resource<byte[]>("atari8.fnt");
+		for (int y = 0; y < rows; y++)
+			DecodeAtari8Gr12Line(content, charactersOffset + y * columns, font, 0, frame, y * columns << (6 + doubleHeight), doubleHeight);
+		return ApplyAtari8Palette(frame);
+	}
+
+	bool DecodeTl4!(byte[] content, int contentLength)
+	{
+		if (contentLength < 11)
+			return false;
+		const int maxColumns = 4;
+		const int maxRows = 5;
+		int columns = content[0];
+		int rows = content[1];
+		if (columns == 0 || columns > maxColumns || rows == 0 || rows > maxRows)
+			return false;
+		SetSize(columns << 3, rows << 3, RECOILResolution.Xe2x1);
+		byte[maxColumns * 8 * maxRows * 8] frame;
+		for (int y = 0; y < rows << 3; y++) {
+			for (int x = 0; x < columns << 3; x++) {
+				int offset = 2 + ((y >> 3) * columns + (x >> 3)) * 9;
+				int c;
+				switch (content[offset + (y & 7)] >> (~x & 6) & 3) {
+				case 1:
+					c = 0x28;
+					break;
+				case 2:
+					c = 0xca;
+					break;
+				case 3:
+					c = content[offset + 8] == 0 ? 0x94 : 0x46;
+					break;
+				default:
+					c = 0x00;
+					break;
+				}
+				frame[(y * columns << 3) + x] = c;
+			}
+		}
+		return ApplyAtari8Palette(frame);
 	}
 
 	bool DecodeAsciiArtEditor!(byte[] content, int contentLength)
@@ -15459,7 +15554,7 @@ public class RECOIL
 
 		SetSize(columns << 3, y << 3, RECOILResolution.Xe1x1);
 		byte[maxColumns * 8 * maxRows * 8] frame;
-		DecodeAtari8Gr0(characters, maxColumns, resource<byte[]>("atari8.fnt"), 0, frame);
+		DecodeAtari8Gr0(characters, 0, maxColumns, resource<byte[]>("atari8.fnt"), 0, frame);
 		return ApplyAtari8Palette(frame);
 	}
 
@@ -17542,6 +17637,9 @@ public class RECOIL
 		case PackExt("AGS"):
 		case PackExt("ALL"):
 		case PackExt("AMI"):
+		case PackExt("AN2"):
+		case PackExt("AN4"):
+		case PackExt("AN5"):
 		case PackExt("AP2"):
 		case PackExt("AP3"):
 		case PackExt("APV"):
@@ -17943,6 +18041,7 @@ public class RECOIL
 		case PackExt("TG1"):
 		case PackExt("TIM"):
 		case PackExt("TIP"):
+		case PackExt("TL4"):
 		case PackExt("TN1"):
 		case PackExt("TN2"):
 		case PackExt("TN3"):
@@ -18027,6 +18126,12 @@ public class RECOIL
 			return DecodeAll(content, contentLength);
 		case PackExt("AMI"):
 			return DecodeAmi(content, contentLength);
+		case PackExt("AN2"):
+			return DecodeAn2(content, contentLength);
+		case PackExt("AN4"):
+			return DecodeAn4(content, contentLength, 0);
+		case PackExt("AN5"):
+			return DecodeAn4(content, contentLength, 1);
 		case PackExt("AP2"):
 			return Decode256(content, contentLength);
 		case PackExt("AP3"):
@@ -18792,6 +18897,8 @@ public class RECOIL
 			return DecodeTim(content, contentLength);
 		case PackExt("TIP"):
 			return DecodeTip(content, contentLength);
+		case PackExt("TL4"):
+			return DecodeTl4(content, contentLength);
 		case PackExt("TN1"):
 		case PackExt("TN2"):
 		case PackExt("TN3"):
