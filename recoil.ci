@@ -3534,8 +3534,8 @@ abstract class GtiaRenderer
 	internal byte[4] MissileHpos;
 	internal byte[4] PlayerSize;
 	internal byte[4] MissileSize;
-	int[4] PlayerSizeCounter; // int to workaround cito 0 Java compilation error
-	int[4] MissileSizeCounter; // likewise
+	byte[4] PlayerSizeCounter;
+	byte[4] MissileSizeCounter;
 	internal byte[4] PlayerGraphics;
 	internal int MissileGraphics; // byte
 	byte[4] PlayerShiftRegister;
