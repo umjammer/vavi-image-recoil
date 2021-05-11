@@ -4625,14 +4625,14 @@ public class RECOIL
 
 	bool DecodeAmigaPlanar!(byte[] content, int contentOffset, int width, int height, RECOILResolution resolution, int bitplanes, int[] palette)
 	{
-		if (!SetSize(width, height, resolution))
+		if (!SetScaledSize(width, height, resolution))
 			return false;
 		int bytesPerLine = width + 15 >> 4 << 1;
 		int bitplaneLength = height * bytesPerLine;
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
 				int c = GetBitplanePixel(content, contentOffset + y * bytesPerLine + (x >> 3), x, bitplanes, bitplaneLength);
-				Pixels[y * width + x] = palette[c];
+				SetScaledPixel(x, y, palette[c]);
 			}
 		}
 		return true;
@@ -12164,7 +12164,7 @@ public class RECOIL
 		int bitplaneLength = height * bytesPerLine;
 		contentOffset += 0x14;
 		return contentLength >= contentOffset + bitplanes * bitplaneLength
-			&& DecodeAmigaPlanar(content, contentOffset, width, height, RECOILResolution.Amiga1x1, bitplanes, palette);
+			&& DecodeAmigaPlanar(content, contentOffset, width, height, RECOILResolution.Amiga1x2, bitplanes, palette);
 	}
 
 	bool DecodeAbkSprite!(byte[] content, int contentLength)
