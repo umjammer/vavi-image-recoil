@@ -14,6 +14,9 @@ recoil-180x180.png: ../recoil-512x512.png
 clean:
 	$(RM) $(TARGETS)
 
-.PHONY: all clean
+sftp:
+	sftp pfusik,recoil@web.sourceforge.net:htdocs
+
+.PHONY: all clean sftp
 
 .DELETE_ON_ERROR:
