@@ -133,11 +133,16 @@ rpm64:
 	ssh vm 'rpmbuild -tb recoil-$(VERSION).tar.gz'
 	scp vm:rpmbuild/RPMS/x86_64/recoil-2png-$(VERSION)-1.x86_64.rpm vm:rpmbuild/RPMS/noarch/recoil-thumbnailer-$(VERSION)-1.noarch.rpm ../../
 
+mac:
+	scp ../../recoil-$(VERSION).tar.gz mac:.
+	ssh mac 'rm -rf recoil-$(VERSION) && tar xf recoil-$(VERSION).tar.gz && make -C recoil-$(VERSION)/osx'
+	scp mac:recoil-$(VERSION)/osx/recoil-$(VERSION)-macos.dmg ../../
+
 clean:
 	$(RM) i686/recoil2png.exe i686/recoilwin.exe $(WINBOTH_BIN) i686/recoilwin-res.o x86_64/recoilwin-res.o recoil.ico COPYING.txt \
 		i686/recoil.wixobj x86_64/recoil.wixobj setup/formats.wxi setup/dialog.jpg setup/banner.jpg signed-msi signed \
 		paint.net/RecoilFileTypeFactory.cs paint.net/RECOIL.cs ../formats.h
 
-.PHONY: all clean ../MANIFEST srcdist dist deb64 rpm64 ../../recoil-$(VERSION).tar.gz
+.PHONY: all clean ../MANIFEST srcdist dist deb64 rpm64 mac ../../recoil-$(VERSION).tar.gz
 
 .DELETE_ON_ERROR:

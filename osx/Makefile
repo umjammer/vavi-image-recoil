@@ -1,24 +1,23 @@
 VERSION = 6.1.0
 
 CFLAGS = -O2 -Wall -mmacosx-version-min=10.6 -arch x86_64 -arch arm64
+CODESIGN = codesign --options runtime -f -s $(PORK_CODESIGNING_IDENTITY)
 QLRECOIL = bin/RECOIL.qlgenerator/Contents/MacOS/qlrecoil 
 PLIST = bin/RECOIL.qlgenerator/Contents/Info.plist
 QLCODESIGN = bin/RECOIL.qlgenerator/Contents/_CodeSignature/CodeResources
 
 recoil-$(VERSION)-macos.dmg: bin/QuickLook $(QLCODESIGN) $(QLRECOIL) $(PLIST) bin/XnViewMP bin/Xrecoil.usr bin/bin bin/recoil2png
 	hdiutil create -volname recoil-$(VERSION)-macos -srcfolder bin -format UDBZ -fs HFS+ -imagekey bzip2-level=3 -ov $@
-ifdef RECOIL_NOTARIZING_USERNAME
-ifdef RECOIL_NOTARIZING_PASSWORD
-	xcrun altool --notarize-app --primary-bundle-id "net.sf.recoil.qlrecoil" --username $(RECOIL_NOTARIZING_USERNAME) --password $(RECOIL_NOTARIZING_PASSWORD) --file recoil-$(VERSION)-macos.dmg
-endif
+ifdef PORK_NOTARIZING_CREDENTIALS
+	xcrun altool --notarize-app --primary-bundle-id net.sf.recoil.qlrecoil $(PORK_NOTARIZING_CREDENTIALS) --file $@
 endif
 
 bin/QuickLook:
 	mkdir -p $(@D) && ln -s /Library/QuickLook $@
 
 $(QLCODESIGN): $(QLRECOIL) $(PLIST)
-ifdef RECOIL_CODESIGNING_IDENTITY
-	codesign --options runtime --entitlements entitlements.xml -f -s "$(RECOIL_CODESIGNING_IDENTITY)" bin/RECOIL.qlgenerator
+ifdef PORK_CODESIGNING_IDENTITY
+	$(CODESIGN) --entitlements entitlements.xml bin/RECOIL.qlgenerator
 else
 	rm -rf $(@D)
 endif
@@ -34,8 +33,8 @@ bin/XnViewMP:
 
 bin/Xrecoil.usr: ../Xrecoil.c ../formats.h ../recoil-stdio.c ../recoil-stdio.h ../recoil.c ../recoil.h
 	mkdir -p $(@D) && $(CC) $(CFLAGS) -o $@ -I .. -dynamiclib ../Xrecoil.c ../recoil-stdio.c ../recoil.c
-ifdef RECOIL_CODESIGNING_IDENTITY
-	codesign --options runtime -f -s "$(RECOIL_CODESIGNING_IDENTITY)" bin/Xrecoil.usr
+ifdef PORK_CODESIGNING_IDENTITY
+	$(CODESIGN) $@
 endif
 
 ../formats.h: ../formats.h.xsl ../formats.xml
@@ -46,8 +45,8 @@ bin/bin:
 
 bin/recoil2png: ../recoil2png.c ../pngsave.c ../pngsave.h ../recoil-stdio.c ../recoil-stdio.h ../recoil.c ../recoil.h
 	mkdir -p $(@D) && $(CC) $(CFLAGS) -o $@ -I .. -I /usr/local/include ../recoil2png.c ../pngsave.c ../recoil-stdio.c ../recoil.c /usr/local/lib/libpng.a -lz
-ifdef RECOIL_CODESIGNING_IDENTITY
-	codesign --options runtime -f -s "$(RECOIL_CODESIGNING_IDENTITY)" bin/recoil2png
+ifdef PORK_CODESIGNING_IDENTITY
+	$(CODESIGN) $@
 endif
 
 %.c %.h: %.ci ../altirrantsc.pal ../altirrapal.pal ../atari8.fnt ../c16.pal ../c64.fnt ../zx81.fnt
