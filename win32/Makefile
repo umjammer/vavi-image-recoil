@@ -135,7 +135,7 @@ rpm64:
 
 mac:
 	scp ../../recoil-$(VERSION).tar.gz mac:.
-	ssh mac 'rm -rf recoil-$(VERSION) && tar xf recoil-$(VERSION).tar.gz && make -C recoil-$(VERSION)/osx'
+	ssh mac 'security unlock-keychain ~/Library/Keychains/login.keychain && rm -rf recoil-$(VERSION) && tar xf recoil-$(VERSION).tar.gz && make -C recoil-$(VERSION)/osx'
 	scp mac:recoil-$(VERSION)/osx/recoil-$(VERSION)-macos.dmg ../../
 
 clean:
