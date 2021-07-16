@@ -1,4 +1,4 @@
-VERSION = 6.1.0
+VERSION = 6.1.1
 SEVENZIP = 7z a -mx=9 -bd -bso0
 
 RESOURCES := ../altirrantsc.pal ../altirrapal.pal ../atari8.fnt ../c16.pal ../c64.fnt ../zx81.fnt

@@ -1,4 +1,12 @@
 ﻿<page title="News">
+	<release project="RECOIL" version="6.1.1" date="2021-07-16">
+		<ul>
+			<li>New Atari 8-bit formats: Mad Studio (AN2, AN4, AN5, TL4), Zoom-4 graphics editor (ZM4)</li>
+			<li>Improved formats: MSX Screen 4 (SC4), Amiga icon (INFO), Mad Studio (GR1, GR2, MPL)</li>
+			<li>Notarized the macOS package</li>
+		</ul>
+	</release>
+
 	<release project="RECOIL" version="6.1.0" date="2021-03-07">
 		<ul>
 			<li>Lifted limits on file size (from 6 MB to 2 GB) and number of pixels (from 3 MP to 134 MP)</li>

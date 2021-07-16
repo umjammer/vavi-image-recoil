@@ -1,4 +1,4 @@
-VERSION = 6.1.0
+VERSION = 6.1.1
 
 CFLAGS = -O2 -Wall -mmacosx-version-min=10.6 -arch x86_64 -arch arm64
 CODESIGN = codesign --options runtime -f -s $(PORK_CODESIGNING_IDENTITY)
