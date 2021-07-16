@@ -126,12 +126,15 @@ dist: srcdist ../../recoil-$(VERSION)-win32.zip ../../recoil-$(VERSION)-win64.zi
 deb64:
 	scp ../../recoil-$(VERSION).tar.gz vm:.
 	ssh vm 'rm -rf recoil-$(VERSION) && tar xf recoil-$(VERSION).tar.gz && make -C recoil-$(VERSION) deb'
-	scp vm:recoil-2png_$(VERSION)-1_amd64.deb vm:recoil-xnview_$(VERSION)-1_amd64.deb vm:recoil-thumbnailer_$(VERSION)-1_all.deb ../../
+	scp vm:recoil-2png_$(VERSION)-1_amd64.deb ../../
+	scp vm:recoil-xnview_$(VERSION)-1_amd64.deb ../../
+	scp vm:recoil-thumbnailer_$(VERSION)-1_all.deb ../../
 
 rpm64:
 	scp ../../recoil-$(VERSION).tar.gz vm:.
 	ssh vm 'rpmbuild -tb recoil-$(VERSION).tar.gz'
-	scp vm:rpmbuild/RPMS/x86_64/recoil-2png-$(VERSION)-1.x86_64.rpm vm:rpmbuild/RPMS/noarch/recoil-thumbnailer-$(VERSION)-1.noarch.rpm ../../
+	scp vm:rpmbuild/RPMS/x86_64/recoil-2png-$(VERSION)-1.x86_64.rpm ../../
+	scp vm:rpmbuild/RPMS/noarch/recoil-thumbnailer-$(VERSION)-1.noarch.rpm ../../
 
 mac:
 	scp ../../recoil-$(VERSION).tar.gz mac:.
