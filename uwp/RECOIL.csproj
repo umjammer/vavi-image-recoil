@@ -98,7 +98,7 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <Content Include="Assets\FileLogo.png" />
+    <Content Include="Assets\FileLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\Square150x150Logo.scale-200.png" />
     <Content Include="Assets\Square44x44Logo.scale-200.png" />
@@ -114,7 +114,7 @@
     <XslTransformation XslInputPath="Package.appxmanifest.xsl" XmlInputPaths="../formats.xml" OutputPaths="Package.appxmanifest" />
     <XslTransformation XslInputPath="FilePicker.cs.xsl" XmlInputPaths="../formats.xml" OutputPaths="FilePicker.cs" />
     <MakeDir Directories="Assets" />
-    <Exec Command="magick -background #006374 logo.png -gravity Center -sample 36x36 -extent 48x48 -quality 95 -strip Assets\FileLogo.png" />
+    <Exec Command="magick -background #006374 logo.png -gravity Center -sample 72x72 -extent 96x96 -quality 95 -strip Assets\FileLogo.scale-200.png" />
     <Exec Command="magick -background none logo.png -gravity Center -sample 400x400 -extent 1240x600 -quality 95 -strip Assets\SplashScreen.scale-200.png" />
     <Exec Command="magick -background none logo.png -gravity Center -sample 224x224 -extent 300x300 -quality 95 -strip Assets\Square150x150Logo.scale-200.png" />
     <Exec Command="magick -background none logo.png -gravity Center -sample 66x66 -extent 88x88 -quality 95 -strip Assets\Square44x44Logo.scale-200.png" />
