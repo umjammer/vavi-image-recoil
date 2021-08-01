@@ -745,6 +745,7 @@
 			<ext>SCS4</ext>
 			<ext>SS4</ext>
 		</format>
+		<format maxWidth="512" height="192"><ext>SSX</ext></format>
 	</platform>
 	<platform name="Sharp X68000" href="https://en.wikipedia.org/wiki/X68000">
 		<format name="Maki-chan Graphics" colors="16"><ext>MAG</ext></format>
