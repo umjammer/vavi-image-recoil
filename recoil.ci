@@ -7628,7 +7628,14 @@ public class RECOIL
 			for (int c = 0; c < 128; c++)
 				ContentPalette[c] = GetSamCoupeColor(c);
 			SetSize(512, 384, RECOILResolution.SamCoupe1x2);
-			DecodeBytes(content, 0);
+			for (int y = 0; y < 192; y++) {
+				for (int x = 0; x < 512; x++) {
+					int c = content[(y << 9) + x];
+					if (c >= 128)
+						return false;
+					Pixels[(y << 10) + x + 512] = Pixels[(y << 10) + x] = ContentPalette[c];
+				}
+			}
 			return true;
 		default:
 			return false;
