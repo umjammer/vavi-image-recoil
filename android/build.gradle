@@ -51,7 +51,7 @@ task generateIcon(type:Exec) {
 task generateRoundIcon(type:Exec) {
     inputs.files SOURCE_ICON
     outputs.file new File(ICON_DIR, 'drawable-v26/ic_launcher.png')
-    commandLine 'magick', inputs.files.asPath, '-resize', '68x68', '-gravity', 'Center', '-extent', '108x108', '-quality', '95', '-strip', outputs.files.asPath
+    commandLine 'magick', inputs.files.asPath, '-resize', '102x102', '-gravity', 'Center', '-extent', '162x162', '-quality', '95', '-strip', outputs.files.asPath
     doFirst { new File(ICON_DIR, 'drawable-v26').mkdirs() }
 }
 
