@@ -197,6 +197,15 @@ class Stream
 		}
 	}
 
+	protected bool Expect!(string s)
+	{
+		int length = s.Length;
+		for (int i = 0; i < length; i++)
+			if (ReadByte() != s[i])
+				return false;
+		return true;
+	}
+
 	/// Reads `count` bytes to `dest` starting at `destOffset`.
 	/// Returns `true` on success, `false` if not enough data.
 	protected bool ReadBytes!(byte[]! dest, int destOffset, int count)
@@ -3221,27 +3230,18 @@ class IcnParser : Stream
 		return true;
 	}
 
-	internal bool Expect!(string s)
-	{
-		if (!SkipWhitespaceAndComments())
-			return false;
-		int length = s.Length;
-		for (int i = 0; i < length; i++)
-			if (ReadByte() != s[i])
-				return false;
-		return true;
-	}
+	internal bool ExpectAfterWhitespace!(string s) => SkipWhitespaceAndComments() && Expect(s);
 
 	internal int ParseHex!()
 	{
-		if (!Expect("0x"))
+		if (!ExpectAfterWhitespace("0x"))
 			return -1;
 		return ParseInt(16, 0xffff);
 	}
 
 	internal int ParseDefine!(string s)
 	{
-		if (!Expect("#define") || !Expect(s))
+		if (!ExpectAfterWhitespace("#define") || !ExpectAfterWhitespace(s))
 			return -1;
 		return ParseHex();
 	}
@@ -3610,11 +3610,16 @@ abstract class GtiaRenderer
 		}
 	}
 
+	internal void ProcessPlayerDma!(byte[] content, int playersOffset)
+	{
+		for (int i = 0; i < 4; i++)
+			PlayerGraphics[i] = content[playersOffset + (i << 8)];
+	}
+
 	internal void ProcessSpriteDma!(byte[] content, int missileOffset)
 	{
 		MissileGraphics = content[missileOffset];
-		for (int i = 0; i < 4; i++)
-			PlayerGraphics[i] = content[missileOffset + (1 + i << 8)];
+		ProcessPlayerDma(content, missileOffset + 0x100);
 	}
 
 	const int P0   = 0x01;
@@ -3808,6 +3813,21 @@ abstract class GtiaRenderer
 		for (int i = 0; i < count; i++)
 			Colors[(gtiaMode & 0xc0) == 0x80 ? i : normalRegisters[i]] = Content[contentOffset + i * contentStride] & 0xfe;
 	}
+
+	internal int AdvanceCpuCycles(int hpos, int cpuCycles, bool nonBlank)
+	{
+		for (;;) {
+			hpos += 2;
+			int x = hpos - 118 >> 1;
+			if ((x & 1) != 0
+				? nonBlank && x >= -PlayfieldColumns && x < PlayfieldColumns // screen DMA
+				: x >= -36 && x < 0 && (x & 2) != 0) { // memory refresh
+				// DMA cycle
+			}
+			else if (--cpuCycles == 0)
+				return hpos;
+		}
+	}
 }
 
 class HcmRenderer : GtiaRenderer
@@ -3890,6 +3910,254 @@ class G2fRenderer : GtiaRenderer
 		return true;
 	}
 
+}
+
+class RastaRenderer : GtiaRenderer
+{
+	protected override int GetPlayfieldByte!(int y, int column)
+		=> Content[y * 40 + column];
+}
+
+class RastaStream : Stream
+{
+	RastaRenderer() Gtia;
+	byte[3] CpuRegisters = 0;
+
+	bool EndLine!()
+	{
+		for (;;) {
+			switch (ReadByte()) {
+			case ' ':
+			case '\t':
+			case '\r':
+				break;
+			case '\n':
+				return true;
+			case ';':
+				return SkipUntilByte('\n');
+			default:
+				return false;
+			}
+		}
+	}
+
+	int ReadCpuRegister!()
+	{
+		switch (ReadByte()) {
+		case 'a':
+			return 0;
+		case 'x':
+			return 1;
+		case 'y':
+			return 2;
+		default:
+			return -1;
+		}
+	}
+
+	int ParseHexByte!() => ParseInt(16, 0xff);
+
+	int ReadDigit!(int offset, int maxValue)
+	{
+		int digit = ReadByte() - '0';
+		return digit >= 0 && digit <= maxValue ? offset + digit : -1;
+	}
+
+	int ReadGtiaRegister!()
+	{
+		switch (ReadByte()) {
+		case 'C':
+			if (ReadByte() != 'O' || ReadByte() != 'L')
+				return -1;
+			switch (ReadByte()) {
+			case 'B':
+				return ReadByte() == 'A' && ReadByte() == 'K' ? 0x1a : -1;
+			case 'O':
+				return ReadByte() == 'R' ? ReadDigit(0x16, 2) : -1;
+			case 'P':
+				return ReadByte() == 'M' ? ReadDigit(0x12, 3) : -1;
+			default:
+				return -1;
+			}
+		case 'H':
+			return Expect("POSP") ? ReadDigit(0x00, 3) : -1;
+		default:
+			return -1;
+		}
+	}
+
+	static bool IsLetter(int b)
+	{
+		if (b == '_')
+			return true;
+		b &= ~0x20;
+		return b >= 'A' && b <= 'Z';
+	}
+
+	bool SkipUntilMnemonic!()
+	{
+		for (;;) {
+			int b = ReadByte();
+			switch (b) {
+			case -1:
+				return false;
+			case ';':
+				if (!SkipUntilByte('\n'))
+					return false;
+				break;
+			case '\r':
+			case '\n':
+				break;
+			case '\t':
+				return true;
+			default:
+				if (IsLetter(b)) {
+					// label definition
+					do
+						b = ReadByte();
+					while (IsLetter(b) || (b >= '0' && b <= '9'));
+					if (EndLine())
+						break;
+				}
+				return false;
+			}
+		}
+	}
+
+	int CpuRegisterIndex;
+	int GtiaRegisterIndex;
+
+	int ExecuteUntilPoke!()
+	{
+		int cpuCycles = 4; // STx
+		while (SkipUntilMnemonic()) {
+			switch (ReadByte()) {
+			case 'l':
+				if (ReadByte() != 'd')
+					return -1;
+				int reg = ReadCpuRegister();
+				if (reg < 0 || !Expect(" #$"))
+					return -1;
+				int value = ParseHexByte();
+				if (value < 0 || !EndLine())
+					return -1;
+				CpuRegisters[reg] = value;
+				break;
+			case 's':
+				if (ReadByte() != 't')
+					return -1;
+				CpuRegisterIndex = ReadCpuRegister();
+				if (CpuRegisterIndex < 0 || ReadByte() != ' ')
+					return -1;
+				GtiaRegisterIndex = ReadGtiaRegister();
+				if (GtiaRegisterIndex < 0 || !EndLine())
+					return -1;
+				return cpuCycles;
+			case 'n':
+				if (ReadByte() != 'o' || ReadByte() != 'p' || !EndLine())
+					return -1;
+				break;
+			default:
+				ContentOffset--;
+				return 0;
+			}
+			cpuCycles += 2; // LDx # or NOP
+		}
+		return -1;
+	}
+
+	void Poke!()
+	{
+		Gtia.Poke(GtiaRegisterIndex, CpuRegisters[CpuRegisterIndex]);
+	}
+
+	internal bool ReadIni!()
+	{
+		Gtia.PlayerHpos.Fill(0);
+		Gtia.Colors.Fill(0);
+		ContentOffset = 0;
+		for (;;) {
+			switch (ExecuteUntilPoke()) {
+			case -1:
+				return false;
+			case 0:
+				return Expect(":2 sta wsync") && EndLine();
+			default:
+				Poke();
+				break;
+			}
+		}
+	}
+
+	byte[1024] Players;
+
+	internal bool ReadPmg!()
+	{
+		ContentOffset = 0;
+		if (!SkipUntilMnemonic() || !Expect(".ds $100") || !EndLine())
+			return false;
+		bool beginLine = true;
+		for (int i = 0; i < 1024; i++) {
+			if (beginLine) {
+				if (!SkipUntilMnemonic() || !Expect(".he "))
+					return false;
+				beginLine = false;
+			}
+			int b = ParseHexByte();
+			if (b < 0)
+				return false;
+			Players[i] = b;
+			if (ReadByte() != ' ') {
+				ContentOffset--;
+				if (!EndLine())
+					return false;
+				beginLine = true;
+			}
+		}
+		return true;
+	}
+
+	bool ExpectCmpZp!() => Expect("cmp byt2") && EndLine();
+
+	internal bool ReadRp!(byte[] bitmap, int height, byte[]! frame)
+	{
+		ContentOffset = 0;
+		for (int i = 0; i < 4; i++) {
+			if (!SkipUntilMnemonic() || !Expect("nop") || !EndLine())
+				return false;
+		}
+		if (!SkipUntilMnemonic() || !ExpectCmpZp())
+			return false;
+
+		Gtia.MissileHpos.Fill(0);
+		GtiaRenderer.SetSpriteSizes(Gtia.PlayerSize, 0xff);
+		GtiaRenderer.SetSpriteSizes(Gtia.MissileSize, 0);
+		Gtia.MissileGraphics = 0;
+		Gtia.Prior = 0x14;
+		Gtia.Content = bitmap;
+		Gtia.PlayfieldColumns = 40;
+
+		for (int y = 0; y < height; y++) {
+			Gtia.ProcessPlayerDma(Players, 8 + y);
+			Gtia.StartLine(0x30);
+			for (int hpos = 7;;) {
+				int cpuCycles = ExecuteUntilPoke();
+				if (cpuCycles > 0) {
+					int untilHpos = Gtia.AdvanceCpuCycles(hpos, cpuCycles, true);
+					Gtia.DrawSpan(y, hpos >= 0x30 ? hpos : 0x30, untilHpos < 0xd0 ? untilHpos : 0xd0, AnticMode.FourColor, frame, 320);
+					hpos = untilHpos;
+					Poke();
+					continue;
+				}
+				if (cpuCycles == 0 && ExpectCmpZp()) {
+					Gtia.DrawSpan(y, hpos >= 0x30 ? hpos : 0x30, 0xd0, AnticMode.FourColor, frame, 320);
+					break;
+				}
+				return false;
+			}
+		}
+		return true;
+	}
 }
 
 class InflateStream : Stream
@@ -11532,10 +11800,10 @@ public class RECOIL
 		int size = parser.ParseDefine("ICONSIZE");
 		if (size != (width + 0xf >> 4) * height)
 			return false;
-		if (!parser.Expect("int")
-		 || !parser.Expect("image[ICONSIZE]")
-		 || !parser.Expect("=")
-		 || !parser.Expect("{"))
+		if (!parser.ExpectAfterWhitespace("int")
+		 || !parser.ExpectAfterWhitespace("image[ICONSIZE]")
+		 || !parser.ExpectAfterWhitespace("=")
+		 || !parser.ExpectAfterWhitespace("{"))
 			return false;
 		byte[maxWidth / 8 * maxHeight] bitmap;
 		for (int i = 0; ; ) {
@@ -11551,7 +11819,7 @@ public class RECOIL
 			if (content[parser.ContentOffset++] != ',')
 				return false;
 		}
-		if (!parser.Expect("};"))
+		if (!parser.ExpectAfterWhitespace("};"))
 			return false;
 		SetSize(width, height, RECOILResolution.St1x1);
 		return DecodeBlackAndWhite(bitmap, 0, size << 1, true, 0xffffff);
@@ -13888,6 +14156,22 @@ public class RECOIL
 			return false;
 		SetSize(320, height, RECOILResolution.Xe2x1);
 		byte[320 * 240] frame;
+		if (contentLength % 40 == 0) {
+			byte[128 * 1024] asm;
+			int asmLength = ReadCompanionFile(filename, "RP.INI", "rp.ini", asm, asm.Length);
+			if (asmLength > 0) {
+				RastaStream() s;
+				s.Content = asm;
+				s.ContentLength = asmLength;
+				if (!s.ReadIni())
+					return false;
+				s.ContentLength = ReadCompanionFile(filename, "PMG", "pmg", asm, asm.Length);
+				if (!s.ReadPmg())
+					return false;
+				s.ContentLength = ReadCompanionFile(filename, "RP", "rp", asm, asm.Length);
+				return s.ReadRp(content, height, frame) && ApplyAtari8Palette(frame);
+			}
+		}
 		if (height == 240) {
 			byte[1280 + 1] col;
 			switch (ReadCompanionFile(filename, "COL", "col", col, col.Length)) {
@@ -17047,8 +17331,7 @@ public class RECOIL
 					gtia.MissileGraphics = content[0x108 + y];
 				if ((dmaCtl & 8) != 0) {
 					hpos += 4 * 2; // player DMA
-					for (int i = 0; i < 4; i++)
-						gtia.PlayerGraphics[i] = content[0x208 + (i << 8) + y];
+					gtia.ProcessPlayerDma(content, 0x208 + y);
 				}
 			}
 
@@ -17064,18 +17347,7 @@ public class RECOIL
 				}
 				int addr = rasterOp & 0x1f;
 				if (addr <= 0x1b) {
-					int untilHpos = hpos;
-					for (;;) {
-						untilHpos += 2;
-						int x = untilHpos - 118 >> 1;
-						if ((x & 1) != 0
-							? anticMode != AnticMode.Blank && x >= -gtia.PlayfieldColumns && x < gtia.PlayfieldColumns // screen DMA
-							: x >= -36 && x < 0 && (x & 2) != 0) { // memory refresh
-							// DMA cycle
-						}
-						else if (--cpuCycles == 0)
-							break;
-					}
+					int untilHpos = gtia.AdvanceCpuCycles(hpos, cpuCycles, anticMode != AnticMode.Blank);
 					gtia.DrawSpan(y, hpos >= 0x2c ? hpos : 0x2c, untilHpos < 0xd4 ? untilHpos : 0xd4, anticMode, frame, 336);
 					hpos = untilHpos;
 					gtia.Poke(addr, a);

@@ -225,6 +225,12 @@
 			<ext>MIC</ext>
 			<companionExt>COL</companionExt>
 		</format>
+		<format name="RastaConverter" width="160" maxHeight="240" colors="128">
+			<ext>MIC</ext>
+			<companionExt>PMG</companionExt>
+			<companionExt>RP</companionExt>
+			<companionExt>RP.INI</companionExt>
+		</format>
 		<format name="AtariTools-800 missile" width="2" height="240" colors="2"><ext>MIS</ext></format>
 		<format name="Mad Studio multi-color player" maxWidth="56" maxHeight="40" colors="5"><ext>MPL</ext></format>
 		<format name="Mad Studio missile" width="2" maxHeight="34" colors="2"><ext>MSL</ext></format>
