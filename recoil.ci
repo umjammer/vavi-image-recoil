@@ -9831,6 +9831,12 @@ public class RECOIL
 			&& DecodePetScreen(content, 2, 0x402, 0x3eb, 40, 25);
 	}
 
+	bool DecodePdr!(byte[] content, int contentLength)
+	{
+		return contentLength == 2029
+			&& DecodePetScreen(content, 5, 0x405, 3, 40, 25);
+	}
+
 	bool DecodeScrCol!(string filename, byte[] content, int contentLength)
 	{
 		if (contentLength != 1002)
@@ -18270,6 +18276,7 @@ public class RECOIL
 		case PackExt("PCI"):
 		case PackExt("PCS"):
 		case PackExt("PCT"):
+		case PackExt("PDR"):
 		case PackExt("PET"):
 		case PackExt("PG1"):
 		case PackExt("PG2"):
@@ -19017,6 +19024,8 @@ public class RECOIL
 			return DecodePcs(content, contentLength);
 		case PackExt("PCT"):
 			return DecodePct(content, contentLength);
+		case PackExt("PDR"):
+			return DecodePdr(content, contentLength);
 		case PackExt("PET"):
 			return DecodePet(content, contentLength);
 		case PackExt("PG1"):
