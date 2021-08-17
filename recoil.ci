@@ -8980,9 +8980,7 @@ public class RECOIL
 
 	void SetC16Palette!()
 	{
-		byte[] pal = resource<byte[]>("c16.pal");
-		for (int i = 0; i < 256; i++)
-			ContentPalette[i] = pal[i * 3] << 16 | pal[i * 3 + 1] << 8 | pal[i * 3 + 2];
+		DecodeR8G8B8Colors(resource<byte[]>("c16.pal"), 0, 128, ContentPalette, 0);
 	}
 
 	bool DecodeP4i!(byte[] content, int contentLength)
@@ -8998,18 +8996,18 @@ public class RECOIL
 						int c = content[0x802 + offset] >> (~x & 6) & 3;
 						switch (c) {
 						case 0:
-							c = content[0x401];
+							c = (content[0x401] & 7) << 4 | content[0x401] >> 4;
 							break;
 						case 1:
 							offset >>= 3;
-							c = (content[0x402 + offset] & 0xf0) | (content[2 + offset] & 7);
+							c = (content[2 + offset] & 7) << 4 | content[0x402 + offset] >> 4;
 							break;
 						case 2:
 							offset >>= 3;
-							c = (content[0x402 + offset] & 0xf) << 4 | content[2 + offset] >> 4;
+							c = (content[2 + offset] & 0x70) | (content[0x402 + offset] & 0xf);
 							break;
 						default:
-							c = content[0x400];
+							c = (content[0x400] & 7) << 4 | content[0x400] >> 4;
 							break;
 						}
 						Pixels[y * 320 + x] = ContentPalette[c];
@@ -9025,9 +9023,9 @@ public class RECOIL
 						int c = content[0x802 + offset] >> (~x & 7) & 1;
 						offset >>= 3;
 						if (c == 0)
-							c = (content[0x402 + offset] & 0xf) << 4 | content[2 + offset] >> 4;
+							c = (content[2 + offset] & 0x70) | (content[0x402 + offset] & 0xf);
 						else
-							c = (content[0x402 + offset] & 0xf0) | (content[2 + offset] & 7);
+							c = (content[2 + offset] & 7) << 4 | content[0x402 + offset] >> 4;
 						Pixels[y * 320 + x] = ContentPalette[c];
 					}
 				}
@@ -9038,7 +9036,7 @@ public class RECOIL
 			SetC16Palette();
 			for (int y = 0; y < 64; y++) {
 				for (int x = 0; x < 256; x++) {
-					const byte[4] logoColors = { 0, 0x13, 0x15, 0x17 };
+					const byte[4] logoColors = { 0, 0x31, 0x51, 0x71 };
 					int c = logoColors[content[2 + ((x & ~7) << 3) + y] >> (~x & 6) & 3];
 					Pixels[(y << 8) + x] = ContentPalette[c];
 				}
