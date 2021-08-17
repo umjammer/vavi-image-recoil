@@ -567,7 +567,7 @@ static void SelectAndOpenPalette(void)
 		0,
 		_T("All palette files (*.act;*.pal;*.vpl)\0*.act;*pal;*.vpl\0"
 		"Atari 8-bit palettes (*.act;*.pal)\0*.act;*pal\0"
-		"C64 palettes (*.vpl)\0*.vpl\0"
+		"C64 and C16 palettes (*.vpl)\0*.vpl\0"
 		"\0"),
 		NULL,
 		0,

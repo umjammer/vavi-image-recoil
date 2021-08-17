@@ -394,7 +394,7 @@ class SprStream : Stream
 
 class VplStream : Stream
 {
-	int[16] Palette;
+	int[128] Palette;
 
 	int SkipWhitespace!()
 	{
@@ -4485,6 +4485,8 @@ public class RECOIL
 
 	int[16] C64Palette;
 
+	int[128] C16Palette;
+
 	int[256] Atari8Palette;
 
 	int LeftSkip;
@@ -4517,6 +4519,7 @@ public class RECOIL
 		C64Palette[14] = 0x6c5eb5;
 		C64Palette[15] = 0x959595;
 
+		DecodeR8G8B8Colors(resource<byte[]>("c16.pal"), 0, 128, C16Palette, 0);
 		DecodeR8G8B8Colors(Ntsc ? resource<byte[]>("altirrantsc.pal") : resource<byte[]>("altirrapal.pal"), 0, 256, Atari8Palette, 0);
 	}
 
@@ -4544,7 +4547,7 @@ public class RECOIL
 	/// Sets a custom platform palette.
 	///
 	/// * 768-byte `ACT`/`PAL` file with an Atari 8-bit palette
-	/// * `VPL` VICE Palette file with a C64 palette
+	/// * `VPL` VICE Palette file with a C64 or C16 palette
 	///
 	/// Returns `true` on success.
 	public bool SetPlatformPalette!(
@@ -4571,7 +4574,9 @@ public class RECOIL
 			case 16:
 				vpl.CopyTo(C64Palette, 16);
 				return true;
-			// TODO: C16
+			case 128:
+				vpl.CopyTo(C16Palette, 128);
+				return true;
 			default:
 				return false;
 			}
@@ -8978,18 +8983,12 @@ public class RECOIL
 
 	// Commodore 16 formats.
 
-	void SetC16Palette!()
-	{
-		DecodeR8G8B8Colors(resource<byte[]>("c16.pal"), 0, 128, ContentPalette, 0);
-	}
-
 	bool DecodeP4i!(byte[] content, int contentLength)
 	{
 		switch (contentLength) {
 		case 10050:
 			if (IsStringAt(content, 0x3fc, "MULT")) {
 				SetSize(320, 200, RECOILResolution.C162x1);
-				SetC16Palette();
 				for (int y = 0; y < 200; y++) {
 					for (int x = 0; x < 320; x++) {
 						int offset = (y & ~7) * 40 + (x & ~7) + (y & 7);
@@ -9010,13 +9009,12 @@ public class RECOIL
 							c = (content[0x400] & 7) << 4 | content[0x400] >> 4;
 							break;
 						}
-						Pixels[y * 320 + x] = ContentPalette[c];
+						Pixels[y * 320 + x] = C16Palette[c];
 					}
 				}
 			}
 			else {
 				SetSize(320, 200, RECOILResolution.C161x1);
-				SetC16Palette();
 				for (int y = 0; y < 200; y++) {
 					for (int x = 0; x < 320; x++) {
 						int offset = (y & ~7) * 40 + (x & ~7) + (y & 7);
@@ -9026,19 +9024,18 @@ public class RECOIL
 							c = (content[2 + offset] & 0x70) | (content[0x402 + offset] & 0xf);
 						else
 							c = (content[2 + offset] & 7) << 4 | content[0x402 + offset] >> 4;
-						Pixels[y * 320 + x] = ContentPalette[c];
+						Pixels[y * 320 + x] = C16Palette[c];
 					}
 				}
 			}
 			break;
 		case 2050:
 			SetSize(256, 64, RECOILResolution.C162x1);
-			SetC16Palette();
 			for (int y = 0; y < 64; y++) {
 				for (int x = 0; x < 256; x++) {
 					const byte[4] logoColors = { 0, 0x31, 0x51, 0x71 };
 					int c = logoColors[content[2 + ((x & ~7) << 3) + y] >> (~x & 6) & 3];
-					Pixels[(y << 8) + x] = ContentPalette[c];
+					Pixels[(y << 8) + x] = C16Palette[c];
 				}
 			}
 			break;
