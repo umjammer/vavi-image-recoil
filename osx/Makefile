@@ -2,7 +2,7 @@ VERSION = 6.1.1
 
 CFLAGS = -O2 -Wall -mmacosx-version-min=10.6 -arch x86_64 -arch arm64
 CODESIGN = codesign --options runtime -f -s $(PORK_CODESIGNING_IDENTITY)
-QLRECOIL = bin/RECOIL.qlgenerator/Contents/MacOS/qlrecoil 
+QLRECOIL = bin/RECOIL.qlgenerator/Contents/MacOS/qlrecoil
 PLIST = bin/RECOIL.qlgenerator/Contents/Info.plist
 QLCODESIGN = bin/RECOIL.qlgenerator/Contents/_CodeSignature/CodeResources
 

@@ -12,7 +12,7 @@ CAN_INSTALL_MAGICK := $(and $(MAGICK_CODER_PATH),$(MAGICK_CONFIG_PATH))
 endif
 
 CITO = cito
-CC = gcc 
+CC = gcc
 CFLAGS = -O2 -Wall
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)

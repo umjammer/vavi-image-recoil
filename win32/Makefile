@@ -39,9 +39,9 @@ all: $(WIN32_BIN) $(WIN64_BIN)
 
 %/IM_MOD_RL_recoil_.dll: ../imagemagick/recoilmagick.c ../formats.h ../recoil.c ../recoil.h
 	$(DO)$(DO_CC) -D MAGICK7 -I"$(IMAGEMAGICK_$(@D)_DIR)"/include -lCORE_RL_MagickCore_ -L"$(IMAGEMAGICK_$(@D)_DIR)" -static-libgcc
- 
+
 %/Xrecoil.usr: ../Xrecoil.c ../formats.h ../recoil-stdio.c ../recoil-stdio.h ../recoil.c ../recoil.h
-	$(DO)$(DO_CC) -static 
+	$(DO)$(DO_CC) -static
 
 %/recoilwin.exe: recoilwin/recoilwin.c recoilwin/recoilwin.h recoil-win32.c recoil-win32.h %/recoilwin-res.o ../pngsave.c ../pngsave.h ../formats.h ../recoil.c ../recoil.h
 	$(DO)$(DO_CC) -municode -Wl,-subsystem,windows -lcomctl32 -lcomdlg32 -lgdi32 -lpng16 -lz

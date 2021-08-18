@@ -177,7 +177,7 @@ ModuleExport unsigned long RegisterRECOILImage(void)
 		entry->decoder = ReadRECOILImage;
 		entry->magick = IsRECOIL;
 		RegisterMagickInfo(entry);
-	}	
+	}
 	return MagickImageCoderSignature;
 }
 
