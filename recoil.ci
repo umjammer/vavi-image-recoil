@@ -19535,6 +19535,9 @@ public class RECOIL
 		case RECOILResolution.Vbxe2x1:
 			// https://pineight.com/mw/index.php?title=Dot_clock_rates
 			// http://virtualdub.org/downloads/Altirra%20Hardware%20Reference%20Manual.pdf
+		case RECOILResolution.C161x1:
+		case RECOILResolution.C162x1:
+			// https://plus4world.powweb.com/plus4encyclopedia/500248
 			return Ntsc ? NtscTvYPixelsPerMeter * 7 / 12
 				: PalTvYPixelsPerMeter * (1773447 * 4 / 1000) / (PalSquareDotClock / 1000);
 		case RECOILResolution.Portfolio1x1:
@@ -19578,6 +19581,8 @@ public class RECOIL
 		case RECOILResolution.Xe8x8:
 		case RECOILResolution.Vbxe1x1:
 		case RECOILResolution.Vbxe2x1:
+		case RECOILResolution.C161x1:
+		case RECOILResolution.C162x1:
 			return Ntsc ? NtscTvYPixelsPerMeter / 2 : PalTvYPixelsPerMeter / 2;
 		case RECOILResolution.Portfolio1x1:
 			return PortfolioPixelsPerMeter;
