@@ -19560,6 +19560,9 @@ public class RECOIL
 		case RECOILResolution.Msx2Plus2x1i:
 			// https://pineight.com/mw/index.php?title=Dot_clock_rates
 			return NtscTvYPixelsPerMeter * 7 / 8;
+		case RECOILResolution.Oric1x1:
+			// http://oric.free.fr/HARDWARE/ula.html
+			return PalTvYPixelsPerMeter * 6000 / (PalSquareDotClock / 1000);
 		// TODO: other platforms
 		default:
 			return 0;
@@ -19600,6 +19603,8 @@ public class RECOIL
 		case RECOILResolution.Msx22x1i:
 		case RECOILResolution.Msx2Plus2x1i:
 			return NtscTvYPixelsPerMeter;
+		case RECOILResolution.Oric1x1:
+			return PalTvYPixelsPerMeter / 2;
 		// TODO: other platforms
 		default:
 			return 0;
