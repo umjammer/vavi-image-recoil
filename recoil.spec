@@ -12,9 +12,10 @@ BuildRoot: %{_tmppath}/%{name}-root
 %description
 Decoder of pictures in native formats of
 Amiga, Amstrad CPC, Apple II, Atari 8-bit/Portfolio/ST/TT/Falcon, BBC Micro,
-Commodore VIC-20/16/64/128, Electronika BK, FM Towns, Macintosh 128K, MSX,
-NEC PC-80/88/98, Oric, Psion Series 3, SAM Coupe, Sharp X68000, Tandy 1000,
-Timex 2048, TRS-80, TRS-80 Color Computer, ZX81 and ZX Spectrum computers.
+Commodore VIC-20/64/16/116/Plus4/128, Electronika BK, FM Towns, Macintosh 128K,
+MSX, NEC PC-80/88/98, Oric, Psion Series 3, SAM Coupe, Sharp X68000,
+Tandy 1000, Timex 2048, TRS-80, TRS-80 Color Computer, ZX81 and ZX Spectrum
+computers.
 
 %package 2png
 Summary: Converter of retro computer image files
@@ -22,9 +23,10 @@ Summary: Converter of retro computer image files
 %description 2png
 Provides "recoil2png" command-line converter of pictures in native formats of
 Amiga, Amstrad CPC, Apple II, Atari 8-bit/Portfolio/ST/TT/Falcon, BBC Micro,
-Commodore VIC-20/16/64/128, Electronika BK, FM Towns, Macintosh 128K, MSX,
-NEC PC-80/88/98, Oric, Psion Series 3, SAM Coupe, Sharp X68000, Tandy 1000,
-Timex 2048, TRS-80, TRS-80 Color Computer, ZX81 and ZX Spectrum computers.
+Commodore VIC-20/64/16/116/Plus4/128, Electronika BK, FM Towns, Macintosh 128K,
+MSX, NEC PC-80/88/98, Oric, Psion Series 3, SAM Coupe, Sharp X68000,
+Tandy 1000, Timex 2048, TRS-80, TRS-80 Color Computer, ZX81 and ZX Spectrum
+computers.
 
 %package thumbnailer
 Summary: GNOME thumbnailer for retro computer image files
@@ -34,9 +36,10 @@ BuildArch: noarch
 %description thumbnailer
 GNOME thumbnailer for pictures in native formats of
 Amiga, Amstrad CPC, Apple II, Atari 8-bit/Portfolio/ST/TT/Falcon, BBC Micro,
-Commodore VIC-20/16/64/128, Electronika BK, FM Towns, Macintosh 128K, MSX,
-NEC PC-80/88/98, Oric, Psion Series 3, SAM Coupe, Sharp X68000, Tandy 1000,
-Timex 2048, TRS-80, TRS-80 Color Computer, ZX81 and ZX Spectrum computers.
+Commodore VIC-20/64/16/116/Plus4/128, Electronika BK, FM Towns, Macintosh 128K,
+MSX, NEC PC-80/88/98, Oric, Psion Series 3, SAM Coupe, Sharp X68000,
+Tandy 1000, Timex 2048, TRS-80, TRS-80 Color Computer, ZX81 and ZX Spectrum
+computers.
 
 %global debug_package %{nil}
 

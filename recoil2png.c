@@ -37,7 +37,7 @@ static void print_help(void)
 		"-o FILE  --output=FILE   Set output file name\n"
 		"         --pal           Emulate PAL video standard if applicable (default)\n"
 		"         --ntsc          Emulate NTSC video standard if applicable\n"
-		"-p FILE  --palette=FILE  Load Atari 8-bit, C64 or C16 palette\n"
+		"-p FILE  --palette=FILE  Load Atari 8-bit, C64 or C16/C116/Plus4 palette\n"
 		"-h       --help          Display this information\n"
 		"-v       --version       Display version information\n"
 	);

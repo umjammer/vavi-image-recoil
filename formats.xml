@@ -463,11 +463,6 @@
 	<platform name="Commodore VIC-20" href="https://en.wikipedia.org/wiki/Commodore_VIC-20">
 		<format name="Turbo Rascal Syntax Error" colors="8"><ext>FLF</ext></format>
 	</platform>
-	<platform name="Commodore 16" href="https://en.wikipedia.org/wiki/Commodore_16">
-		<format name="Botticelli" width="320" height="200" colors="121"><ext>P4I</ext></format>
-		<format name="Multi Botticelli" width="160" height="200" colors="121"><ext>P4I</ext></format>
-		<format width="128" height="64" colors="4"><ext>P4I</ext></format>
-	</platform>
 	<platform name="Commodore 64" href="https://en.wikipedia.org/wiki/Commodore_64">
 		<format name="GoDot" width="320" height="200" colors="16"><ext>4BT</ext></format>
 		<format name="8x8 font" colors="2"><ext>64C</ext></format>
@@ -573,6 +568,11 @@
 		<format name="SpritePad"><ext>SPD</ext></format>
 		<format maxWidth="320" height="200" colors="16"><ext>VIC</ext></format>
 		<format name="Vidcom 64Paint" width="160" height="200" colors="16"><ext>VID</ext></format>
+	</platform>
+	<platform name="Commodore 16/116/Plus4" href="https://en.wikipedia.org/wiki/Commodore_16">
+		<format name="Botticelli" width="320" height="200" colors="121"><ext>P4I</ext></format>
+		<format name="Multi Botticelli" width="160" height="200" colors="121"><ext>P4I</ext></format>
+		<format width="128" height="64" colors="4"><ext>P4I</ext></format>
 	</platform>
 	<platform name="Commodore 128" href="https://en.wikipedia.org/wiki/Commodore_128">
 		<format name="VDC BitMap" colors="2">

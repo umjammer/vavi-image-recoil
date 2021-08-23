@@ -19364,7 +19364,7 @@ public class RECOIL
 			return "Commodore VIC-20";
 		case RECOILResolution.C161x1:
 		case RECOILResolution.C162x1:
-			return "Commodore 16";
+			return "Commodore 16/116/Plus4";
 		case RECOILResolution.C641x1:
 		case RECOILResolution.C642x1:
 			return "Commodore 64";
