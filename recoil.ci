@@ -4492,7 +4492,7 @@ public class RECOIL
 	int LeftSkip;
 
 	/// Maximum length of a string returned by `GetPlatform()`.
-	public const int MaxPlatformLength = "TRS-80 Color Computer".Length;
+	public const int MaxPlatformLength = "Commodore 16/116/Plus4".Length;
 
 	/// Selects the PAL/NTSC video standard for applicable platforms.
 	/// Resets all platform palettes loaded with `SetPlatformPalette` to default.
