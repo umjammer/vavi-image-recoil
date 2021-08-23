@@ -110,9 +110,11 @@
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
-  <Target Name="BeforeBuild">
+  <Target Name="GenerateFromFormats" BeforeTargets="BeforeBuild" Inputs="Package.appxmanifest.xsl;FilePicker.cs.xsl;../formats.xml" Outputs="Package.appxmanifest;FilePicker.cs">
     <XslTransformation XslInputPath="Package.appxmanifest.xsl" XmlInputPaths="../formats.xml" OutputPaths="Package.appxmanifest" />
     <XslTransformation XslInputPath="FilePicker.cs.xsl" XmlInputPaths="../formats.xml" OutputPaths="FilePicker.cs" />
+  </Target>
+  <Target Name="GenerateAssets" BeforeTargets="BeforeBuild" Inputs="logo.png" Outputs="Assets\FileLogo.scale-200.png;Assets\SplashScreen.scale-200.png;Assets\Square150x150Logo.scale-200.png;Assets\Square44x44Logo.scale-200.png;Assets\StoreLogo.png;Assets\Wide310x150Logo.scale-200.png">
     <MakeDir Directories="Assets" />
     <Exec Command="magick -background #006374 logo.png -gravity Center -sample 72x72 -extent 96x96 -quality 95 -strip Assets\FileLogo.scale-200.png" />
     <Exec Command="magick -background none logo.png -gravity Center -sample 400x400 -extent 1240x600 -quality 95 -strip Assets\SplashScreen.scale-200.png" />
@@ -120,6 +122,8 @@
     <Exec Command="magick -background none logo.png -gravity Center -sample 66x66 -extent 88x88 -quality 95 -strip Assets\Square44x44Logo.scale-200.png" />
     <Exec Command="magick -background none logo.png -gravity Center -sample 38x38 -extent 50x50 -quality 95 -strip Assets\StoreLogo.png" />
     <Exec Command="magick -background none logo.png -gravity Center -sample 200x200 -extent 620x300 -quality 95 -strip Assets\Wide310x150Logo.scale-200.png" />
+  </Target>
+  <Target Name="GenerateCode" BeforeTargets="BeforeCompile" Inputs="../recoil.ci;../atari8.fnt;../altirrapal.pal;../c16.pal;../c64.fnt;../zx81.fnt" Outputs="RECOIL.cs">
     <Exec Command="cito -o RECOIL.cs -I .. -n Recoil ../recoil.ci" />
   </Target>
 </Project>
