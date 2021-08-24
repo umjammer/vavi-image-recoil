@@ -19535,13 +19535,21 @@ public class RECOIL
 		case RECOILResolution.Vbxe2x1:
 			// https://pineight.com/mw/index.php?title=Dot_clock_rates
 			// http://virtualdub.org/downloads/Altirra%20Hardware%20Reference%20Manual.pdf
+			return Ntsc ? NtscTvYPixelsPerMeter * 7 / 12
+				: PalTvYPixelsPerMeter * (1773447 * 4 / 1000) / (PalSquareDotClock / 1000);
+		case RECOILResolution.Portfolio1x1:
+			return PortfolioPixelsPerMeter;
+		case RECOILResolution.Vic202x1:
+			// http://tinyvga.com/6561
+			// https://en.wikipedia.org/wiki/List_of_8-bit_computer_hardware_graphics#Commodore_VIC-20
+			// double, because we emit 2x1
+			return Ntsc ? NtscTvYPixelsPerMeter * 2 / 3
+				: PalTvYPixelsPerMeter * 3 / 5;
 		case RECOILResolution.C161x1:
 		case RECOILResolution.C162x1:
 			// https://plus4world.powweb.com/plus4encyclopedia/500248
 			return Ntsc ? NtscTvYPixelsPerMeter * 7 / 12
 				: PalTvYPixelsPerMeter * (1773447 * 4 / 1000) / (PalSquareDotClock / 1000);
-		case RECOILResolution.Portfolio1x1:
-			return PortfolioPixelsPerMeter;
 		case RECOILResolution.C641x1:
 		case RECOILResolution.C642x1:
 			// https://codebase64.org/doku.php?id=base:cpu_clocking
@@ -19584,11 +19592,13 @@ public class RECOIL
 		case RECOILResolution.Xe8x8:
 		case RECOILResolution.Vbxe1x1:
 		case RECOILResolution.Vbxe2x1:
-		case RECOILResolution.C161x1:
-		case RECOILResolution.C162x1:
 			return Ntsc ? NtscTvYPixelsPerMeter / 2 : PalTvYPixelsPerMeter / 2;
 		case RECOILResolution.Portfolio1x1:
 			return PortfolioPixelsPerMeter;
+		case RECOILResolution.Vic202x1:
+		case RECOILResolution.C161x1:
+		case RECOILResolution.C162x1:
+			return Ntsc ? NtscTvYPixelsPerMeter / 2 : PalTvYPixelsPerMeter / 2;
 		case RECOILResolution.C641x1:
 		case RECOILResolution.C642x1:
 			return Ntsc ? NtscTvYPixelsPerMeter / 2 : PalTvYPixelsPerMeter / 2;
