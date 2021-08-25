@@ -19539,6 +19539,15 @@ public class RECOIL
 				: PalTvYPixelsPerMeter * (1773447 * 4 / 1000) / (PalSquareDotClock / 1000);
 		case RECOILResolution.Portfolio1x1:
 			return PortfolioPixelsPerMeter;
+		case RECOILResolution.Bbc1x1:
+		case RECOILResolution.Bbc2x1:
+			// https://stardot.org.uk/forums/viewtopic.php?t=17615
+			return Ntsc ? NtscTvYPixelsPerMeter * 16000 / 2 / (NtscSquareDotClock / 1000)
+				: PalTvYPixelsPerMeter * 16000 / 2 / (PalSquareDotClock / 1000);
+		case RECOILResolution.Bbc1x2:
+			// https://stardot.org.uk/forums/viewtopic.php?t=17615
+			return Ntsc ? NtscTvYPixelsPerMeter * 16000 / (NtscSquareDotClock / 1000)
+				: PalTvYPixelsPerMeter * 16000 / (PalSquareDotClock / 1000);
 		case RECOILResolution.Vic202x1:
 			// http://tinyvga.com/6561
 			// https://en.wikipedia.org/wiki/List_of_8-bit_computer_hardware_graphics#Commodore_VIC-20
@@ -19595,6 +19604,11 @@ public class RECOIL
 			return Ntsc ? NtscTvYPixelsPerMeter / 2 : PalTvYPixelsPerMeter / 2;
 		case RECOILResolution.Portfolio1x1:
 			return PortfolioPixelsPerMeter;
+		case RECOILResolution.Bbc1x1:
+		case RECOILResolution.Bbc2x1:
+			return Ntsc ? NtscTvYPixelsPerMeter / 2 : PalTvYPixelsPerMeter / 2;
+		case RECOILResolution.Bbc1x2:
+			return Ntsc ? NtscTvYPixelsPerMeter : PalTvYPixelsPerMeter;
 		case RECOILResolution.Vic202x1:
 		case RECOILResolution.C161x1:
 		case RECOILResolution.C162x1:
