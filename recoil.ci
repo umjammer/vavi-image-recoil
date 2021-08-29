@@ -19580,6 +19580,9 @@ public class RECOIL
 		case RECOILResolution.Oric1x1:
 			// http://oric.free.fr/HARDWARE/ula.html
 			return PalTvYPixelsPerMeter * 6000 / (PalSquareDotClock / 1000);
+		case RECOILResolution.Spectrum1x1:
+		case RECOILResolution.Spectrum4x4:
+			return PalTvYPixelsPerMeter * 7000 / (PalSquareDotClock / 1000);
 		// TODO: other platforms
 		default:
 			return 0;
@@ -19628,6 +19631,9 @@ public class RECOIL
 		case RECOILResolution.Msx2Plus2x1i:
 			return NtscTvYPixelsPerMeter;
 		case RECOILResolution.Oric1x1:
+			return PalTvYPixelsPerMeter / 2;
+		case RECOILResolution.Spectrum1x1:
+		case RECOILResolution.Spectrum4x4:
 			return PalTvYPixelsPerMeter / 2;
 		// TODO: other platforms
 		default:
