@@ -123,6 +123,7 @@ enum RECOILResolution
 	SamCoupe1x2,
 	X68K1x1,
 	Tandy1x1,
+	Zx811x1,
 	Spectrum1x1,
 	Spectrum4x4,
 	SpectrumUlaPlus1x1,
@@ -133,8 +134,7 @@ enum RECOILResolution
 	Trs1x1,
 	Trs1x2,
 	Coco1x1,
-	Coco2x2,
-	Zx811x1
+	Coco2x2
 }
 
 enum IffType
@@ -19410,6 +19410,8 @@ public class RECOIL
 			return "Sharp X68000";
 		case RECOILResolution.Tandy1x1:
 			return "Tandy 1000";
+		case RECOILResolution.Zx811x1:
+			return "ZX81";
 		case RECOILResolution.Spectrum1x1:
 		case RECOILResolution.Spectrum4x4:
 			return "ZX Spectrum";
@@ -19428,8 +19430,6 @@ public class RECOIL
 		case RECOILResolution.Coco1x1:
 		case RECOILResolution.Coco2x2:
 			return "TRS-80 Color Computer";
-		case RECOILResolution.Zx811x1:
-			return "ZX81";
 		default:
 			return "Unknown";
 		}
@@ -19580,6 +19580,8 @@ public class RECOIL
 		case RECOILResolution.Oric1x1:
 			// http://oric.free.fr/HARDWARE/ula.html
 			return PalTvYPixelsPerMeter * 6000 / (PalSquareDotClock / 1000);
+		case RECOILResolution.Zx811x1:
+			return PalTvYPixelsPerMeter * 6500 / (PalSquareDotClock / 1000);
 		case RECOILResolution.Spectrum1x1:
 		case RECOILResolution.Spectrum4x4:
 		case RECOILResolution.SpectrumUlaPlus1x1:
@@ -19589,8 +19591,6 @@ public class RECOIL
 			return PalTvYPixelsPerMeter * 7000 / (PalSquareDotClock / 1000);
 		case RECOILResolution.Timex1x2:
 			return PalTvYPixelsPerMeter * 7000 * 2 / (PalSquareDotClock / 1000);
-		case RECOILResolution.Zx811x1:
-			return PalTvYPixelsPerMeter * 6500 / (PalSquareDotClock / 1000);
 		// TODO: other platforms
 		default:
 			return 0;
@@ -19640,6 +19640,8 @@ public class RECOIL
 			return NtscTvYPixelsPerMeter;
 		case RECOILResolution.Oric1x1:
 			return PalTvYPixelsPerMeter / 2;
+		case RECOILResolution.Zx811x1:
+			return PalTvYPixelsPerMeter / 2;
 		case RECOILResolution.Spectrum1x1:
 		case RECOILResolution.Spectrum4x4:
 		case RECOILResolution.SpectrumUlaPlus1x1:
@@ -19649,8 +19651,6 @@ public class RECOIL
 			return PalTvYPixelsPerMeter / 2;
 		case RECOILResolution.Timex1x2:
 			return PalTvYPixelsPerMeter;
-		case RECOILResolution.Zx811x1:
-			return PalTvYPixelsPerMeter / 2;
 		// TODO: other platforms
 		default:
 			return 0;
