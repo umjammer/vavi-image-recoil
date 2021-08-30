@@ -19582,7 +19582,13 @@ public class RECOIL
 			return PalTvYPixelsPerMeter * 6000 / (PalSquareDotClock / 1000);
 		case RECOILResolution.Spectrum1x1:
 		case RECOILResolution.Spectrum4x4:
+		case RECOILResolution.SpectrumUlaPlus1x1:
+		case RECOILResolution.ZxEvolution1x1:
+		case RECOILResolution.SpectrumNext1x1:
+		case RECOILResolution.Timex1x1:
 			return PalTvYPixelsPerMeter * 7000 / (PalSquareDotClock / 1000);
+		case RECOILResolution.Timex1x2:
+			return PalTvYPixelsPerMeter * 7000 * 2 / (PalSquareDotClock / 1000);
 		// TODO: other platforms
 		default:
 			return 0;
@@ -19634,7 +19640,13 @@ public class RECOIL
 			return PalTvYPixelsPerMeter / 2;
 		case RECOILResolution.Spectrum1x1:
 		case RECOILResolution.Spectrum4x4:
+		case RECOILResolution.SpectrumUlaPlus1x1:
+		case RECOILResolution.ZxEvolution1x1:
+		case RECOILResolution.SpectrumNext1x1:
+		case RECOILResolution.Timex1x1:
 			return PalTvYPixelsPerMeter / 2;
+		case RECOILResolution.Timex1x2:
+			return PalTvYPixelsPerMeter;
 		// TODO: other platforms
 		default:
 			return 0;
