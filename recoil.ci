@@ -19589,6 +19589,8 @@ public class RECOIL
 			return PalTvYPixelsPerMeter * 7000 / (PalSquareDotClock / 1000);
 		case RECOILResolution.Timex1x2:
 			return PalTvYPixelsPerMeter * 7000 * 2 / (PalSquareDotClock / 1000);
+		case RECOILResolution.Zx811x1:
+			return PalTvYPixelsPerMeter * 6500 / (PalSquareDotClock / 1000);
 		// TODO: other platforms
 		default:
 			return 0;
@@ -19647,6 +19649,8 @@ public class RECOIL
 			return PalTvYPixelsPerMeter / 2;
 		case RECOILResolution.Timex1x2:
 			return PalTvYPixelsPerMeter;
+		case RECOILResolution.Zx811x1:
+			return PalTvYPixelsPerMeter / 2;
 		// TODO: other platforms
 		default:
 			return 0;
