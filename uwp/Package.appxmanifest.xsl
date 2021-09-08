@@ -44,7 +44,8 @@
 									<!-- MSP and SCR file type associations are reserved for system use. -->
 									<!-- ATR is likely an Atari 8-bit disk image and not a ZX Spectrum picture. RECOIL only supports the latter. -->
 									<!-- CPT is likely a Corel Photo Paint image. -->
-									<xsl:for-each select="platform/format/ext[not(. = following::ext) and . != 'MSP' and . != 'SCR' and . != 'ATR' and . != 'CPT']">
+									<!-- ODF is likely an Open Document Formula. -->
+									<xsl:for-each select="platform/format/ext[not(. = following::ext) and . != 'MSP' and . != 'SCR' and . != 'ATR' and . != 'CPT' and . != 'ODF']">
 										<xsl:sort />
 										<uap:FileType>.<xsl:value-of select="translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')" /></uap:FileType>
 									</xsl:for-each>

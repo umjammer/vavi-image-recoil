@@ -15635,6 +15635,19 @@ public class RECOIL
 		return ApplyAtari8Palette(frame);
 	}
 
+	bool DecodeOdf!(byte[] content, int contentLength)
+	{
+		if (contentLength != 1280)
+			return false;
+		SetSize(256, 40, RECOILResolution.Xe1x1);
+		byte[256 * 40] frame;
+		for (int y = 0; y < 40; y++) {
+			for (int x = 0; x < 256; x++)
+				frame[y << 8 | x] = (content[(y / 10) * 320 + (x >> 3) * 10 + y % 10] >> (~x & 7) & 1) == 0 ? 0 : 0xe;
+		}
+		return ApplyAtari8Palette(frame);
+	}
+
 	bool DecodeNlq!(byte[] content, int contentLength)
 	{
 		if (contentLength < 19 + 90 * 4 || !IsStringAt(content, 0, "DAISY-DOT NLQ FONT") || content[18] != 0x9b)
@@ -18255,6 +18268,7 @@ public class RECOIL
 		case PackExt("NLQ"):
 		case PackExt("NXI"):
 		case PackExt("OCP"):
+		case PackExt("ODF"):
 		case PackExt("P"):
 		case PackExt("P11"):
 		case PackExt("P3C"):
@@ -18990,6 +19004,8 @@ public class RECOIL
 			return DecodeNxi(content, contentLength);
 		case PackExt("OCP"):
 			return DecodeOcp(content, contentLength);
+		case PackExt("ODF"):
+			return DecodeOdf(content, contentLength);
 		case PackExt("P"):
 			return DecodeP(content, contentLength);
 		case PackExt("P11"):

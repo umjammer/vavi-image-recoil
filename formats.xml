@@ -235,6 +235,7 @@
 		<format name="Mad Studio multi-color player" maxWidth="56" maxHeight="40" colors="5"><ext>MPL</ext></format>
 		<format name="Mad Studio missile" width="2" maxHeight="34" colors="2"><ext>MSL</ext></format>
 		<format name="Daisy-Dot font" colors="2"><ext>NLQ</ext></format>
+		<format name="OD Font Editor" colors="2"><ext>ODF</ext></format>
 		<format name="PowerGraphics" maxWidth="336" height="240" colors="256"><ext>PGR</ext></format>
 		<format maxWidth="320" height="192"><ext>PI8</ext></format>
 		<format width="80"><ext>PI9</ext></format>
