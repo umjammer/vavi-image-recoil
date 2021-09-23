@@ -85,12 +85,8 @@ function populateFiles(contents, mainFilenames)
 		break;
 	default:
 		select.innerHTML = "";
-		for (const name of mainFilenames) {
-			const option = document.createElement("option");
-			option.text = name;
-			option.value = name;
-			select.add(option);
-		}
+		for (const name of mainFilenames)
+			select.add(new Option(name, name));
 		select.style.display = "";
 		break;
 	}
