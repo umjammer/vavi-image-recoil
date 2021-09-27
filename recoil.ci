@@ -17980,6 +17980,7 @@ public class RECOIL
 		case PackExt("WIG"):
 		case PackExt("AAS"):
 		case PackExt("IPH"):
+		case PackExt("HRE"):
 		case PackExt("ABK"):
 		case PackExt("ACS"):
 		case PackExt("AFL"):
@@ -18211,6 +18212,7 @@ public class RECOIL
 		case PackExt("IP2"):
 		case PackExt("IPC"):
 		case PackExt("IPT"):
+		case PackExt("LRE"):
 		case PackExt("IR2"):
 		case PackExt("IRG"):
 		case PackExt("ISH"):
@@ -18465,6 +18467,7 @@ public class RECOIL
 			return contentLength == 10242 && DecodeC64Multicolor(320, content, 2, 0x2002, 0x2402, content[0x2801]);
 		case PackExt("AAS"):
 		case PackExt("IPH"):
+		case PackExt("HRE"):
 			return DecodeIph(content, contentLength);
 		case PackExt("ABK"):
 			return DecodeAbk(content, contentLength);
@@ -18892,6 +18895,7 @@ public class RECOIL
 		case PackExt("IPC"):
 			return DecodeAtari8Ice(content, contentLength, false, 19);
 		case PackExt("IPT"):
+		case PackExt("LRE"):
 			return contentLength == 10003 && DecodeC64Multicolor(320, content, 2, 0x1f42, 0x232a, content[0x2712]);
 		case PackExt("IR2"):
 			return DecodeAtari8Ice(content, contentLength, false, 2);
