@@ -9243,6 +9243,7 @@ public class RECOIL
 	{
 		switch (contentLength) {
 		case 9026:
+		case 9217: // Hires-Editor
 		case 9218:
 		case 9346:
 			break;
@@ -18064,6 +18065,7 @@ public class RECOIL
 		case PackExt("DAP"):
 		case PackExt("DC1"):
 		case PackExt("DD"):
+		case PackExt("HET"):
 		case PackExt("DEL"):
 		case PackExt("DG1"):
 		case PackExt("DHGR"):
@@ -18619,6 +18621,7 @@ public class RECOIL
 		case PackExt("DC1"):
 			return DecodeDc1(content, contentLength);
 		case PackExt("DD"):
+		case PackExt("HET"):
 			return DecodeDd(content, contentLength);
 		case PackExt("DEL"):
 			return DecodeDel(content, contentLength);
