@@ -18280,6 +18280,7 @@ public class RECOIL
 		case PackExt("GRF"):
 		case PackExt("P4I"):
 		case PackExt("P64"):
+		case PackExt("FLY"):
 		case PackExt("PA3"):
 		case PackExt("PAC"):
 		case PackExt("PBX"):
@@ -19025,6 +19026,7 @@ public class RECOIL
 		case PackExt("P4I"):
 			return DecodeP4i(content, contentLength);
 		case PackExt("P64"):
+		case PackExt("FLY"):
 			return contentLength == 10050 && DecodeC64Multicolor(320, content, 0x802, 0x402, 2, content[0x801]);
 		case PackExt("PA3"):
 			return DecodeStPpp(content, contentLength);
