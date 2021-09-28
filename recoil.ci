@@ -18066,6 +18066,7 @@ public class RECOIL
 		case PackExt("DAP"):
 		case PackExt("DC1"):
 		case PackExt("DD"):
+		case PackExt("DDP"):
 		case PackExt("HET"):
 		case PackExt("DEL"):
 		case PackExt("DG1"):
@@ -18625,6 +18626,7 @@ public class RECOIL
 		case PackExt("DC1"):
 			return DecodeDc1(content, contentLength);
 		case PackExt("DD"):
+		case PackExt("DDP"):
 		case PackExt("HET"):
 			return DecodeDd(content, contentLength);
 		case PackExt("DEL"):
