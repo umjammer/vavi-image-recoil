@@ -13899,6 +13899,16 @@ public class RECOIL
 		return ApplyAtari8Palette(frame);
 	}
 
+	bool DecodeVisualizer!(byte[] content)
+	{
+		SetSize(320, 158, RECOILResolution.Xe2x2);
+		byte[320 * 158] frame;
+		SetPF0123Bak(content, 0);
+		DecodeAtari8Gr7(content, 5, frame, 0, 79);
+		// TODO: last 160 bytes are four lines of text in ANTIC codes
+		return ApplyAtari8Palette(frame);
+	}
+
 	bool DecodeGr7!(byte[] content, int contentOffset, int contentSize)
 	{
 		if (contentSize > 4804 || contentSize % 40 != 4)
@@ -17897,6 +17907,8 @@ public class RECOIL
 			return true;
 
 		switch (contentLength) {
+		case 3325:
+			return DecodeVisualizer(content);
 		case 4325:
 			return DecodeGad(content, contentLength);
 		case 7680:
