@@ -15792,7 +15792,7 @@ public class RECOIL
 
 	bool DecodeGr0!(byte[] content, int contentLength)
 	{
-		if (contentLength != 960)
+		if (contentLength != 960 && contentLength != 1024)
 			return false;
 		DecodeAtari8Gr0Screen(content, resource<byte[]>("atari8.fnt"));
 		return true;

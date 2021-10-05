@@ -132,6 +132,7 @@
 		</format>
 		<format name="Artist by David Eaton" width="160" height="80" colors="4"><ext fake="true">ART</ext></format>
 		<format colors="2"><ext>ART</ext></format><!-- not sure if Atari 8-bit -->
+		<format name="ASCII maker" width="40" height="24" unit="characters" colors="2"><ext>ASC</ext></format>
 		<format width="160" height="192" grayscale="16">
 			<ext>BG9</ext>
 			<ext>G09</ext>
