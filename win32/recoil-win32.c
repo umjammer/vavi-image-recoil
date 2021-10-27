@@ -66,7 +66,7 @@ static int RECOILWin32_ReadFileA(const RECOIL *self, const char *filename, uint8
 static int RECOILWin32_ReadFileW(const RECOIL *self, const char *filename, uint8_t *content, int contentLength)
 {
 	WCHAR wideFilename[2048];
-	if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, wideFilename, sizeof(wideFilename) / sizeof(wideFilename[0])) <= 0)
+	if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, wideFilename, ARRAYSIZE(wideFilename)) <= 0)
 		return -1;
 	return RECOILWin32_SlurpFileW(wideFilename, content, contentLength);
 }

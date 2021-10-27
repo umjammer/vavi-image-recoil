@@ -836,7 +836,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	HACCEL hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATORS));
 	DragAcceptFiles(hWnd, TRUE);
 
-	if (filename != NULL && wcscpy_s(image_filename, sizeof(image_filename) / sizeof(image_filename[0]), filename) == 0)
+	if (filename != NULL && wcscpy_s(image_filename, ARRAYSIZE(image_filename), filename) == 0)
 		OpenImage(true);
 	else
 		SelectAndOpenImage();
