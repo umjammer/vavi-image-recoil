@@ -11,6 +11,14 @@
 		</xsl:for-each>
 		<xsl:text>&#10;&#10;</xsl:text>
 
+		<xsl:text>#define GIMP_RECOIL_EXTS "</xsl:text>
+		<xsl:for-each select="platform/format/ext[not(. = following::ext)]">
+			<xsl:sort />
+			<xsl:if test="position() != 1">,</xsl:if>
+			<xsl:value-of select="translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')" />
+		</xsl:for-each>
+		<xsl:text>"&#10;&#10;</xsl:text>
+
 		<xsl:text>#define XNVIEW_RECOIL_EXTS "</xsl:text>
 		<xsl:for-each select="platform/format/ext[not(. = following::ext)]">
 			<xsl:sort />

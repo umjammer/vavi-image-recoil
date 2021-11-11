@@ -23,6 +23,9 @@ all: recoil2png $(if $(CAN_INSTALL_MAGICK),imagemagick/recoil.so) recoil-mime.xm
 recoil2png: recoil2png.c pngsave.c pngsave.h recoil-stdio.c recoil-stdio.h recoil.c recoil.h
 	$(CC) $(CFLAGS) recoil2png.c pngsave.c recoil-stdio.c recoil.c -lpng -lz -o $@
 
+file-recoil: file-recoil.c recoil-stdio.c recoil-stdio.h recoil.c recoil.h formats.h
+	$(CC) $(CFLAGS) `gimptool --cflags` file-recoil.c recoil-stdio.c recoil.c -o $@ `gimptool --libs`
+
 ifdef CAN_INSTALL_MAGICK
 imagemagick/recoil.so: imagemagick/recoilmagick.c recoil.c recoil.h formats.h
 ifdef MAGICK_INCLUDE_PATH
@@ -46,7 +49,7 @@ benchmark: benchmark.c recoil-stdio.c recoil-stdio.h recoil.c recoil.h
 	$(CC) $(CFLAGS) benchmark.c recoil-stdio.c recoil.c -o $@
 
 clean:
-	rm -f recoil2png imagemagick/recoil.so imagemagick/coder.xml.new formats.h recoil-mime.xml benchmark Xrecoil.usr
+	rm -f recoil2png file-recoil imagemagick/recoil.so imagemagick/coder.xml.new formats.h recoil-mime.xml benchmark Xrecoil.usr
 
 install: install-thumbnailer $(if $(CAN_INSTALL_MAGICK),install-magick)
 
