@@ -186,6 +186,10 @@
 					<FileSearch Name="xnviewmp.exe" />
 				</RegistrySearch>
 			</Property>
+
+			<Property Id="GIMP64.DIR">
+				<RegistrySearch Id="gimp.installdir" Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\GIMP-2_is1" Name="InstallLocation" Type="directory" Win64="yes" />
+			</Property>
 		<?endif?>
 
 		<Property Id="IMCODERS.DIR">
@@ -391,6 +395,22 @@
 							</ProgId>
 						</Component>
 					</Directory>
+
+					<Directory Id="GIMP64.DIR" Name="GIMP 2">
+						<Directory Id="GIMPLIB64.DIR" Name="lib">
+							<Directory Id="GIMPGIMP64.DIR" Name="gimp">
+								<Directory Id="GIMP2064.DIR" Name="2.0">
+									<Directory Id="GIMPPLUG64.DIR" Name="plug-ins">
+										<Directory Id="GIMPRECOIL64.DIR" Name="file-recoil">
+											<Component Id="filerecoil64.exe" Win64="yes">
+												<File Name="file-recoil.exe" Source="x86_64\file-recoil.exe" Checksum="yes" KeyPath="yes" />
+											</Component>
+										</Directory>
+									</Directory>
+								</Directory>
+							</Directory>
+						</Directory>
+					</Directory>
 				<?endif?>
 
 				<Directory Id="IMCODERS.DIR" Name="ImageMagick-RECOIL"><!-- fake Name -->
@@ -525,6 +545,11 @@
 					<Condition Level="9">XNVIEWMP64.EXE</Condition>
 					<ComponentRef Id="xnviewmp64.ext" />
 				</Feature>
+			</Feature>
+
+			<Feature Id="gimp64" Title="GIMP 64-bit plugin" Level="9" ConfigurableDirectory="GIMPRECOIL64.DIR" Description="Plugin for GIMP." AllowAdvertise="no">
+				<Condition Level="1">GIMP64.DIR</Condition>
+				<ComponentRef Id="filerecoil64.exe" />
 			</Feature>
 		<?endif?>
 

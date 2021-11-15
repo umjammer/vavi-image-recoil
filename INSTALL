@@ -37,9 +37,9 @@ To do this using a command-line Git client:
 This will fetch the latest code to a new directory called recoil-code.
 
 
-Building recoil2png, GNOME thumbnailer, XnView MP
-and ImageMagick plugins on Unix-like systems
--------------------------------------------------
+Building recoil2png, GNOME thumbnailer, XnView MP,
+GIMP and ImageMagick plugins on Unix-like systems
+--------------------------------------------------
 
 Install development files for libpng.
 
@@ -53,7 +53,7 @@ To install recoil2png under PREFIX, run:
 
     make install-recoil2png
 
-To install the XnViewMP plugin, run:
+To install the XnView MP plugin, run:
 
     make install-xnview
 
@@ -67,6 +67,11 @@ Or, if you are still on GNOME 2:
 
 After you restart your system, Nautilus windows should display thumbnails
 of retro computer images.
+
+The GIMP plugin requires the GIMP development package (gimp-dev or gimp-devel).
+Install the GIMP plugin with:
+
+    make install-gimp
 
 Installation of the ImageMagick coder requires that you have complete source
 distribution of ImageMagick.  Current version of the ImageMagick coder has been

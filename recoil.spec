@@ -28,6 +28,19 @@ MSX, NEC PC-80/88/98, Oric, Psion Series 3, SAM Coupe, Sharp X68000,
 Tandy 1000, Timex 2048, TRS-80, TRS-80 Color Computer, ZX81 and ZX Spectrum
 computers.
 
+%package gimp
+Summary: RECOIL plugin for GIMP
+Requires: gimp
+BuildRequires: gimp-devel
+
+%description gimp
+Extends GIMP with the ability to load pictures in native formats of
+Amiga, Amstrad CPC, Apple II, Atari 8-bit/Portfolio/ST/TT/Falcon, BBC Micro,
+Commodore VIC-20/64/16/116/Plus4/128, Electronika BK, FM Towns, Macintosh 128K,
+MSX, NEC PC-80/88/98, Oric, Psion Series 3, SAM Coupe, Sharp X68000,
+Tandy 1000, Timex 2048, TRS-80, TRS-80 Color Computer, ZX81 and ZX Spectrum
+computers.
+
 %package thumbnailer
 Summary: GNOME thumbnailer for retro computer image files
 Requires: recoil-2png
@@ -47,11 +60,11 @@ computers.
 %setup -q
 
 %build
-make recoil2png recoil-mime.xml
+make recoil2png file-recoil recoil-mime.xml
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make PREFIX=$RPM_BUILD_ROOT/%{_prefix} BUILDING_PACKAGE=1 install-thumbnailer
+make PREFIX=$RPM_BUILD_ROOT/%{_prefix} libdir=$RPM_BUILD_ROOT%{_libdir} BUILDING_PACKAGE=1 install-gimp install-thumbnailer
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -60,6 +73,10 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 %{_bindir}/recoil2png
 %{_mandir}/man1/recoil2png.1*
+
+%files gimp
+%defattr(-,root,root)
+%{_libdir}/gimp/2.0/plug-ins/file-recoil/file-recoil
 
 %files thumbnailer
 %defattr(-,root,root)
@@ -73,6 +90,9 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/update-mime-database %{_datadir}/mime &> /dev/null || :
 
 %changelog
+* Mon Nov 15 2021 Piotr Fusik <fox@scene.pl>
+- Added GIMP plugin
+
 * Fri Jul 16 2021 Piotr Fusik <fox@scene.pl>
 - 6.1.1-1
 

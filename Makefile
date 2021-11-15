@@ -55,13 +55,24 @@ install: install-thumbnailer $(if $(CAN_INSTALL_MAGICK),install-magick)
 
 uninstall: uninstall-thumbnailer $(if $(CAN_INSTALL_MAGICK),uninstall-magick)
 
-install-recoil2png: recoil2png
+install-recoil2png: recoil2png recoil2png.1
 	mkdir -p $(PREFIX)/bin $(PREFIX)/share/man/man1
 	$(INSTALL_PROGRAM) recoil2png $(PREFIX)/bin/recoil2png
 	$(INSTALL_DATA) recoil2png.1 $(PREFIX)/share/man/man1/recoil2png.1
 
 uninstall-recoil2png:
 	rm -f $(PREFIX)/bin/recoil2png $(PREFIX)/share/man/man1/recoil2png.1
+
+install-gimp: file-recoil
+ifdef BUILDING_PACKAGE
+	mkdir -p $(libdir)/gimp/2.0/plug-ins/file-recoil
+	$(INSTALL_PROGRAM) $< $(libdir)/gimp/2.0/plug-ins/file-recoil/file-recoil
+else
+	gimptool --install-admin-bin $<
+endif
+
+uninstall-gimp:
+	gimptool --uninstall-admin-bin $<
 
 ifdef CAN_INSTALL_MAGICK
 
@@ -133,8 +144,9 @@ cmp-examples: recoil2png
 	rm -f ../png/*.png
 	ls ../examples | xargs -P 5 -i sh -c "./recoil2png -o '../png/{}.png' '../examples/{}' && cmp '../ref/{}.png' '../png/{}.png'"
 
-.PHONY: all clean install uninstall install-recoil2png uninstall-recoil2png $(if $(CAN_INSTALL_MAGICK),install-magick uninstall-magick) \
-	install-mime uninstall-mime install-thumbnailer uninstall-thumbnailer install-gnome2-thumbnailer uninstall-gnome2-thumbnailer \
+.PHONY: all clean install uninstall install-recoil2png uninstall-recoil2png install-gimp uninstall-gimp \
+    $(if $(CAN_INSTALL_MAGICK),install-magick uninstall-magick) install-mime uninstall-mime \
+	install-thumbnailer uninstall-thumbnailer install-gnome2-thumbnailer uninstall-gnome2-thumbnailer \
 	install-xnview uninstall-xnview deb missing-examples cmp-examples
 
 .DELETE_ON_ERROR:

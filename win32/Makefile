@@ -7,7 +7,7 @@ CSOURCES = $(patsubst %/,-I%,$(sort $(dir $(filter %.h,$^)))) $(^:%.h=)
 LDFLAGS_DLL = -shared -Wl,--kill-at -Wl,-subsystem,windows
 CC = $(@D)-w64-mingw32-gcc
 CXX = $(@D)-w64-mingw32-g++
-DO_CC = $(CC) -o $@ $(CFLAGS) $(if $(filter %.exe,$@),-static,$(LDFLAGS_DLL)) $(CSOURCES)
+DO_CC = $(CC) -o $@ $(CFLAGS) $(if $(filter %.exe,$@),,$(LDFLAGS_DLL)) $(CSOURCES)
 WINDRES = $(@D)-w64-mingw32-windres
 CSC = C:/Windows/Microsoft.NET/Framework/v4.0.30319/csc.exe -nologo -o+ -out:$@
 RM = rm -f
@@ -29,13 +29,16 @@ endif
 DO_SIGN = $(DO)signtool sign -d "RECOIL - Retro Computer Image Library $(VERSION)" -n "Open Source Developer, Piotr Fusik" -tr http://time.certum.pl -fd sha256 -td sha256 $^ && touch $@
 
 WIN32_BIN = i686/recoil2png.exe i686/IM_MOD_RL_recoil_.dll i686/Xrecoil.usr i686/recoilwin.exe i686/thumbrecoil.dll i686/RECOIL.plg paint.net/RecoilPaintDotNet.dll
-WIN64_BIN = x86_64/recoil2png.exe x86_64/IM_MOD_RL_recoil_.dll x86_64/Xrecoil.usr x86_64/recoilwin.exe x86_64/thumbrecoil.dll x86_64/RECOIL.plg64 paint.net/RecoilPaintDotNet.dll
+WIN64_BIN = x86_64/recoil2png.exe x86_64/file-recoil.exe x86_64/IM_MOD_RL_recoil_.dll x86_64/Xrecoil.usr x86_64/recoilwin.exe x86_64/thumbrecoil.dll x86_64/RECOIL.plg64 paint.net/RecoilPaintDotNet.dll
 WINBOTH_BIN = $(WIN64_BIN) i686/IM_MOD_RL_recoil_.dll i686/Xrecoil.usr i686/thumbrecoil.dll i686/RECOIL.plg
 
 all: $(WIN32_BIN) $(WIN64_BIN)
 
 %/recoil2png.exe: ../recoil2png.c ../pngsave.c ../pngsave.h ../recoil-stdio.c ../recoil-stdio.h ../recoil.c ../recoil.h
 	$(DO)$(DO_CC) -static -lpng16 -lz
+
+%/file-recoil.exe: ../file-recoil.c ../recoil-stdio.c ../recoil-stdio.h ../recoil.c ../recoil.h
+	$(DO)$(DO_CC) `gimptool --cflags` -Wl,-subsystem,windows `gimptool --libs`
 
 %/IM_MOD_RL_recoil_.dll: ../imagemagick/recoilmagick.c ../formats.h ../recoil.c ../recoil.h
 	$(DO)$(DO_CC) -D MAGICK7 -I"$(IMAGEMAGICK_$(@D)_DIR)"/include -lCORE_RL_MagickCore_ -L"$(IMAGEMAGICK_$(@D)_DIR)" -static-libgcc
@@ -44,7 +47,7 @@ all: $(WIN32_BIN) $(WIN64_BIN)
 	$(DO)$(DO_CC) -static
 
 %/recoilwin.exe: recoilwin/recoilwin.c recoilwin/recoilwin.h recoil-win32.c recoil-win32.h %/recoilwin-res.o ../pngsave.c ../pngsave.h ../formats.h ../recoil.c ../recoil.h
-	$(DO)$(DO_CC) -municode -Wl,-subsystem,windows -lcomctl32 -lcomdlg32 -lgdi32 -lpng16 -lz
+	$(DO)$(DO_CC) -municode -Wl,-subsystem,windows -static -lcomctl32 -lcomdlg32 -lgdi32 -lpng16 -lz
 
 %/recoilwin-res.o: recoilwin/recoilwin.rc recoilwin/recoilwin.h recoil.ico ../recoil.h
 	$(DO)$(WINDRES) -o $@ -I.. $<
@@ -65,7 +68,7 @@ paint.net/RECOIL.cs: ../recoil.ci ../altirrantsc.pal ../altirrapal.pal ../atari8
 	$(DO)$(CITO) -o $@ -I .. -n Recoil $<
 
 %/by-platform.exe: by-platform.c recoil-win32.c recoil-win32.h ../recoil.c ../recoil.h
-	$(DO)$(DO_CC)
+	$(DO)$(DO_CC) -static
 
 ../formats.h: ../formats.h.xsl ../formats.xml
 	$(DO)$(XSLTPROC)
@@ -134,6 +137,7 @@ rpm64:
 	scp ../../recoil-$(VERSION).tar.gz vm:.
 	ssh vm 'rpmbuild -tb recoil-$(VERSION).tar.gz'
 	scp vm:rpmbuild/RPMS/x86_64/recoil-2png-$(VERSION)-1.x86_64.rpm ../../
+	scp vm:rpmbuild/RPMS/x86_64/recoil-gimp-$(VERSION)-1.x86_64.rpm ../../
 	scp vm:rpmbuild/RPMS/noarch/recoil-thumbnailer-$(VERSION)-1.noarch.rpm ../../
 
 mac:
