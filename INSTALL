@@ -99,15 +99,15 @@ Unless you specify the -o/--output option, the output filename will be
 constructed from the input filename with the extension changed to png.
 
 
-Building recoil2png, XnView/XnView MP/ImageMagick/Imagine/Windows Explorer
+Building recoil2png, XnView/XnView MP/GIMP/ImageMagick/Imagine/Windows Explorer
 plugins and RECOILWin on Windows
---------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 Install MSYS2 (https://www.msys2.org/), then additional packages:
 
-    pacman -S make mingw-w64-i686-gcc mingw-w64-x86_64-gcc mingw-w64-i686-libpng
+    pacman -S make mingw-w64-i686-gcc mingw-w64-x86_64-gcc mingw-w64-i686-libpng mingw-w64-x86_64-libpng mingw-w64-x86_64-gimp
 
-Install ImageMagick 6 (https://www.imagemagick.org/)
+Install ImageMagick 7 (https://www.imagemagick.org/)
 and edit its directories in RECOIL's win32/Makefile.
 
 To build RECOIL, from the command prompt navigate to the win32 directory and run:
@@ -124,7 +124,7 @@ Make sure cito is on your PATH.
 
 From the command prompt navigate to the win32 directory and run:
 
-    make RecoilPaintDotNet.dll
+    make paint.net/RecoilPaintDotNet.dll
 
 
 Building HTML 5 based viewer
@@ -161,7 +161,7 @@ From the command prompt navigate to the osx directory and run:
 Building Windows 10 application
 -------------------------------
 
-Install Visual Studio 2019 and ImageMagick 7.
+Install Visual Studio 2022 and ImageMagick 7.
 
 Make sure cito and magick are on your PATH.
 
