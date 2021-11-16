@@ -42,6 +42,9 @@ static gint32 load_image(const gchar *filename)
 	gint32 image = gimp_image_new(width, height, GIMP_RGB);
 	if (image != -1) {
 		gimp_image_set_filename(image, filename);
+		float x_dpi = RECOIL_GetXPixelsPerInch(recoil);
+		if (x_dpi != 0)
+			gimp_image_set_resolution(image, x_dpi, RECOIL_GetYPixelsPerInch(recoil));
 		gint32 layer = gimp_layer_new(image, "Background", width, height, GIMP_RGB_IMAGE, 100, GIMP_NORMAL_MODE);
 		gimp_image_insert_layer(image, layer, -1, 0);
 		uint8_t *line = (uint8_t *) malloc(width * 3);
