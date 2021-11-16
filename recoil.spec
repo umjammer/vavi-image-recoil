@@ -34,7 +34,7 @@ Requires: gimp
 BuildRequires: gimp-devel
 
 %description gimp
-Extends GIMP with the ability to load pictures in native formats of
+GIMP plugin capable of loading pictures in native formats of
 Amiga, Amstrad CPC, Apple II, Atari 8-bit/Portfolio/ST/TT/Falcon, BBC Micro,
 Commodore VIC-20/64/16/116/Plus4/128, Electronika BK, FM Towns, Macintosh 128K,
 MSX, NEC PC-80/88/98, Oric, Psion Series 3, SAM Coupe, Sharp X68000,

@@ -38,7 +38,7 @@ all: $(WIN32_BIN) $(WIN64_BIN)
 	$(DO)$(DO_CC) -static -lpng16 -lz
 
 %/file-recoil.exe: ../file-recoil.c ../recoil-stdio.c ../recoil-stdio.h ../recoil.c ../recoil.h
-	$(DO)$(DO_CC) `gimptool --cflags` -Wl,-subsystem,windows `gimptool --libs`
+	$(DO)$(DO_CC) `gimptool-2.0 --cflags` -Wl,-subsystem,windows `gimptool-2.0 --libs`
 
 %/IM_MOD_RL_recoil_.dll: ../imagemagick/recoilmagick.c ../formats.h ../recoil.c ../recoil.h
 	$(DO)$(DO_CC) -D MAGICK7 -I"$(IMAGEMAGICK_$(@D)_DIR)"/include -lCORE_RL_MagickCore_ -L"$(IMAGEMAGICK_$(@D)_DIR)" -static-libgcc
@@ -130,6 +130,7 @@ deb64:
 	scp ../../recoil-$(VERSION).tar.gz vm:.
 	ssh vm 'rm -rf recoil-$(VERSION) && tar xf recoil-$(VERSION).tar.gz && make -C recoil-$(VERSION) deb'
 	scp vm:recoil-2png_$(VERSION)-1_amd64.deb ../../
+	scp vm:recoil-gimp_$(VERSION)-1_amd64.deb ../../
 	scp vm:recoil-xnview_$(VERSION)-1_amd64.deb ../../
 	scp vm:recoil-thumbnailer_$(VERSION)-1_all.deb ../../
 

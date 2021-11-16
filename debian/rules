@@ -6,4 +6,4 @@
 override_dh_auto_clean:
 
 override_dh_auto_install:
-	$(MAKE) PREFIX=$$(pwd)/debian/tmp/usr XNVIEW=$$(pwd)/debian/tmp/opt/XnView BUILDING_PACKAGE=1 install-thumbnailer install-xnview
+	$(MAKE) PREFIX=$$(pwd)/debian/tmp/usr libdir=$$(pwd)/debian/tmp/usr/lib XNVIEW=$$(pwd)/debian/tmp/opt/XnView BUILDING_PACKAGE=1 install-gimp install-thumbnailer install-xnview

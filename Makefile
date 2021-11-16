@@ -24,7 +24,7 @@ recoil2png: recoil2png.c pngsave.c pngsave.h recoil-stdio.c recoil-stdio.h recoi
 	$(CC) $(CFLAGS) recoil2png.c pngsave.c recoil-stdio.c recoil.c -lpng -lz -o $@
 
 file-recoil: file-recoil.c recoil-stdio.c recoil-stdio.h recoil.c recoil.h formats.h
-	$(CC) $(CFLAGS) `gimptool --cflags` file-recoil.c recoil-stdio.c recoil.c -o $@ `gimptool --libs`
+	$(CC) $(CFLAGS) `gimptool-2.0 --cflags` file-recoil.c recoil-stdio.c recoil.c -o $@ `gimptool-2.0 --libs`
 
 ifdef CAN_INSTALL_MAGICK
 imagemagick/recoil.so: imagemagick/recoilmagick.c recoil.c recoil.h formats.h
@@ -68,11 +68,11 @@ ifdef BUILDING_PACKAGE
 	mkdir -p $(libdir)/gimp/2.0/plug-ins/file-recoil
 	$(INSTALL_PROGRAM) $< $(libdir)/gimp/2.0/plug-ins/file-recoil/file-recoil
 else
-	gimptool --install-admin-bin $<
+	gimptool-2.0 --install-admin-bin $<
 endif
 
 uninstall-gimp:
-	gimptool --uninstall-admin-bin $<
+	gimptool-2.0 --uninstall-admin-bin $<
 
 ifdef CAN_INSTALL_MAGICK
 
