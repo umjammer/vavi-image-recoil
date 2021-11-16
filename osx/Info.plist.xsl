@@ -106,7 +106,7 @@
 						<dict>
 							<key>public.filename-extension</key>
 							<array>
-								<xsl:for-each select="platform/format/ext[not(. = following::ext)]">
+								<xsl:for-each select="platform/format/ext[not(. = following::ext) and . != 'RPM']">
 									<xsl:variable name="ext" select="." />
 									<xsl:if test="count(../../../platform[format/ext = $ext]) != 1">
 										<string><xsl:value-of select="translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')" /></string>

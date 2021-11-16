@@ -3,7 +3,7 @@
 	<xsl:output method="xml" indent="yes" />
 	<xsl:template match="/formats">
 		<mime-info>
-			<xsl:for-each select="platform/format/ext[not(. = following::ext)]">
+			<xsl:for-each select="platform/format/ext[not(. = following::ext) and . != 'RPM']">
 				<xsl:sort select="." />
 				<xsl:variable name="lc" select="translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')" />
 				<mime-type type="image/x-{$lc}">

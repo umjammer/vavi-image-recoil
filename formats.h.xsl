@@ -28,7 +28,7 @@
 		<xsl:text>"&#10;&#10;</xsl:text>
 
 		<xsl:text>#define THUMBRECOIL_EXTS </xsl:text>
-		<xsl:for-each select="platform/format/ext[not(. = following::ext)]">
+		<xsl:for-each select="platform/format/ext[not(. = following::ext) and . != 'RPM']">
 			<xsl:sort />
 			<xsl:if test="position() != 1">
 				<xsl:text>, </xsl:text>
