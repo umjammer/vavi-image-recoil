@@ -33,7 +33,12 @@
 						Square44x44Logo="Assets\Square44x44Logo.png"
 						Description="Shows images in native formats of vintage computers"
 						BackgroundColor="#006374">
-						<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+						<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" ShortName="RECOIL">
+							<uap:ShowNameOnTiles>
+								<uap:ShowOn Tile="square150x150Logo" />
+								<uap:ShowOn Tile="wide310x150Logo" />
+							</uap:ShowNameOnTiles>
+						</uap:DefaultTile>
 						<uap:SplashScreen Image="Assets\SplashScreen.png" />
 					</uap:VisualElements>
 					<Extensions>
