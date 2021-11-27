@@ -56,7 +56,7 @@ namespace Recoil.PaintDotNet
 		{
 			// Read.
 			long longLength = input.Length;
-			if (longLength > 0x7fffffc7) // max byte array length according to https://docs.microsoft.com/en-us/dotnet/api/system.array?view=net-5.0
+			if (longLength > 0x7fffffc7) // max byte array length according to https://docs.microsoft.com/en-us/dotnet/api/system.array?view=net-6.0
 				throw new Exception("File too long");
 			int contentLength = (int) longLength;
 			byte[] content = new byte[contentLength];

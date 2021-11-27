@@ -9,7 +9,7 @@ CC = $(@D)-w64-mingw32-gcc
 CXX = $(@D)-w64-mingw32-g++
 DO_CC = $(CC) -o $@ $(CFLAGS) $(if $(filter %.exe,$@),,$(LDFLAGS_DLL)) $(CSOURCES)
 WINDRES = $(@D)-w64-mingw32-windres
-CSC = C:/Windows/Microsoft.NET/Framework/v4.0.30319/csc.exe -nologo -o+ -out:$@
+CSC = "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/Roslyn/csc.exe" -nologo -o+ -out:$@
 RM = rm -f
 UNIX2DOS = unix2dos
 GIT = git
@@ -20,7 +20,8 @@ LIGHT = light -ext WixUtilExtension -nologo -o $@ -spdb
 MAGICK = magick
 IMAGEMAGICK_i686_DIR = C:\Program Files (x86)\ImageMagick-7.1.0-Q16-HDRI
 IMAGEMAGICK_x86_64_DIR = C:\Program Files\ImageMagick-7.1.0-Q16-HDRI
-PAINT_NET_DIR = C:\Program Files\paint.net
+PAINT_NET_DIR = C:/Program Files/paint.net
+DOTNET_REF_DIR = C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.0/ref/net6.0
 ifdef V
 DO = mkdir -p $(@D) && 
 else
@@ -59,7 +60,7 @@ i686/RECOIL.plg x86_64/RECOIL.plg64: imagine/recoilimagine.c ../formats.h recoil
 	$(DO)$(DO_CC) -static
 
 paint.net/RecoilPaintDotNet.dll: paint.net/RecoilPaintDotNet.cs paint.net/RecoilFileTypeFactory.cs paint.net/RECOIL.cs
-	$(DO)$(CSC) -t:library $(subst /,\\,$^) -r:"$(PAINT_NET_DIR)\PaintDotNet.Base.dll" -r:"$(PAINT_NET_DIR)\PaintDotNet.Core.dll" -r:"$(PAINT_NET_DIR)\PaintDotNet.Data.dll"
+	$(DO)$(CSC) -t:library $^ -nostdlib -r:"$(PAINT_NET_DIR)/PaintDotNet.Data.dll" -r:"$(PAINT_NET_DIR)/System.Drawing.Common.dll" -r:"$(PAINT_NET_DIR)/System.dll" -r:"$(DOTNET_REF_DIR)/System.Drawing.dll" -r:"$(DOTNET_REF_DIR)/System.Runtime.dll"
 
 paint.net/RecoilFileTypeFactory.cs: paint.net/RecoilFileTypeFactory.cs.xsl ../formats.xml
 	$(DO)$(XSLTPROC)
