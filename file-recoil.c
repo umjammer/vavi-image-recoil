@@ -77,10 +77,9 @@ static void query(void)
 	static const GimpParamDef load_args[] = {
 		{ GIMP_PDB_INT32,  "run-mode",     "The run mode { RUN-INTERACTIVE (0), RUN-NONINTERACTIVE (1) }" },
 		{ GIMP_PDB_STRING, "filename",     "The name of the file to load" },
-		{ GIMP_PDB_STRING, "raw-filename", "The name entered"             }
+		{ GIMP_PDB_STRING, "raw-filename", "The name entered" }
 	};
-	static const GimpParamDef load_return_vals[] =
-	{
+	static const GimpParamDef load_return_vals[] = {
 		{ GIMP_PDB_IMAGE, "image", "Output image" }
 	};
 	gimp_install_procedure(LOAD_PROC,
@@ -105,7 +104,7 @@ static void run(const gchar *name, gint nparams, const GimpParam *param, gint *n
 	*return_vals = values;
 	*nreturn_vals = 1;
 	values[0].type = GIMP_PDB_STATUS;
-	if (strcmp(name, LOAD_PROC) == 0) {
+	if (strcmp(name, LOAD_PROC) == 0 && nparams >= 2) {
 		gint32 image = load_image(param[1].data.d_string);
 		if (image != -1) {
 			values[0].data.d_status = GIMP_PDB_SUCCESS;
