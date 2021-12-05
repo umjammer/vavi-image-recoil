@@ -47,26 +47,16 @@ static gint32 load_image(const gchar *filename)
 			gimp_image_set_resolution(image, x_dpi, RECOIL_GetYPixelsPerInch(recoil));
 		gint32 layer = gimp_layer_new(image, "Background", width, height, GIMP_RGB_IMAGE, 100, GIMP_NORMAL_MODE);
 		gimp_image_insert_layer(image, layer, -1, 0);
-		uint8_t *line = (uint8_t *) malloc(width * 3);
-		if (line != NULL) {
-			const int *pixels = RECOIL_GetPixels(recoil);
-			GeglBuffer *buffer = gimp_drawable_get_buffer(layer);
-			for (int y = 0; y < height; y++) {
-				for (int x = 0; x < width; x++) {
-					int rgb = pixels[y * width + x];
-					line[x * 3] = (uint8_t) (rgb >> 16);
-					line[x * 3 + 1] = (uint8_t) (rgb >> 8);
-					line[x * 3 + 2] = (uint8_t) rgb;
-				}
-				gegl_buffer_set(buffer, GEGL_RECTANGLE (0, y, width, 1), 0, NULL, line, GEGL_AUTO_ROWSTRIDE);
-			}
-			g_object_unref(buffer);
-			free(line);
-		}
-		else {
-			gimp_image_delete(image);
-			image = -1;
-		}
+		const Babl *format = babl_format_new(babl_model("R'G'B'"), babl_type("u8"),
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+			babl_component("B'"), babl_component("G'"), babl_component("R'"), babl_component("PAD"),
+#else
+			babl_component("PAD"), babl_component("R'"), babl_component("G'"), babl_component("B'"),
+#endif
+			NULL);
+		GeglBuffer *buffer = gimp_drawable_get_buffer(layer);
+		gegl_buffer_set(buffer, NULL, 0, format, RECOIL_GetPixels(recoil), GEGL_AUTO_ROWSTRIDE);
+		g_object_unref(buffer);
 	}
 	RECOIL_Delete(recoil);
 	return image;
