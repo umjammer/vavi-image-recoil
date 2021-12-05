@@ -18,8 +18,9 @@ SEVENZIP = 7z a -mx=9 -bd -bso0
 CANDLE = candle -ext WixUtilExtension -nologo -o $@
 LIGHT = light -ext WixUtilExtension -nologo -o $@ -spdb
 MAGICK = magick
-IMAGEMAGICK_i686_DIR = C:\Program Files (x86)\ImageMagick-7.1.0-Q16-HDRI
-IMAGEMAGICK_x86_64_DIR = C:\Program Files\ImageMagick-7.1.0-Q16-HDRI
+GIMP_PLUGIN_DIR = C:/Program Files/GIMP 2/lib/gimp/2.0/plug-ins
+IMAGEMAGICK_i686_DIR = C:/Program Files (x86)/ImageMagick-7.1.0-Q16-HDRI
+IMAGEMAGICK_x86_64_DIR = C:/Program Files/ImageMagick-7.1.0-Q16-HDRI
 PAINT_NET_DIR = C:/Program Files/paint.net
 DOTNET_REF_DIR = C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.0/ref/net6.0
 ifdef V
@@ -83,6 +84,15 @@ recoil.ico: ../recoil-512x512.png
 
 COPYING.txt: ../COPYING
 	$(DO)$(UNIX2DOS) <$< >$@
+
+install-gimp: x86_64/file-recoil.exe
+	elevate install -D $< "$(GIMP_PLUGIN_DIR)/file-recoil/file-recoil.exe"
+
+install-magick: x86_64/IM_MOD_RL_recoil_.dll
+	elevate cp $< "$(IMAGEMAGICK_x86_64_DIR)/modules/coders/IM_MOD_RL_recoil_.dll"
+
+install-paint.net: paint.net/RecoilPaintDotNet.dll
+	elevate cp $< "$(PAINT_NET_DIR)/FileTypes/RecoilPaintDotNet.dll"
 
 signed: $(WIN32_BIN) $(WIN64_BIN)
 	$(DO_SIGN)
@@ -152,6 +162,6 @@ clean:
 		i686/recoil.wixobj x86_64/recoil.wixobj setup/formats.wxi setup/dialog.jpg setup/banner.jpg signed-msi signed \
 		paint.net/RecoilFileTypeFactory.cs paint.net/RECOIL.cs ../formats.h
 
-.PHONY: all clean ../MANIFEST srcdist dist deb64 rpm64 mac ../../recoil-$(VERSION).tar.gz
+.PHONY: all clean install-gimp install-magick install-paint.net ../MANIFEST srcdist dist deb64 rpm64 mac ../../recoil-$(VERSION).tar.gz
 
 .DELETE_ON_ERROR:
