@@ -199,27 +199,6 @@ DLL_EXPORT void API gfpLoadPictureExit(void *ptr)
 	RECOIL_Delete(recoil);
 }
 
-DLL_EXPORT BOOL API gfpSavePictureIsSupported(INT width, INT height, INT bits_per_pixel, BOOL has_colormap)
-{
-	return FALSE;
-}
-
-DLL_EXPORT void * API gfpSavePictureInit(
-	const char *filename, INT width, INT height, INT bits_per_pixel,
-	INT dpi, INT *picture_type, char *label, INT label_max_size)
-{
-	return NULL;
-}
-
-DLL_EXPORT BOOL API gfpSavePicturePutLine(void *ptr, INT line, const unsigned char *buffer)
-{
-	return FALSE;
-}
-
-DLL_EXPORT void API gfpSavePictureExit(void *ptr)
-{
-}
-
 #ifdef WIN32
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
