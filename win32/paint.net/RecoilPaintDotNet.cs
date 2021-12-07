@@ -22,8 +22,6 @@
  */
 
 using System;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -67,16 +65,25 @@ namespace Recoil.PaintDotNet
 			if (!recoil.Decode(this.Extension, content, contentLength))
 				throw new Exception("Decoding error");
 			int width = recoil.GetWidth();
+			int height = recoil.GetHeight();
+			int[] pixels = recoil.GetPixels();
 
 			// Pass to Paint.NET.
-			GCHandle pinnedPixels = GCHandle.Alloc(recoil.GetPixels(), GCHandleType.Pinned);
-			using (Bitmap bitmap = new Bitmap(width, recoil.GetHeight(), width << 2, PixelFormat.Format32bppRgb, pinnedPixels.AddrOfPinnedObject())) {
-				pinnedPixels.Free();
-				float xDpi = recoil.GetXPixelsPerInch();
-				if (xDpi != 0)
-					bitmap.SetResolution(xDpi, recoil.GetYPixelsPerInch());
-				return Document.FromImage(bitmap);
+			Document document = new Document(width, height);
+			BitmapLayer layer = Layer.CreateBackgroundLayer(width, height);
+			Surface surface = layer.Surface;
+			for (int y = 0; y < height; y++) {
+				for (int x = 0; x < width; x++)
+					surface[x, y] = ColorBgra.FromOpaqueInt32(pixels[y * width + x]);
 			}
+			float xDpi = recoil.GetXPixelsPerInch();
+			if (xDpi != 0) {
+				document.DpuUnit = MeasurementUnit.Inch;
+				document.DpuX = xDpi;
+				document.DpuY = recoil.GetYPixelsPerInch();
+			}
+			document.Layers.Add(layer);
+			return document;
 		}
 	}
 }
