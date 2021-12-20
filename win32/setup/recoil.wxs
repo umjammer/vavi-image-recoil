@@ -179,16 +179,16 @@
 
 		<?if $(sys.BUILDARCH) = x64?>
 			<Property Id="XNVIEWMP64.DIR">
-				<RegistrySearch Id="xnviewmp.installdir" Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\XnViewMP_is1" Name="InstallLocation" Type="directory" Win64="yes" />
+				<RegistrySearch Id="xnviewmp.installdir" Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\XnViewMP_is1" Name="InstallLocation" Type="directory" />
 			</Property>
 			<Property Id="XNVIEWMP64.EXE">
-				<RegistrySearch Id="xnviewmp.exe" Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\XnViewMP_is1" Name="InstallLocation" Type="directory" Win64="yes">
+				<RegistrySearch Id="xnviewmp.exe" Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\XnViewMP_is1" Name="InstallLocation" Type="directory">
 					<FileSearch Name="xnviewmp.exe" />
 				</RegistrySearch>
 			</Property>
 
 			<Property Id="GIMP64.DIR">
-				<RegistrySearch Id="gimp.installdir" Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\GIMP-2_is1" Name="InstallLocation" Type="directory" Win64="yes" />
+				<RegistrySearch Id="gimp.installdir" Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\GIMP-2_is1" Name="InstallLocation" Type="directory" />
 			</Property>
 		<?endif?>
 
@@ -207,11 +207,11 @@
 		<?endif?>
 		<?if $(sys.BUILDARCH) = x64?>
 			<Property Id="IMCODERS64.DIR">
-				<RegistrySearch Id="imcoders64.dir" Root="HKLM" Key="SOFTWARE\ImageMagick\Current" Name="CoderModulesPath" Type="directory" Win64="yes" />
+				<RegistrySearch Id="imcoders64.dir" Root="HKLM" Key="SOFTWARE\ImageMagick\Current" Name="CoderModulesPath" Type="directory" />
 			</Property>
 			<?ifdef IMCONFIG?>
 				<Property Id="IMCONFIG64.DIR">
-					<RegistrySearch Id="imconfig64.dir" Root="HKLM" Key="SOFTWARE\ImageMagick\Current" Name="ConfigurePath" Type="directory" Win64="yes" />
+					<RegistrySearch Id="imconfig64.dir" Root="HKLM" Key="SOFTWARE\ImageMagick\Current" Name="ConfigurePath" Type="directory" />
 				</Property>
 				<Property Id="CODER64.XML">
 					<DirectorySearch Id="coder64.xml" Path="[IMCONFIG64.DIR]" Depth="1">
@@ -313,7 +313,7 @@
 						</Component>
 					<?endif?>
 					<?if $(sys.BUILDARCH) = x64?>
-						<Component Id="thumbrecoil64.dll" Win64="yes">
+						<Component Id="thumbrecoil64.dll">
 							<File Name="thumbrecoil64.dll" Source="x86_64\thumbrecoil.dll" Checksum="yes" KeyPath="yes">
 								<Class Id="{3C450D81-B6BD-4D8C-923C-FC659ABB27D3}" Context="InprocServer32" Description="RECOIL Thumbnail Handler" ThreadingModel="both" />
 							</File>
@@ -322,7 +322,7 @@
 								<RegistryValue Root="HKCR" Key=".$(var.EXT)" Name="PerceivedType" Value="image" Type="string" />
 							<?endforeach?>
 						</Component>
-						<Component Id="thumbrecoil64XP.reg" Win64="yes">
+						<Component Id="thumbrecoil64XP.reg">
 							<?ifdef $(var.THUMBRECOIL_VISTA) ?>
 								<Condition>VersionNT &lt; 600</Condition>
 							<?endif?>
@@ -331,7 +331,7 @@
 							<?endforeach?>
 						</Component>
 						<?ifdef $(var.THUMBRECOIL_VISTA) ?>
-							<Component Id="thumbrecoil64Vista.reg" Win64="yes">
+							<Component Id="thumbrecoil64Vista.reg">
 								<Condition>VersionNT &gt;= 600</Condition>
 								<?foreach EXT in $(var.RECOIL_EXTS)?>
 									<RegistryValue Root="HKCR" Key=".$(var.EXT)\ShellEx\{e357fccd-a995-4576-b01f-234630154e96}" Value="{3C450D81-B6BD-4D8C-923C-FC659ABB27D3}" Type="string" />
@@ -378,7 +378,7 @@
 				<?if $(sys.BUILDARCH) = x64?>
 					<Directory Id="XNVIEWMP64.DIR" Name="XnViewMP">
 						<Directory Id="XNVIEWMP64PLUG.DIR" Name="plugins">
-							<Component Id="XrecoilMP64.usr" Win64="yes">
+							<Component Id="XrecoilMP64.usr">
 								<File Name="Xrecoil64.usr" Source="x86_64\Xrecoil.usr" Checksum="yes" KeyPath="yes" />
 							</Component>
 						</Directory>
@@ -402,8 +402,8 @@
 								<Directory Id="GIMP2064.DIR" Name="2.0">
 									<Directory Id="GIMPPLUG64.DIR" Name="plug-ins">
 										<Directory Id="GIMPRECOIL64.DIR" Name="file-recoil">
-											<Component Id="filerecoil64.exe" Win64="yes">
-												<File Name="file-recoil.exe" Source="x86_64\file-recoil.exe" Checksum="yes" KeyPath="yes" />
+											<Component Id="filerecoil64.exe">
+												<File Source="x86_64\file-recoil.exe" Checksum="yes" KeyPath="yes" />
 											</Component>
 										</Directory>
 									</Directory>
@@ -430,7 +430,7 @@
 				</Directory>
 				<?if $(sys.BUILDARCH) = x64?>
 					<Directory Id="IMCODERS64.DIR" Name="ImageMagick64-RECOIL"><!-- fake Name -->
-						<Component Id="IM_MOD_RL_recoil_64.dll" Win64="yes">
+						<Component Id="IM_MOD_RL_recoil_64.dll">
 							<File Id="IM_MOD_RL_recoil_64.dll" Source="x86_64\IM_MOD_RL_recoil_.dll" Checksum="yes" KeyPath="yes" />
 							<?ifdef IMCONFIG?>
 								<?foreach EXT in $(var.RECOIL_EXTS)?>
@@ -466,7 +466,7 @@
 					</Component>
 					<?if $(sys.BUILDARCH) = x64?>
 						<Directory Id="IMAGINEPLUG64.DIR" Name="Plugin">
-							<Component Id="RECOIL.plg64" Win64="yes">
+							<Component Id="RECOIL.plg64">
 								<File Source="x86_64\RECOIL.plg64" Checksum="yes" KeyPath="yes" />
 							</Component>
 						</Directory>
