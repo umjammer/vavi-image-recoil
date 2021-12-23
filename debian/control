@@ -2,7 +2,7 @@ Source: recoil
 Maintainer: Piotr Fusik <fox@scene.pl>
 Section: graphics
 Priority: optional
-Standards-Version: 3.9.3
+Standards-Version: 4.6.0
 Build-Depends: debhelper (>= 7), gcc, libpng-dev, libgimp2.0-dev, xsltproc
 
 Package: recoil-2png
