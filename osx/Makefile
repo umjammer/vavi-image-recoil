@@ -6,7 +6,6 @@ CODESIGN = codesign --options runtime -f -s $(PORK_CODESIGNING_IDENTITY)
 QLRECOIL = bin/RECOIL.qlgenerator/Contents/MacOS/qlrecoil
 PLIST = bin/RECOIL.qlgenerator/Contents/Info.plist
 QLCODESIGN = bin/RECOIL.qlgenerator/Contents/_CodeSignature/CodeResources
-GIMPTOOL = PATH=/usr/local/bin:$$PATH gimptool-2.0
 
 recoil-$(VERSION)-macos.dmg: bin/QuickLook $(QLCODESIGN) $(QLRECOIL) $(PLIST) bin/GIMP bin/file-recoil bin/XnViewMP bin/Xrecoil.usr bin/bin bin/recoil2png
 	hdiutil create -volname recoil-$(VERSION)-macos -srcfolder bin -format UDBZ -fs HFS+ -imagekey bzip2-level=3 -ov $@
@@ -35,7 +34,7 @@ bin/GIMP:
 	mkdir -p $(@D) && ln -s /Applications/GIMP-2.10.app/Contents/Resources/lib/gimp/2.0/plug-ins $@
 
 bin/file-recoil: ../file-recoil.c ../formats.h ../recoil-stdio.c ../recoil-stdio.h ../recoil.c ../recoil.h
-	mkdir -p $(@D) && $(CC) $(CFLAGS_MIN) `$(GIMPTOOL) --cflags` -o $@ -I .. ../file-recoil.c ../recoil-stdio.c ../recoil.c `$(GIMPTOOL) --libs`
+	mkdir -p $(@D) && $(CC) $(CFLAGS_MIN) `gimptool-2.0 --cflags` -o $@ -I .. ../file-recoil.c ../recoil-stdio.c ../recoil.c `gimptool-2.0 --libs`
 ifdef PORK_CODESIGNING_IDENTITY
 	$(CODESIGN) $@
 endif
