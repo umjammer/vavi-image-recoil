@@ -1,6 +1,6 @@
 // recoil.ci - RECOIL core
 //
-// Copyright (C) 2009-2021  Piotr Fusik
+// Copyright (C) 2009-2022  Piotr Fusik
 //
 // This file is part of RECOIL (Retro Computer Image Library),
 // see http://recoil.sourceforge.net
@@ -4435,7 +4435,7 @@ public class RECOIL
 	public const string Version = $"{VersionMajor}.{VersionMinor}.{VersionMicro}";
 
 	/// Years RECOIL was created in.
-	public const string Years = "2009-2021";
+	public const string Years = "2009-2022";
 
 	/// Short credits for RECOIL.
 	public const string Credits = $"Retro Computer Image Library (C) {Years} Piotr Fusik\n";
