@@ -1,12 +1,14 @@
 VERSION = 6.1.1
 
-CFLAGS = -O2 -Wall -mmacosx-version-min=10.6 -arch x86_64 -arch arm64
+CFLAGS_MIN = -O2 -Wall
+CFLAGS = $(CFLAGS_MIN) -mmacosx-version-min=10.6 -arch x86_64 -arch arm64
 CODESIGN = codesign --options runtime -f -s $(PORK_CODESIGNING_IDENTITY)
 QLRECOIL = bin/RECOIL.qlgenerator/Contents/MacOS/qlrecoil
 PLIST = bin/RECOIL.qlgenerator/Contents/Info.plist
 QLCODESIGN = bin/RECOIL.qlgenerator/Contents/_CodeSignature/CodeResources
+GIMPTOOL = PATH=/usr/local/bin:$$PATH gimptool-2.0
 
-recoil-$(VERSION)-macos.dmg: bin/QuickLook $(QLCODESIGN) $(QLRECOIL) $(PLIST) bin/XnViewMP bin/Xrecoil.usr bin/bin bin/recoil2png
+recoil-$(VERSION)-macos.dmg: bin/QuickLook $(QLCODESIGN) $(QLRECOIL) $(PLIST) bin/GIMP bin/file-recoil bin/XnViewMP bin/Xrecoil.usr bin/bin bin/recoil2png
 	hdiutil create -volname recoil-$(VERSION)-macos -srcfolder bin -format UDBZ -fs HFS+ -imagekey bzip2-level=3 -ov $@
 ifdef PORK_NOTARIZING_CREDENTIALS
 	xcrun altool --notarize-app --primary-bundle-id net.sf.recoil.qlrecoil $(PORK_NOTARIZING_CREDENTIALS) --file $@ \
@@ -28,6 +30,15 @@ $(QLRECOIL): qlrecoil.c ../recoil-stdio.c ../recoil-stdio.h ../recoil.c ../recoi
 
 $(PLIST): Info.plist.xsl ../formats.xml
 	mkdir -p $(@D) && xsltproc -o $@ Info.plist.xsl ../formats.xml
+
+bin/GIMP:
+	mkdir -p $(@D) && ln -s /Applications/GIMP-2.10.app/Contents/Resources/lib/gimp/2.0/plug-ins $@
+
+bin/file-recoil: ../file-recoil.c ../formats.h ../recoil-stdio.c ../recoil-stdio.h ../recoil.c ../recoil.h
+	mkdir -p $(@D) && $(CC) $(CFLAGS_MIN) `$(GIMPTOOL) --cflags` -o $@ -I .. ../file-recoil.c ../recoil-stdio.c ../recoil.c `$(GIMPTOOL) --libs`
+ifdef PORK_CODESIGNING_IDENTITY
+	$(CODESIGN) $@
+endif
 
 bin/XnViewMP:
 	mkdir -p $(@D) && ln -s /Applications/XnViewMP.app/Contents/MacOS/Plugins $@
