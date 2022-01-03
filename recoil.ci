@@ -16989,7 +16989,7 @@ public class RECOIL
 
 	static void PlotSpcPattern(byte[]! pixels, int x, int y, int pattern)
 	{
-		pixels[y * 160 + x] = pattern >> ((~y & 1) * 8 + (~x & 3) * 2) & 3;
+		pixels[y * 160 + x] = pattern >> (((~y & 1) << 3) + ((~x & 3) << 1)) & 3;
 	}
 
 	static void DrawSpcBrush(byte[]! pixels, int x1, int y1, int brush, int pattern)
