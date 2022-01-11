@@ -34,7 +34,7 @@ bin/GIMP:
 	mkdir -p $(@D) && ln -s /Applications/GIMP-2.10.app/Contents/Resources/lib/gimp/2.0/plug-ins $@
 
 bin/file-recoil: ../file-recoil.c ../formats.h ../recoil-stdio.c ../recoil-stdio.h ../recoil.c ../recoil.h
-	mkdir -p $(@D) && $(CC) $(CFLAGS_MIN) `gimptool-2.0 --cflags` -o $@ -I .. ../file-recoil.c ../recoil-stdio.c ../recoil.c `gimptool-2.0 --libs`
+	mkdir -p $(@D) && $(CC) $(CFLAGS_MIN) `gimptool-2.0 --cflags` -o $@ -I .. ../file-recoil.c ../recoil-stdio.c ../recoil.c -L /Applications/GIMP-2.10.app/Contents/Resources/lib -lgimp-2.0.0 -lgegl-0.4.0 -lbabl-0.1.0 -lgobject-2.0.0
 ifdef PORK_CODESIGNING_IDENTITY
 	$(CODESIGN) $@
 endif
