@@ -39,6 +39,9 @@ ifdef PORK_CODESIGNING_IDENTITY
 	$(CODESIGN) $@
 endif
 
+install-gimp: bin/file-recoil
+	cp $< /Applications/GIMP-2.10.app/Contents/Resources/lib/gimp/2.0/plug-ins/
+
 bin/XnViewMP:
 	mkdir -p $(@D) && ln -s /Applications/XnViewMP.app/Contents/MacOS/Plugins $@
 
@@ -66,6 +69,6 @@ endif
 clean:
 	rm -rf recoil-$(VERSION)-macos.dmg bin  ../formats.h
 
-.PHONY: clean
+.PHONY: clean install-gimp
 
 .DELETE_ON_ERROR:
