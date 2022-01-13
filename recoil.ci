@@ -102,6 +102,7 @@ enum RECOILResolution
 	C1281x1,
 	Electronika1x1,
 	FmTowns1x1,
+	Hp481x1,
 	Msx11x1,
 	Msx14x4,
 	Msx21x1,
@@ -221,7 +222,7 @@ class Stream
 	/// Reads a hexadecimal ASCII digit and returns its value.
 	/// If there's no digit at the current stream position,
 	/// leaves the position intact and returns -1.
-	internal int ReadHexDigit!()
+	int ReadHexDigit!()
 	{
 		if (ContentOffset >= ContentLength)
 			return -1;
@@ -234,6 +235,17 @@ class Stream
 			return c - ('a' - 10);
 		ContentOffset--;
 		return -1;
+	}
+
+	internal int ReadHexByte!()
+	{
+		int hi = ReadHexDigit();
+		if (hi < 0)
+			return -1;
+		int lo = ReadHexDigit();
+		if (lo < 0)
+			return -1;
+		return hi << 4 | lo;
 	}
 
 	/// Reads an integer in range `0`..`maxValue`
@@ -5054,6 +5066,56 @@ public class RECOIL
 		return true;
 	}
 
+	// HP 48 formats.
+
+	bool DecodeGrb!(byte[] content, int contentLength)
+	{
+		if (contentLength < 19)
+			return false;
+		if (IsStringAt(content, 0, "HPHP48-")
+		 && content[8] == 0x1e && content[9] == 0x2b && (content[10] & 0xf) == 0) {
+			int nibbles = content[10] >> 4 | content[11] << 4 | content[12] << 12;
+			int height = content[13] | content[14] << 8 | (content[15] & 0xf) << 16;
+			int width = content[15] >> 4 | content[16] << 4 | content[17] << 12;
+			int bytesPerLine = width + 7 >> 3;
+			if (nibbles != (contentLength << 1) - 21
+			 || contentLength != 18 + height * bytesPerLine
+			 || !SetSize(width, height, RECOILResolution.Hp481x1))
+				return false;
+			for (int y = 0; y < height; y++) {
+				for (int x = 0; x < width; x++)
+					Pixels[y * width + x] = (content[18 + y * bytesPerLine + (x >> 3)] >> (x & 7) & 1) == 0 ? 0xffffff : 0;
+			}
+			return true;
+		}
+
+		const string asciiHeader = "%%HP: T(0)A(D)F(.);\rGROB ";
+		if (contentLength < $"{asciiHeader}1 1\r00".Length
+		 || !IsStringAt(content, 0, asciiHeader))
+			return false;
+		Stream() s;
+		s.Content = content;
+		s.ContentOffset = asciiHeader.Length;
+		s.ContentLength = contentLength;
+		int width = s.ParseInt(10, 65535); // actual size limits unknown
+		if (width <= 0 || s.ReadByte() != ' ')
+			return false;
+		int height = s.ParseInt(10, 65535); // ditto
+		if (height <= 0 || s.ReadByte() != '\r'
+		 || !SetSize(width, height, RECOILResolution.Hp481x1))
+			return false;
+		for (int y = 0; y < height; y++) {
+			for (int col = 0; col < width; col += 8) {
+				int b = s.ReadHexByte();
+				if (b < 0)
+					return false;
+				for (int x = 0; x < 8; x++)
+					Pixels[y * width + col + x] = (b >> (x ^ 4) & 1) == 0 ? 0xffffff : 0;
+			}
+		}
+		return true;
+	}
+
 	// TRS-80 formats.
 
 	bool DecodeTrsHr!(byte[] content, int contentLength)
@@ -5966,13 +6028,10 @@ public class RECOIL
 		s.ContentOffset = 0;
 		s.ContentLength = contentLength;
 		for (int i = 0; i < screen.Length; i++) {
-			int hi = s.ReadHexDigit();
-			if (hi < 0)
+			int b = s.ReadHexByte();
+			if (b < 0)
 				return false;
-			int lo = s.ReadHexDigit();
-			if (lo < 0)
-				return false;
-			screen[i] = hi << 4 | lo;
+			screen[i] = b;
 		}
 		return DecodeZx81(screen);
 	}
@@ -6320,13 +6379,10 @@ public class RECOIL
 				return true;
 			}
 			for (int x = 0; x < 32; x++) {
-				int hi = s.ReadHexDigit();
-				if (hi < 0)
+				int b = s.ReadHexByte();
+				if (b < 0)
 					return false;
-				int lo = s.ReadHexDigit();
-				if (lo < 0)
-					return false;
-				scr[0x1800 + (y << 5) + x] = (hi << 4) + lo;
+				scr[0x1800 + (y << 5) + x] = b;
 				if (s.ReadChar() != (x < 31 ? ' ' : '\n'))
 					return false;
 			}
@@ -18153,6 +18209,8 @@ public class RECOIL
 		case PackExt("GR8"):
 		case PackExt("GR9"):
 		case PackExt("GR9P"):
+		case PackExt("GRB"):
+		case PackExt("GRO"):
 		case PackExt("GRP"):
 		case PackExt("GS"):
 		case PackExt("IIGS"):
@@ -18785,6 +18843,9 @@ public class RECOIL
 			return DecodeGr9(content, contentLength);
 		case PackExt("GR9P"):
 			return DecodeGr9p(content, contentLength);
+		case PackExt("GRB"):
+		case PackExt("GRO"):
+			return DecodeGrb(content, contentLength);
 		case PackExt("GRP"):
 			return DecodeSc2(content, contentLength);
 		case PackExt("GS"):
@@ -19413,6 +19474,8 @@ public class RECOIL
 			return "Electronika BK";
 		case RECOILResolution.FmTowns1x1:
 			return "FM Towns";
+		case RECOILResolution.Hp481x1:
+			return "HP 48";
 		case RECOILResolution.Msx11x1:
 		case RECOILResolution.Msx14x4:
 			return "MSX";
