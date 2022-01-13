@@ -5104,13 +5104,16 @@ public class RECOIL
 		if (height <= 0 || s.ReadByte() != '\r'
 		 || !SetSize(width, height, RECOILResolution.Hp481x1))
 			return false;
+		int b = 0;
 		for (int y = 0; y < height; y++) {
-			for (int col = 0; col < width; col += 8) {
-				int b = s.ReadHexByte();
-				if (b < 0)
-					return false;
-				for (int x = 0; x < 8; x++)
-					Pixels[y * width + col + x] = (b >> (x ^ 4) & 1) == 0 ? 0xffffff : 0;
+			for (int x = 0; x < width; x++) {
+				int bit = x & 7;
+				if (bit == 0) {
+					b = s.ReadHexByte();
+					if (b < 0)
+						return false;
+				}
+				Pixels[y * width + x] = (b >> (bit ^ 4) & 1) == 0 ? 0xffffff : 0;
 			}
 		}
 		return true;
