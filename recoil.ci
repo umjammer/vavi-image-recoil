@@ -9141,6 +9141,18 @@ public class RECOIL
 		return true;
 	}
 
+	bool DecodeCfli!(byte[] content, int contentLength)
+	{
+		if (contentLength != 8170)
+			return false;
+		SetSize(296, 200, RECOILResolution.C641x1);
+		for (int y = 0; y < 200; y++) {
+			for (int x = 0; x < 296; x++)
+				Pixels[y * 296 + x] = C64Palette[content[2 + 3 + ((y & 7) << 10) + (y & ~7) * 5 + (x >> 3)] >> ((~x & 1) << 2) & 0xf];
+		}
+		return true;
+	}
+
 	bool Decode4bt!(byte[] content, int contentLength)
 	{
 		if (contentLength < 5 || !IsStringAt(content, 0, "GOD0") || content[contentLength - 1] != 0xad)
@@ -18113,6 +18125,7 @@ public class RECOIL
 		case PackExt("CE2"):
 		case PackExt("CE3"):
 		case PackExt("CEL"):
+		case PackExt("CFLI"):
 		case PackExt("CH$"):
 		case PackExt("CH4"):
 		case PackExt("CH6"):
@@ -18653,6 +18666,8 @@ public class RECOIL
 			return DecodeCe(content, contentLength);
 		case PackExt("CEL"):
 			return DecodeCel(content, contentLength);
+		case PackExt("CFLI"):
+			return DecodeCfli(content, contentLength);
 		case PackExt("CH$"):
 			return DecodeChrd(content, contentLength);
 		case PackExt("CH4"):
