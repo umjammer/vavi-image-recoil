@@ -251,7 +251,7 @@ class Stream
 	/// Reads an integer in range `0`..`maxValue`
 	/// in base `b`.
 	/// Returns -1 on error.
-	protected int ParseInt!(int b, int maxValue)
+	internal int ParseInt!(int b, int maxValue)
 	{
 		int r = ReadHexDigit();
 		if (r < 0 || r >= b)
@@ -5090,33 +5090,34 @@ public class RECOIL
 		}
 
 		const string asciiHeader = "%%HP: T(0)A(D)F(.);\rGROB ";
-		if (contentLength < $"{asciiHeader}1 1\r00".Length
-		 || !IsStringAt(content, 0, asciiHeader))
-			return false;
-		Stream() s;
-		s.Content = content;
-		s.ContentOffset = asciiHeader.Length;
-		s.ContentLength = contentLength;
-		int width = s.ParseInt(10, 65535); // actual size limits unknown
-		if (width <= 0 || s.ReadByte() != ' ')
-			return false;
-		int height = s.ParseInt(10, 65535); // ditto
-		if (height <= 0 || s.ReadByte() != '\r'
-		 || !SetSize(width, height, RECOILResolution.Hp481x1))
-			return false;
-		int b = 0;
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				int bit = x & 7;
-				if (bit == 0) {
-					b = s.ReadHexByte();
-					if (b < 0)
-						return false;
+		if (contentLength >= $"{asciiHeader}1 1\r00".Length
+		 && IsStringAt(content, 0, asciiHeader)) {
+			Stream() s;
+			s.Content = content;
+			s.ContentOffset = asciiHeader.Length;
+			s.ContentLength = contentLength;
+			int width = s.ParseInt(10, 65535); // actual size limits unknown
+			if (width <= 0 || s.ReadByte() != ' ')
+				return false;
+			int height = s.ParseInt(10, 65535); // ditto
+			if (height <= 0 || s.ReadByte() != '\r'
+			 || !SetSize(width, height, RECOILResolution.Hp481x1))
+				return false;
+			int b = 0;
+			for (int y = 0; y < height; y++) {
+				for (int x = 0; x < width; x++) {
+					int bit = x & 7;
+					if (bit == 0) {
+						b = s.ReadHexByte();
+						if (b < 0)
+							return false;
+					}
+					Pixels[y * width + x] = (b >> (bit ^ 4) & 1) == 0 ? 0xffffff : 0;
 				}
-				Pixels[y * width + x] = (b >> (bit ^ 4) & 1) == 0 ? 0xffffff : 0;
 			}
+			return true;
 		}
-		return true;
+		return false;
 	}
 
 	// TRS-80 formats.
