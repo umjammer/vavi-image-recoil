@@ -18236,6 +18236,7 @@ public class RECOIL
 		case PackExt("HCM"):
 		case PackExt("HED"):
 		case PackExt("HFC"):
+		case PackExt("HFD"):
 		case PackExt("HGB"):
 		case PackExt("HGR"):
 		case PackExt("HIM"):
@@ -18878,6 +18879,7 @@ public class RECOIL
 		case PackExt("HED"):
 			return contentLength == 9218 && DecodeIsh(content);
 		case PackExt("HFC"):
+		case PackExt("HFD"):
 			return DecodeHfc(content, contentLength);
 		case PackExt("HGB"):
 			return DecodeHgb(content, contentLength);
