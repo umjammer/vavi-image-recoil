@@ -5188,7 +5188,7 @@ public class RECOIL
 
 	// TRS-80 Color Computer formats.
 
-	bool DecodeClp!(byte[] content, int contentLength)
+	bool DecodeCocoClp!(byte[] content, int contentLength)
 	{
 		if (contentLength != 306 || content[305] != 0x64)
 			return false;
@@ -9154,26 +9154,39 @@ public class RECOIL
 		return true;
 	}
 
-	bool Decode4bt!(byte[] content, int contentLength)
+	bool DecodeGodot!(int columns, int rows, byte[] content, int contentOffset, int contentLength)
 	{
-		if (contentLength < 5 || !IsStringAt(content, 0, "GOD0") || content[contentLength - 1] != 0xad)
+		if (content[0] != 'G' || content[1] != 'O' || content[2] != 'D' || content[contentLength - 1] != 0xad)
 			return false;
 		byte[32000] unpacked;
 		GoDotStream() rle;
 		rle.Content = content;
-		rle.ContentOffset = 4;
+		rle.ContentOffset = contentOffset;
 		rle.ContentLength = contentLength - 1;
-		if (!rle.Unpack(unpacked, 0, 1, 32000))
+		if (!rle.Unpack(unpacked, 0, 1, columns * rows << 5))
 			return false;
-		SetSize(320, 200, RECOILResolution.C641x1);
-		for (int y = 0; y < 200; y++) {
-			for (int x = 0; x < 320; x++) {
+		int width = columns << 3;
+		int height = rows << 3;
+		SetSize(width, height, RECOILResolution.C641x1);
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
 				const byte[16] byBrightness = { 0, 6, 9, 11, 2, 4, 8, 12, 14, 10, 5, 15, 3, 7, 13, 1 };
-				int c = unpacked[(y & ~7) * 160 + ((x & ~7) + (y & 7) << 2) + (x >> 1 & 3)];
-				Pixels[y * 320 + x] = C64Palette[byBrightness[(x & 1) == 0 ? c >> 4 : c & 0xf]];
+				int c = unpacked[((y & ~7) * columns + (x & ~7) + (y & 7) << 2) + (x >> 1 & 3)];
+				Pixels[y * width + x] = C64Palette[byBrightness[(x & 1) == 0 ? c >> 4 : c & 0xf]];
 			}
 		}
 		return true;
+	}
+
+	bool Decode4bt!(byte[] content, int contentLength) => contentLength >= 5 && content[3] == '0' && DecodeGodot(40, 25, content, 4, contentLength);
+
+	bool DecodeGodotClp!(byte[] content, int contentLength)
+	{
+		if (contentLength < 9 || content[3] != '1')
+			return false;
+		int columns = content[6];
+		int rows = content[7];
+		return columns > 0 && columns <= 40 && rows > 0 && rows <= 25 && DecodeGodot(columns, rows, content, 8, contentLength);
 	}
 
 	const int FliBugCharacters = 3;
@@ -18687,7 +18700,8 @@ public class RECOIL
 		case PackExt("CLE"):
 			return DecodeCle(content, contentLength);
 		case PackExt("CLP"):
-			return DecodeClp(content, contentLength);
+			return DecodeGodotClp(content, contentLength)
+				|| DecodeCocoClp(content, contentLength);
 		case PackExt("CM5"):
 			return DecodeCm5(filename, content, contentLength);
 		case PackExt("CMP"):
