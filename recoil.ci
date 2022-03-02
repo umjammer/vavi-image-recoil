@@ -9154,40 +9154,36 @@ public class RECOIL
 		return true;
 	}
 
-	bool DecodeGodot!(int columns, int rows, byte[] content, int contentOffset, int contentLength)
+	bool DecodeGodot!(int width, int height, byte[] content, int contentOffset, int contentLength)
 	{
-		if (content[0] != 'G' || content[1] != 'O' || content[2] != 'D' || content[contentLength - 1] != 0xad)
+		if (content[0] != 'G' || content[1] != 'O' || content[2] != 'D' || content[contentLength - 1] != 0xad
+		 || !SetSize(width, height, RECOILResolution.C641x1))
 			return false;
-		byte[32000] unpacked;
 		GoDotStream() rle;
 		rle.Content = content;
 		rle.ContentOffset = contentOffset;
 		rle.ContentLength = contentLength - 1;
-		if (!rle.Unpack(unpacked, 0, 1, columns * rows << 5))
-			return false;
-		int width = columns << 3;
-		int height = rows << 3;
-		SetSize(width, height, RECOILResolution.C641x1);
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				const byte[16] byBrightness = { 0, 6, 9, 11, 2, 4, 8, 12, 14, 10, 5, 15, 3, 7, 13, 1 };
-				int c = unpacked[((y & ~7) * columns + (x & ~7) + (y & 7) << 2) + (x >> 1 & 3)];
-				Pixels[y * width + x] = C64Palette[byBrightness[(x & 1) == 0 ? c >> 4 : c & 0xf]];
+		for (int row = 0; row < height; row += 8) {
+			for (int column = 0; column < width; column += 8) {
+				for (int y = 0; y < 8; y++) {
+					int pixelsOffset = (row + y) * width + column;
+					for (int x = 0; x < 4; x++) {
+						int b = rle.ReadRle();
+						if (b < 0)
+							return false;
+						const byte[16] byBrightness = { 0, 6, 9, 11, 2, 4, 8, 12, 14, 10, 5, 15, 3, 7, 13, 1 };
+						Pixels[pixelsOffset++] = C64Palette[byBrightness[b >> 4]];
+						Pixels[pixelsOffset++] = C64Palette[byBrightness[b & 0xf]];
+					}
+				}
 			}
 		}
 		return true;
 	}
 
-	bool Decode4bt!(byte[] content, int contentLength) => contentLength >= 5 && content[3] == '0' && DecodeGodot(40, 25, content, 4, contentLength);
+	bool Decode4bt!(byte[] content, int contentLength) => contentLength >= 5 && content[3] == '0' && DecodeGodot(320, 200, content, 4, contentLength);
 
-	bool DecodeGodotClp!(byte[] content, int contentLength)
-	{
-		if (contentLength < 9 || content[3] != '1')
-			return false;
-		int columns = content[6];
-		int rows = content[7];
-		return columns > 0 && columns <= 40 && rows > 0 && rows <= 25 && DecodeGodot(columns, rows, content, 8, contentLength);
-	}
+	bool DecodeGodotClp!(byte[] content, int contentLength) => contentLength >= 9 && content[3] == '1' && DecodeGodot(content[6] << 3, content[7] << 3, content, 8, contentLength);
 
 	const int FliBugCharacters = 3;
 
