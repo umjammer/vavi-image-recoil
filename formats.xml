@@ -834,7 +834,7 @@
 		<format name="Stellar" width="64" height="48" frames="2"><ext>STL</ext></format>
 		<format name="ZX-Paintbrush" width="256" height="192" colors="15"><ext>ZXP</ext></format>
 	</platform>
-	<platform name="ZX Spectrum Profi" href="https://velesoft.speccy.cz/profi.htm">
+	<platform name="ZX Spectrum Profi" href="https://en.wikipedia.org/wiki/List_of_ZX_Spectrum_clones#Profi">
 		<format name="Profi" width="512" height="240" colors="16"><ext>GRF</ext></format>
 	</platform>
 	<platform name="ZX Spectrum ULAplus" href="https://sites.google.com/site/ulaplus/">
