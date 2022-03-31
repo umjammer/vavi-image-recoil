@@ -127,6 +127,7 @@ enum RECOILResolution
 	Zx811x1,
 	Spectrum1x1,
 	Spectrum4x4,
+	SpectrumProfi1x2,
 	SpectrumUlaPlus1x1,
 	ZxEvolution1x1,
 	SpectrumNext1x1,
@@ -6005,7 +6006,7 @@ public class RECOIL
 			for (int x = 0; x < 256; x++) {
 				int c = screen[y >> 3 << 5 | x >> 3];
 				int b = font[(c & 0x3f) << 3 | (y & 7)] >> (~x & 7) & 1;
-				Pixels[y << 8 | x] = b == c >> 7 ? 0xffffff : 0;
+				Pixels[(y << 8) + x] = b == c >> 7 ? 0xffffff : 0;
 			}
 		}
 		return true;
@@ -6581,6 +6582,29 @@ public class RECOIL
 		}
 		SetSize(256, 192, RECOILResolution.SpectrumNext1x1);
 		DecodeBytes(content, 512);
+		return true;
+	}
+
+	bool DecodeProfiGrf!(byte[] content, int contentLength)
+	{
+		if (contentLength != 30848
+		 || content[0] != 0 || content[1] != 2
+		 || content[2] != 0xf0 || content[3] != 0
+		 || content[4] != 4 || content[5] != 0
+		 || content[6] != 0x80 || content[7] != 0
+		 || content[8] != 1 || content[9] != 0x13)
+			return false;
+		SetSize(512, 480, RECOILResolution.SpectrumProfi1x2);
+		for (int c = 0; c < 16; c++)
+			ContentPalette[c] = GetG3R3B2Color(content[10 + c]);
+		for (int y = 0; y < 480; y++) {
+			for (int x = 0; x < 512; x++) {
+				int offset = 128 + (y >> 1 << 7) + (x >> 3 << 1);
+				int b = content[offset] >> (~x & 7) & 1;
+				int a = content[offset + 1]; // PIPPPIII
+				Pixels[(y << 9) + x] = ContentPalette[b == 0 ? (a >> 4 & 8) | (a >> 3 & 7) : (a >> 3 & 8) | (a & 7)];
+			}
+		}
 		return true;
 	}
 
@@ -18237,6 +18261,7 @@ public class RECOIL
 		case PackExt("GR9P"):
 		case PackExt("GRB"):
 		case PackExt("GRO"):
+		case PackExt("GRF"):
 		case PackExt("GRP"):
 		case PackExt("GS"):
 		case PackExt("IIGS"):
@@ -18375,7 +18400,6 @@ public class RECOIL
 		case PackExt("P11"):
 		case PackExt("P3C"):
 		case PackExt("P41"):
-		case PackExt("GRF"):
 		case PackExt("P4I"):
 		case PackExt("P64"):
 		case PackExt("FLY"):
@@ -18876,6 +18900,9 @@ public class RECOIL
 		case PackExt("GRB"):
 		case PackExt("GRO"):
 			return DecodeGrb(content, contentLength);
+		case PackExt("GRF"):
+			return DecodeCocoMax(content, contentLength)
+				|| DecodeProfiGrf(content, contentLength);
 		case PackExt("GRP"):
 			return DecodeSc2(content, contentLength);
 		case PackExt("GS"):
@@ -19127,7 +19154,6 @@ public class RECOIL
 		case PackExt("P3C"):
 			return DecodeP3c(content, contentLength);
 		case PackExt("P41"):
-		case PackExt("GRF"):
 			return DecodeCocoMax(content, contentLength);
 		case PackExt("P4I"):
 			return DecodeP4i(content, contentLength);
@@ -19548,6 +19574,8 @@ public class RECOIL
 		case RECOILResolution.Spectrum1x1:
 		case RECOILResolution.Spectrum4x4:
 			return "ZX Spectrum";
+		case RECOILResolution.SpectrumProfi1x2:
+			return "ZX Spectrum Profi";
 		case RECOILResolution.SpectrumUlaPlus1x1:
 			return "ZX Spectrum ULAplus";
 		case RECOILResolution.ZxEvolution1x1:
@@ -19620,6 +19648,7 @@ public class RECOIL
 		case RECOILResolution.Pc801x2:
 		case RECOILResolution.Pc881x2:
 		case RECOILResolution.SamCoupe1x2:
+		case RECOILResolution.SpectrumProfi1x2:
 		case RECOILResolution.Timex1x2:
 		case RECOILResolution.Trs1x2:
 		case RECOILResolution.Coco2x2:
