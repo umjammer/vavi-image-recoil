@@ -17,7 +17,7 @@ endif
 bin/QuickLook:
 	mkdir -p $(@D) && ln -s /Library/QuickLook $@
 
-$(QLCODESIGN): $(QLRECOIL) $(PLIST)
+$(QLCODESIGN): $(QLRECOIL) $(PLIST) entitlements.xml
 ifdef PORK_CODESIGNING_IDENTITY
 	$(CODESIGN) --entitlements entitlements.xml bin/RECOIL.qlgenerator
 else
