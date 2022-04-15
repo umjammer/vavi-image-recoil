@@ -10664,6 +10664,18 @@ public class RECOIL
 		}
 	}
 
+	bool DecodeBil!(byte[] content, int contentLength)
+	{
+		switch (contentLength) {
+		case 32032: // GFA Artist
+			return DecodeStLow(content, 32, content, 0, 320, 200);
+		case 32034: // DEGAS PI1
+			return content[0] == 0 && content[1] == 0 && DecodeStLow(content, 34, content, 2, 320, 200);
+		default:
+			return false;
+		}
+	}
+
 	bool DecodePaletteMaster!(byte[] content, int contentLength)
 	{
 		if (contentLength != 36864 || content[0x8c80] != 0xff || content[0x8c81] != 0xff)
@@ -18135,6 +18147,7 @@ public class RECOIL
 		case PackExt("BBG"):
 		case PackExt("BFLI"):
 		case PackExt("BG9"):
+		case PackExt("BIL"):
 		case PackExt("BRUS"):
 		case PackExt("IP"):
 		case PackExt("PICT"):
@@ -18666,6 +18679,8 @@ public class RECOIL
 			return DecodeG09(content, contentLength);
 		case PackExt("BGP"):
 			return DecodeBgp(content, contentLength);
+		case PackExt("BIL"):
+			return DecodeBil(content, contentLength);
 		case PackExt("BKG"):
 			return DecodeBkg(content, contentLength);
 		case PackExt("BRUS"):
