@@ -10742,6 +10742,34 @@ public class RECOIL
 	bool DecodeSd!(byte[] content, int contentLength, int mode)
 		=> contentLength == 32128 && DecodeSt(content, 128, content, 4, mode, 0);
 
+	bool DecodeObj!(byte[] content, int contentLength)
+	{
+		Stream() s;
+		s.Content = content;
+		s.ContentOffset = 0;
+		s.ContentLength = contentLength;
+		for (int i = 0; i < 16; i++) {
+			int rgb = s.ParseDaliInt();
+			if (rgb < 0 || rgb > 1911)
+				return false;
+			rgb = (rgb & 0x700) << 8 | (rgb & 0x70) << 4 | (rgb & 7);
+			ContentPalette[i] = rgb << 5 | rgb << 2 | (rgb >> 1 & 0x030303);
+		}
+		int contentOffset = s.ContentOffset;
+		if (contentOffset + 6 >= contentLength
+		 || content[contentOffset + 2] != 0
+		 || content[contentOffset + 4] != 0 || content[contentOffset + 5] != 4)
+			return false;
+		int width = (content[contentOffset] << 8) + content[contentOffset + 1] + 1;
+		int height = content[contentOffset + 3] + 1;
+		int stride = width + 15 >> 4 << 3;
+		if (contentOffset + 6 + height * stride != contentLength
+		 || !SetSize(width, height, RECOILResolution.St1x1))
+			return false;
+		DecodeBitplanes(content, contentOffset + 6, stride, 4, 0, width, height);
+		return true;
+	}
+
 	bool DecodeIc!(byte[] content, int contentLength)
 	{
 		if (contentLength < 68
@@ -18407,6 +18435,7 @@ public class RECOIL
 		case PackExt("NL3"):
 		case PackExt("NLQ"):
 		case PackExt("NXI"):
+		case PackExt("OBJ"):
 		case PackExt("OCP"):
 		case PackExt("ODF"):
 		case PackExt("P"):
@@ -19158,6 +19187,8 @@ public class RECOIL
 			return DecodeNlq(content, contentLength);
 		case PackExt("NXI"):
 			return DecodeNxi(content, contentLength);
+		case PackExt("OBJ"):
+			return DecodeObj(content, contentLength);
 		case PackExt("OCP"):
 			return DecodeOcp(content, contentLength);
 		case PackExt("ODF"):
