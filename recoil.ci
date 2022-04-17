@@ -656,6 +656,14 @@ class ArtPalette : MultiPalette
 	}
 }
 
+class GfaArtistPalette : MultiPalette
+{
+	internal override void SetLinePalette!(RECOIL! recoil, int y)
+	{
+		recoil.SetStPalette(Content, 32036 + ((y + 5) / 3 << 5), 16);
+	}
+}
+
 class RastPalette : MultiPalette
 {
 	internal int Colors;
@@ -10657,8 +10665,11 @@ public class RECOIL
 		case 32032:
 			return DecodeStLow(content, 32, content, 0, 320, 200);
 		case 34360:
-			// TODO: rasters?
-			return DecodeStLow(content, 4, content, 32004, 320, 200);
+			GfaArtistPalette() palette;
+			palette.Content = content;
+			SetSize(320, 200, RECOILResolution.St1x1);
+			DecodeScaledBitplanes(content, 4, 320, 200, 4, false, palette);
+			return true;
 		default:
 			return false;
 		}
