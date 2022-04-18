@@ -10755,6 +10755,12 @@ public class RECOIL
 
 	bool DecodeObj!(byte[] content, int contentLength)
 	{
+		if (contentLength < 8)
+			return false;
+		if (content[4] == 0 && content[5] == 1
+		 && SetSize((content[0] << 8) + content[1] + 1, (content[2] << 8) + content[3] + 1, RECOILResolution.St1x1))
+			return DecodeBlackAndWhite(content, 6, contentLength, true, 0xffffff);
+
 		Stream() s;
 		s.Content = content;
 		s.ContentOffset = 0;
