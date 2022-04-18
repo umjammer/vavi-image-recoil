@@ -18689,6 +18689,7 @@ public class RECOIL
 			return DecodeIph(content, contentLength) // contentLength == 9009
 				|| DecodeArtDirector(content, contentLength) // contentLength == 32512
 				|| DecodeGfaArtist(content, contentLength) // contentLength == 32032
+				|| DecodeDoo(content, contentLength) // contentLength == 32000
 				|| DecodePaletteMaster(content, contentLength) // contentLength == 36864
 				|| DecodeAtari8Artist(content, contentLength) // contentLength == 3206
 				|| DecodeMonoArt(content, contentLength) // dimensions in the file, largest known file is 639 bytes
