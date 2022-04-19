@@ -13520,6 +13520,8 @@ public class RECOIL
 		if (contentLength < colorsOffset + 6)
 			return false;
 		int colors = content[colorsOffset - 1];
+		if (colors == 0)
+			colors = 256;
 		switch (contentLength - colorsOffset - colors * 3) {
 		case 0:
 		case 256:
@@ -13596,6 +13598,9 @@ public class RECOIL
 			default:
 				return false;
 			}
+		case 27:
+			SetSize(320, 200, RECOILResolution.Pc1x1);
+			return DecodeFlfBytes(content, contentLength);
 		default:
 			return false;
 		}
