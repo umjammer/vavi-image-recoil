@@ -13530,7 +13530,6 @@ public class RECOIL
 			return false;
 		}
 		DecodeR8G8B8Colors(content, colorsOffset, colors, ContentPalette, 0);
-		ContentPalette.Fill(0, colors, 256 - colors);
 		DecodeBytes(content, 13);
 		return true;
 	}
@@ -13539,6 +13538,7 @@ public class RECOIL
 	{
 		if (contentLength < 20 || !IsStringAt(content, 0, "FLUFF64"))
 			return false;
+		ContentPalette.Fill(0);
 		switch (content[11]) {
 		case 1:
 			return DecodeFlfFont(content, 15, contentLength, 40, 25, RECOILResolution.C642x1, C64Palette, 16, 6, 3);
@@ -13568,21 +13568,22 @@ public class RECOIL
 				0xb8c76f
 			};
 			return DecodeFlfFont(content, 20, contentLength, content[0x12], content[0x13], RECOILResolution.Vic202x1, Vic20Palette, 8, 6, 3);
-		case 12:
+		case 0x0c:
 			SetSize(320, 200, RECOILResolution.Amiga1x1);
 			return DecodeFlfBytes(content, contentLength);
-		case 13:
+		case 0x0d:
 			SetSize(320, 256, RECOILResolution.Amiga1x1);
 			return DecodeFlfBytes(content, contentLength);
-		case 22:
+		case 0x16:
 			SetSize(320, 200, RECOILResolution.St1x1);
 			return DecodeFlfBytes(content, contentLength);
-		case 26:
+		case 0x1a:
+			if (content[12] != 0x0c)
+				return false;
 			switch (content[13]) {
 			case 4:
 				if (contentLength != 82190)
 					return false;
-				ContentPalette.Fill(0);
 				ContentPalette[1] = 0xffffff;
 				SetSize(320, 256, RECOILResolution.Bbc1x1);
 				DecodeBytes(content, 13);
@@ -13591,16 +13592,21 @@ public class RECOIL
 				if (contentLength != 41230)
 					return false;
 				BbcPalette2Bit.CopyTo(0, ContentPalette, 0, 4);
-				ContentPalette.Fill(0, 4, 256 - 4);
 				SetSize(320, 256, RECOILResolution.Bbc2x1);
 				DecodeBytes(content, 13);
 				return true;
 			default:
 				return false;
 			}
-		case 27:
+		case 0x1b:
 			SetSize(320, 200, RECOILResolution.Pc1x1);
 			return DecodeFlfBytes(content, contentLength);
+		case 0x1c:
+			if (content[12] != 0x0e)
+				return false;
+			SetZx(RECOILResolution.Spectrum1x1);
+			DecodeBytes(content, 13);
+			return true;
 		default:
 			return false;
 		}

@@ -829,6 +829,7 @@
 		<format name="4x8 font" colors="2"><ext>CH4</ext></format>
 		<format name="6x8 font" colors="2"><ext>CH6</ext></format>
 		<format name="8x8 font" colors="2"><ext>CH8</ext></format>
+		<format name="Turbo Rascal Syntax Error" width="256" height="192" colors="15"><ext>FLF</ext></format>
 		<format name="Attributes Gigascreen" width="32" height="24" unit="characters" frames="2"><ext>HLR</ext></format>
 		<format name="Multicolor 8x2" width="256" height="192" colors="15"><ext>IFL</ext></format>
 		<format name="Gigascreen" width="256" height="192" frames="2"><ext>IMG</ext></format>
