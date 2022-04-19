@@ -4696,6 +4696,7 @@ public class RECOIL
 		switch (Resolution) {
 		case RECOILResolution.Amiga2x1:
 		case RECOILResolution.AmigaHame2x1:
+		case RECOILResolution.Amstrad2x1:
 		case RECOILResolution.Tt2x1:
 		case RECOILResolution.Falcon2x1:
 		case RECOILResolution.Bbc2x1:
@@ -13577,6 +13578,25 @@ public class RECOIL
 		case 0x16:
 			SetSize(320, 200, RECOILResolution.St1x1);
 			return DecodeFlfBytes(content, contentLength);
+		case 0x18:
+			if (content[12] != 0x0b || contentLength != 32269)
+				return false;
+			SetAmstradFirmwarePalette(content, 0x7dcd, 16);
+			SetSize(320, 200, RECOILResolution.Amstrad2x1);
+			DecodeBytes(content, 13);
+			return true;
+		case 0x19:
+			if (content[12] != 0x0b || contentLength < 282)
+				return false;
+			int width = Get32LittleEndian(content, 13);
+			int height = Get32LittleEndian(content, 17);
+			if (Get32LittleEndian(content, 21) != 0 // TODO: other modes?
+			 || !SetSize(width << 1, height, RECOILResolution.Amstrad2x1)
+			 || contentLength != 25 + 256 + width * height)
+				return false;
+			SetAmstradFirmwarePalette(content, contentLength - 64, 16);
+			DecodeBytes(content, 25);
+			return true;
 		case 0x1a:
 			if (content[12] != 0x0c)
 				return false;
