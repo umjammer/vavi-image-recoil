@@ -3,7 +3,7 @@
 		<format name="AMOS"><ext>ABK</ext></format>
 		<format name="Amiga Continuous Bitmap"><ext>ACBM</ext></format>
 		<format name="TVPaint" colors="16777216"><ext>DEEP</ext></format>
-		<format name="Turbo Rascal Syntax Error" width="320" height="200"><ext>FLF</ext></format>
+		<format name="Turbo Rascal Syntax Error" width="320" maxHeight="256"><ext>FLF</ext></format>
 		<format name="Hold-And-Modify 6" colors="4096">
 			<ext>HAM</ext>
 			<ext>HAM6</ext>
@@ -314,7 +314,7 @@
 		<format name="PaintShop" width="640" height="800" colors="2"><ext>DA4</ext></format>
 		<format name="Doodle" width="640" height="400" colors="2">
 			<ext>DOO</ext>
-			<ext name="MonoSTar">ART</ext>
+			<ext name="MonoSTar"><!-- also: The ArtiST -->ART</ext>
 		</format>
 		<format width="416" height="273" colors="136" frames="2">
 			<ext>DU1</ext>
@@ -322,6 +322,7 @@
 		</format>
 		<format width="832" height="273" colors="10" frames="2"><ext>DU2</ext></format>
 		<format name="EZ-Art Professional" width="320" height="200" colors="16"><ext>EZA</ext></format>
+		<format name="Turbo Rascal Syntax Error" width="320" height="200"><ext>FLF</ext></format>
 		<format name="8x16 font" colors="2"><ext>FNT</ext></format>
 		<format name="GDOS font" colors="2"><ext>FNT</ext></format>
 		<format name="Canvas (raster)" maxWidth="640" height="200"><ext>FUL</ext></format>
@@ -468,6 +469,7 @@
 		<format name="Mode 4" width="320" height="256" colors="2"><ext>BB4</ext></format>
 		<format name="Mode 5" width="160" height="256" colors="4"><ext>BB5</ext></format>
 		<format name="LdPic" maxWidth="640" height="256"><ext>BBG</ext></format>
+		<format name="Turbo Rascal Syntax Error" maxWidth="320" height="256"><ext>FLF</ext></format>
 	</platform>
 	<platform name="Commodore VIC-20" href="https://en.wikipedia.org/wiki/Commodore_VIC-20">
 		<format name="Turbo Rascal Syntax Error" colors="8"><ext>FLF</ext></format>

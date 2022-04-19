@@ -4698,6 +4698,7 @@ public class RECOIL
 		case RECOILResolution.AmigaHame2x1:
 		case RECOILResolution.Tt2x1:
 		case RECOILResolution.Falcon2x1:
+		case RECOILResolution.Bbc2x1:
 		case RECOILResolution.Msx22x1i:
 		case RECOILResolution.Msx2Plus2x1i:
 			offset += x << 1;
@@ -13513,6 +13514,25 @@ public class RECOIL
 		return true;
 	}
 
+	bool DecodeFlfBytes!(byte[] content, int contentLength)
+	{
+		int colorsOffset = 14 + 320 * Height;
+		if (contentLength < colorsOffset + 6)
+			return false;
+		int colors = content[colorsOffset - 1];
+		switch (contentLength - colorsOffset - colors * 3) {
+		case 0:
+		case 256:
+			break;
+		default:
+			return false;
+		}
+		DecodeR8G8B8Colors(content, colorsOffset, colors, ContentPalette, 0);
+		ContentPalette.Fill(0, colors, 256 - colors);
+		DecodeBytes(content, 13);
+		return true;
+	}
+
 	bool DecodeFlf!(byte[] content, int contentLength)
 	{
 		if (contentLength < 20 || !IsStringAt(content, 0, "FLUFF64"))
@@ -13547,16 +13567,35 @@ public class RECOIL
 			};
 			return DecodeFlfFont(content, 20, contentLength, content[0x12], content[0x13], RECOILResolution.Vic202x1, Vic20Palette, 8, 6, 3);
 		case 12:
-			if (contentLength < 64020)
-				return false;
-			int colors = content[0xfa0d];
-			if (contentLength != 0xfa0e + colors * 3)
-				return false;
-			DecodeR8G8B8Colors(content, 0xfa0e, colors, ContentPalette, 0);
-			ContentPalette.Fill(0, colors, 256 - colors);
 			SetSize(320, 200, RECOILResolution.Amiga1x1);
-			DecodeBytes(content, 13);
-			return true;
+			return DecodeFlfBytes(content, contentLength);
+		case 13:
+			SetSize(320, 256, RECOILResolution.Amiga1x1);
+			return DecodeFlfBytes(content, contentLength);
+		case 22:
+			SetSize(320, 200, RECOILResolution.St1x1);
+			return DecodeFlfBytes(content, contentLength);
+		case 26:
+			switch (content[13]) {
+			case 4:
+				if (contentLength != 82190)
+					return false;
+				ContentPalette.Fill(0);
+				ContentPalette[1] = 0xffffff;
+				SetSize(320, 256, RECOILResolution.Bbc1x1);
+				DecodeBytes(content, 13);
+				return true;
+			case 5:
+				if (contentLength != 41230)
+					return false;
+				BbcPalette2Bit.CopyTo(0, ContentPalette, 0, 4);
+				ContentPalette.Fill(0, 4, 256 - 4);
+				SetSize(320, 256, RECOILResolution.Bbc2x1);
+				DecodeBytes(content, 13);
+				return true;
+			default:
+				return false;
+			}
 		default:
 			return false;
 		}
