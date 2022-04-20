@@ -13569,6 +13569,36 @@ public class RECOIL
 				0xb8c76f
 			};
 			return DecodeFlfFont(content, 20, contentLength, content[0x12], content[0x13], RECOILResolution.Vic202x1, Vic20Palette, 8, 6, 3);
+		case 0x0b:
+			if (contentLength != 64269)
+				return false;
+			switch (content[12]) {
+			case 2:
+				ContentPalette[1] = 0x00aaaa;
+				ContentPalette[2] = 0xaa00aa;
+				ContentPalette[3] = 0xaaaaaa;
+				break;
+			case 3:
+				ContentPalette[1] = 0x55ffff;
+				ContentPalette[2] = 0xff55ff;
+				ContentPalette[3] = 0xffffff;
+				break;
+			case 4:
+				ContentPalette[1] = 0x00aa00;
+				ContentPalette[2] = 0xaa0000;
+				ContentPalette[3] = 0xaa5500;
+				break;
+			case 5:
+				ContentPalette[1] = 0x55ff55;
+				ContentPalette[2] = 0xff5555;
+				ContentPalette[3] = 0xffff55;
+				break;
+			default:
+				return false;
+			}
+			SetSize(320, 200, RECOILResolution.Pc1x1);
+			DecodeBytes(content, 13);
+			return true;
 		case 0x0c:
 			SetSize(320, 200, RECOILResolution.Amiga1x1);
 			return DecodeFlfBytes(content, contentLength);
