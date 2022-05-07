@@ -6,7 +6,7 @@ License: GPLv2+
 Group: Applications/Multimedia
 Source: https://downloads.sourceforge.net/recoil/recoil-%{version}.tar.gz
 URL: https://recoil.sourceforge.net/
-BuildRequires: gcc, libpng-devel, libxslt
+BuildRequires: gcc, libxslt
 BuildRoot: %{_tmppath}/%{name}-root
 
 %description
@@ -19,6 +19,7 @@ and ZX Spectrum computers.
 
 %package 2png
 Summary: Converter of retro computer image files
+BuildRequires: libpng-devel
 
 %description 2png
 Provides "recoil2png" command-line converter of pictures in native formats of
