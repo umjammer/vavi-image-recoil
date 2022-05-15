@@ -9119,6 +9119,41 @@ public class RECOIL
 		return true;
 	}
 
+	bool DecodePic0!(string filename, byte[] content, int contentLength)
+	{
+		if (contentLength != 3890 || content[0] != 0 || content[1] != 0x0d
+		 || content[0xf24] != 0x96 || content[0xf25] != 0x17 || content[0xf27] != 0x8c)
+			return false;
+		byte[244 + 1] colors;
+		if (ReadCompanionFile(filename, "PIC1", "pic1", colors, colors.Length) != 244)
+			return false;
+		SetSize(176, 176, RECOILResolution.Vic202x1);
+		for (int y = 0; y < 176; y++) {
+			for (int x = 0; x < 176; x++) {
+				int charOffset = (y >> 4) * 22 + (x >> 3);
+				int c = colors[2 + charOffset];
+				if ((c & 8) == 0)
+					return false;
+				switch (content[2 + (charOffset << 4) + (y & 15)] >> (~x & 6) & 3) {
+				case 0:
+					c = content[0xf31] >> 4;
+					break;
+				case 1:
+					c = content[0xf31] & 7;
+					break;
+				case 2:
+					c &= 7;
+					break;
+				default:
+					c = content[0xf30] >> 4;
+					break;
+				}
+				Pixels[y * 176 + x] = Vic20Palette[c];
+			}
+		}
+		return true;
+	}
+
 	// Commodore 16 formats.
 
 	bool DecodeP4i!(byte[] content, int contentLength)
@@ -18616,6 +18651,7 @@ public class RECOIL
 		case PackExt("PI8"):
 		case PackExt("PI9"):
 		case PackExt("PIC"):
+		case PackExt("PIC0"):
 		case PackExt("PIX"):
 		case PackExt("PL4"):
 		case PackExt("PLA"):
@@ -19404,6 +19440,8 @@ public class RECOIL
 			return DecodePi9(content, contentLength);
 		case PackExt("PIC"):
 			return DecodePic(content, contentLength);
+		case PackExt("PIC0"):
+			return DecodePic0(filename, content, contentLength);
 		case PackExt("PIX"):
 			return DecodeFalconPix(content, contentLength)
 				|| DecodeCocoMax(content, contentLength)
