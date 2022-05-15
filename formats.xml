@@ -473,6 +473,7 @@
 		<format name="Turbo Rascal Syntax Error" maxWidth="320" height="256"><ext>FLF</ext></format>
 	</platform>
 	<platform name="Commodore VIC-20" href="https://en.wikipedia.org/wiki/Commodore_VIC-20">
+		<format name="Best Paint" width="160" height="192" colors="9"><ext fake="true">BP</ext></format>
 		<format name="Turbo Rascal Syntax Error" colors="8"><ext>FLF</ext></format>
 	</platform>
 	<platform name="Commodore 64" href="https://en.wikipedia.org/wiki/Commodore_64">

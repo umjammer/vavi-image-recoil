@@ -94,6 +94,7 @@ enum RECOILResolution
 	Bbc1x1,
 	Bbc2x1,
 	Bbc1x2,
+	Vic201x1,
 	Vic202x1,
 	C161x1,
 	C162x1,
@@ -9070,6 +9071,49 @@ public class RECOIL
 					0xffffff
 				};
 				Pixels[y * width + x] = palette[c & 0xf];
+			}
+		}
+		return true;
+	}
+
+	// Commodore VIC-20 formats.
+
+	const int[16] Vic20Palette = {
+		0x000000,
+		0xffffff,
+		0x6d2327,
+		0xa0fef8,
+		0x8e3c97,
+		0x7eda75,
+		0x252390,
+		0xffff86,
+		0xa4643b,
+		0xffc8a1,
+		0xf2a7ab,
+		0xdbffff,
+		0xffb4ff,
+		0xd7ffce,
+		0x9d9aff,
+		0xffffc9
+	};
+
+	bool DecodeBp!(byte[] content, int contentLength)
+	{
+		if (contentLength != 4083 || content[0] != 0 || content[1] != 0x11)
+			return false;
+		SetSize(160, 192, RECOILResolution.Vic201x1);
+		int screenColor = content[4082] >> 4;
+		for (int y = 0; y < 192; y++) {
+			for (int x = 0; x < 160; x++) {
+				int c;
+				if ((content[2 + ((x >> 3) * 12 + (y >> 4) << 4) + (y & 15)] >> (~x & 7) & 1) == 0)
+					c = screenColor;
+				else {
+					c = content[0xf02 + (y >> 4) * 20 + (x >> 3)] & 0xf;
+					if (c >= 8)
+						return false;
+				}
+				Pixels[y * 160 + x] = Vic20Palette[c];
 			}
 		}
 		return true;
@@ -18130,16 +18174,6 @@ public class RECOIL
 		case 9:
 			if (content[12] != 6)
 				return false;
-			const int[8] Vic20Palette = {
-				0x000000,
-				0xffffff,
-				0x68372b,
-				0x70a4b2,
-				0x6f3d86,
-				0x588d43,
-				0x352879,
-				0xb8c76f
-			};
 			return DecodeFlfFont(content, 20, contentLength, content[0x12], content[0x13], RECOILResolution.Vic202x1, Vic20Palette, 8, 6, 3);
 		case 0x0b:
 			if (contentLength != 64269)
@@ -18294,6 +18328,7 @@ public class RECOIL
 		case PackExt("BL3"):
 		case PackExt("BLD"):
 		case PackExt("BML"):
+		case PackExt("BP"):
 		case PackExt("BRU"):
 		case PackExt("BSC"):
 		case PackExt("BMC4"):
@@ -18832,6 +18867,8 @@ public class RECOIL
 			return DecodeBld(content, contentLength);
 		case PackExt("BML"):
 			return DecodeBml(content, contentLength);
+		case PackExt("BP"):
+			return DecodeBp(content, contentLength);
 		case PackExt("BRU"):
 			return DecodeBru(content, contentLength);
 		case PackExt("BSC"):
@@ -19671,6 +19708,7 @@ public class RECOIL
 		case RECOILResolution.Bbc2x1:
 		case RECOILResolution.Bbc1x2:
 			return "BBC Micro";
+		case RECOILResolution.Vic201x1:
 		case RECOILResolution.Vic202x1:
 			return "Commodore VIC-20";
 		case RECOILResolution.C161x1:
@@ -19864,6 +19902,7 @@ public class RECOIL
 			// https://stardot.org.uk/forums/viewtopic.php?t=17615
 			return Ntsc ? NtscTvYPixelsPerMeter * 16000 / (NtscSquareDotClock / 1000)
 				: PalTvYPixelsPerMeter * 16000 / (PalSquareDotClock / 1000);
+		case RECOILResolution.Vic201x1:
 		case RECOILResolution.Vic202x1:
 			// http://tinyvga.com/6561
 			// https://en.wikipedia.org/wiki/List_of_8-bit_computer_hardware_graphics#Commodore_VIC-20
@@ -19936,6 +19975,7 @@ public class RECOIL
 			return Ntsc ? NtscTvYPixelsPerMeter / 2 : PalTvYPixelsPerMeter / 2;
 		case RECOILResolution.Bbc1x2:
 			return Ntsc ? NtscTvYPixelsPerMeter : PalTvYPixelsPerMeter;
+		case RECOILResolution.Vic201x1:
 		case RECOILResolution.Vic202x1:
 		case RECOILResolution.C161x1:
 		case RECOILResolution.C162x1:
