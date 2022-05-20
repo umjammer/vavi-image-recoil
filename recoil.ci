@@ -8740,22 +8740,23 @@ public class RECOIL
 		if (!s.SkipUntilByte(0x1a) || !s.SkipUntilByte(0))
 			return false;
 		int contentOffset = s.ContentOffset;
-		if (contentOffset + 14 > contentLength)
+		if (contentOffset + 14 > contentLength
+		 || content[contentOffset] != 0) // TODO: default palette
 			return false;
 		int depth = content[contentOffset + 3];
-		s.ContentOffset = contentOffset + 14 + (3 << depth);
-		if (content[contentOffset] != 0 // TODO: default palette
-		 || (depth != 4 && depth != 8)
-		 || content[contentOffset + 8] != 0 // TODO: skip
-		 || content[contentOffset + 9] != 0)
+		if (depth != 4 && depth != 8)
 			return false;
-		int width = content[contentOffset + 10] << 8 | content[contentOffset + 11];
-		int height = content[contentOffset + 12] << 8 | content[contentOffset + 13];
 		RECOILResolution resolution = GetPiPlatform(content, contentOffset + 4, content[contentOffset + 1] == 2 && content[contentOffset + 2] == 1);
+		contentOffset += 8 + (content[contentOffset + 8] << 8) + content[contentOffset + 9];
+		if (contentOffset + 6 >= contentLength)
+			return false;
+		int width = content[contentOffset + 2] << 8 | content[contentOffset + 3];
+		int height = content[contentOffset + 4] << 8 | content[contentOffset + 5];
 		if (!SetScaledSize(width, height, resolution))
 			return false;
+		s.ContentOffset = contentOffset + 6 + (3 << depth);
 		if (s.Unpack(width, height, depth)) {
-			DecodeR8G8B8Colors(content, contentOffset + 14, 1 << depth, ContentPalette, 0);
+			DecodeR8G8B8Colors(content, contentOffset + 6, 1 << depth, ContentPalette, 0);
 			DecodeBytes(s.Indexes, 0);
 			return true;
 		}
