@@ -23,7 +23,7 @@ IMAGEMAGICK_i686_DIR = C:/Program Files (x86)/ImageMagick-7.1.0-Q16-HDRI
 IMAGEMAGICK_x86_64_DIR = C:/Program Files/ImageMagick-7.1.0-Q16-HDRI
 XNVIEWMP_DIR = C:/Program Files/XnViewMP
 PAINT_NET_DIR = C:/Program Files/paint.net
-DOTNET_REF_DIR = C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.5/ref/net6.0
+DOTNET_REF_DIR = `echo C:/Program\ Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.*/ref/net6.0`
 ifdef V
 DO = mkdir -p $(@D) && 
 else
