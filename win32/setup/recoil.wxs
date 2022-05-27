@@ -528,7 +528,7 @@
 			</Feature>
 		</Feature>
 
-		<Feature Id="xnview" Title="XnView plugin" Level="9" ConfigurableDirectory="XNVIEWPLUG.DIR" Description="Plugin for XnView." AllowAdvertise="no">
+		<Feature Id="xnview" Title="XnView plugin" Level="9" ConfigurableDirectory="XNVIEWPLUG.DIR" Description="Plugin for XnView (Classic or MP 32-bit)." AllowAdvertise="no">
 			<Condition Level="1">XNVIEW.DIR</Condition>
 			<ComponentRef Id="Xrecoil.usr" />
 			<Feature Id="xnview_recoil.ext" Title="Associate file types" Level="0" Description="$(var.DOUBLECLICK) XnView." AllowAdvertise="no">
@@ -538,7 +538,7 @@
 		</Feature>
 
 		<?if $(sys.BUILDARCH) = x64?>
-			<Feature Id="xnviewmp64" Title="XnViewMP 64-bit plugin" Level="9" ConfigurableDirectory="XNVIEWMP64PLUG.DIR" Description="Plugin for XnViewMP." AllowAdvertise="no">
+			<Feature Id="xnviewmp64" Title="XnView MP 64-bit plugin" Level="9" ConfigurableDirectory="XNVIEWMP64PLUG.DIR" Description="Plugin for XnView MP." AllowAdvertise="no">
 				<Condition Level="1">XNVIEWMP64.DIR</Condition>
 				<ComponentRef Id="XrecoilMP64.usr" />
 				<Feature Id="xnviewmp64.ext" Title="Associate file types" Level="0" Description="$(var.DOUBLECLICK) XnViewMP." AllowAdvertise="no">
