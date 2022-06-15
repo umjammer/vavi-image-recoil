@@ -6,7 +6,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.1.3'
+        classpath 'com.android.tools.build:gradle:7.2.1'
     }
 }
 
@@ -79,7 +79,7 @@ task copyJavaResources(type:Copy) {
 preBuild.dependsOn copyJavaResources
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 32
     sourceSets {
         main {
             manifest {
@@ -91,8 +91,8 @@ android {
         }
     }
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 29
+        minSdkVersion 19
+        targetSdkVersion 32
     }
     applicationVariants.all { variant ->
         variant.mergeResourcesProvider.get().dependsOn generateIcon, generateRoundIcon

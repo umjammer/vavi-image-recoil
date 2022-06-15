@@ -1,7 +1,7 @@
 /*
  * Viewer.java - RECOIL for Android
  *
- * Copyright (C) 2013-2021  Piotr Fusik
+ * Copyright (C) 2013-2022  Piotr Fusik
  *
  * This file is part of RECOIL (Retro Computer Image Library),
  * see http://recoil.sourceforge.net
@@ -25,17 +25,24 @@ package net.sf.recoil;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Gallery;
+import java.io.DataInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.TreeSet;
-import java.util.zip.ZipFile;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 class RECOILException extends Exception
 {
@@ -45,90 +52,155 @@ class RECOILException extends Exception
 	}
 }
 
-public class Viewer extends Activity implements AdapterView.OnItemSelectedListener
+class ZipRECOIL extends RECOIL
 {
-	private Uri baseUri;
-	private ArrayList<String> filenames;
-	private Gallery gallery;
-	private TreeSet<String> favorites;
-	private MenuItem favoriteMenuItem;
+	private Context context;
+	private Uri uri;
 
-	private static boolean isFile(Uri uri)
+	ZipRECOIL(Context context, Uri uri)
 	{
-		return "file".equals(uri.getScheme());
+		this.context = context;
+		this.uri = uri;
 	}
 
-	private String split(Uri uri)
+	static ZipInputStream open(Context context, Uri uri) throws FileNotFoundException
 	{
-		String filename = uri.getFragment();
-		if (filename == null)
-			filename = uri.getPath();
+		return new ZipInputStream(context.getContentResolver().openInputStream(uri));
+	}
+	
+	static long seekTo(ZipInputStream zis, String filename) throws IOException
+	{
+		ZipEntry entry;
+		while ((entry = zis.getNextEntry()) != null) {
+			if (!entry.isDirectory() && filename.equals(entry.getName()))
+				return entry.getSize();
+		}
+		throw new FileNotFoundException(filename);
+	}
 
-		int i = filename.lastIndexOf('/') + 1;
-		// nice hack - the following substrings do what we want if there is no slash
-		String path = filename.substring(0, i);
-		filename = filename.substring(i);
+	@Override
+	protected int readFile(String filename, byte[] content, int contentLength)
+	{
+		try (ZipInputStream zis = open(this.context, this.uri)) {
+			seekTo(zis, filename);
+			int got = 0;
+			while (got < contentLength) {
+				int i = zis.read(content, got, contentLength - got);
+				if (i <= 0)
+					break;
+				got += i;
+			}
+			return got;
+		}
+		catch (IOException ex) {
+			return -1;
+		}
+	}
+}
 
-		Uri.Builder builder = uri.buildUpon();
-		if (uri.getFragment() == null)
-			builder.path(path);
-		else
-			builder.fragment(path);
-		baseUri = builder.build();
-		return filename;
+public class Viewer extends Activity implements AdapterView.OnItemSelectedListener
+{
+	private Uri uri;
+	private long fileLength;
+	private static final long ZIP_FILE_LENGTH = -1;
+	private final ArrayList<String> filenames = new ArrayList<String>();
+	private Gallery gallery;
+	private MenuItem infoMenuItem;
+
+	private static boolean isZip(String filename)
+	{
+		int n = filename.length();
+		return n >= 4 && filename.regionMatches(true, n - 4, ".zip", 0, 4);
+	}
+
+	private void open(Uri uri)
+	{
+		Cursor cursor = getContentResolver().query(uri, new String[] { OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE }, null, null, null);
+		try {
+			if (cursor == null)
+				throw new FileNotFoundException();
+			String filename;
+			long fileLength;
+			try {
+				if (!cursor.moveToNext())
+					throw new FileNotFoundException();
+				filename = cursor.getString(0);
+				fileLength = cursor.getLong(1);
+			}
+			finally {
+				cursor.close();
+			}
+			this.uri = uri;
+			this.filenames.clear();
+			if (isZip(filename)) {
+				this.fileLength = ZIP_FILE_LENGTH;
+				try (ZipInputStream zis = ZipRECOIL.open(this, uri)) {
+					ZipEntry entry;
+					while ((entry = zis.getNextEntry()) != null) {
+						if (!entry.isDirectory()) {
+							String name = entry.getName();
+							if (RECOIL.isOurFile(name))
+								this.filenames.add(name);
+						}
+					}
+				}
+			}
+			else {
+				this.filenames.add(filename);
+				this.fileLength = fileLength;
+			}
+			this.gallery.setAdapter(new GalleryAdapter(this));
+			this.infoMenuItem.setVisible(true);
+		}
+		catch (IOException ex) {
+			// TODO
+		}
 	}
 
 	int getFileCount()
 	{
-		return filenames.size();
+		return this.filenames.size();
 	}
 
 	RECOIL decode(int position) throws RECOILException
 	{
-		Uri uri = FileUtil.buildUri(baseUri, filenames.get(position));
-		String filename = uri.getPath();
+		String filename = this.filenames.get(position);
+		long fileLength = this.fileLength;
+		RECOIL recoil;
 		try {
-			ZipFile zip = null;
-			JavaRECOIL recoil;
+			InputStream is = null;
 			try {
-				if (isFile(uri)) {
-					if (FileUtil.isZip(filename)) {
-						zip = new ZipFile(filename);
-						recoil = new ZipRECOIL(zip);
-						filename = uri.getFragment();
-					}
-					else
-						recoil = new FileRECOIL();
+				is = getContentResolver().openInputStream(this.uri);
+				if (fileLength == ZIP_FILE_LENGTH) {
+					ZipInputStream zis = new ZipInputStream(is);
+					is = zis;
+					fileLength = ZipRECOIL.seekTo(zis, filename);
+					recoil = new ZipRECOIL(this, this.uri);
 				}
 				else
-					recoil = new StreamRECOIL(getContentResolver(), uri);
-				if (!recoil.load(filename))
+					recoil = new RECOIL();
+				if (fileLength > Integer.MAX_VALUE)
+					throw new IOException("File too long");
+				int contentLength = (int) fileLength;
+				byte[] content = new byte[contentLength];
+				new DataInputStream(is).readFully(content);
+				if (!recoil.decode(filename, content, contentLength))
 					throw new RECOILException(getString(R.string.error_decoding_file, filename));
 			}
 			finally {
-				if (zip != null)
-					zip.close();
+				if (is != null)
+					is.close();
 			}
-			return recoil;
 		}
 		catch (IOException ex) {
 			throw new RECOILException(getString(R.string.error_reading_file, filename));
 		}
-	}
-
-	private void setFavoriteIcon(String filename)
-	{
-		if (favoriteMenuItem != null) {
-			Uri uri = FileUtil.buildUri(baseUri, filename);
-			FileUtil.setFavoriteIcon(favoriteMenuItem, favorites.contains(uri.toString()));
-		}
+		return recoil;
 	}
 
 	public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
 	{
-		String filename = filenames.get(position);
-		setTitle(getString(R.string.viewing_title, filename));
-		setFavoriteIcon(filename);
+		setTitle(getString(R.string.viewing_title, this.filenames.get(position)));
 	}
 
 	public void onNothingSelected(AdapterView<?> parent)
@@ -140,41 +212,34 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		getActionBar().setDisplayHomeAsUpEnabled(true);
+
+		this.gallery = (Gallery) getLayoutInflater().inflate(R.layout.gallery, null);
+		this.gallery.setHorizontalFadingEdgeEnabled(false);
+		this.gallery.setOnItemSelectedListener(this);
+		setContentView(this.gallery);
 
 		Uri uri = getIntent().getData();
-		String filename = split(uri);
-		if (isFile(uri)) {
-			try {
-				filenames = FileUtil.list(baseUri, null);
-			}
-			catch (IOException ex) {
-				setContentView(R.layout.access_denied);
-				return;
-			}
-		}
-		else {
-			filenames = new ArrayList<String>();
-			filenames.add(filename);
-		}
+		if (uri != null)
+			open(uri);
+	}
 
-		favorites = new TreeSet<String>(FileUtil.getUserFavorites(this));
+	private static final int OPEN_REQUEST_CODE = 1;
 
-		gallery = (Gallery) getLayoutInflater().inflate(R.layout.gallery, null);
-		gallery.setHorizontalFadingEdgeEnabled(false);
-		gallery.setAdapter(new GalleryAdapter(this));
-		gallery.setOnItemSelectedListener(this);
-		int index = filenames.indexOf(filename);
-		if (index >= 0)
-			gallery.setSelection(index);
-		setContentView(gallery);
+	private void pickFile()
+	{
+		Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+		intent.addCategory(Intent.CATEGORY_OPENABLE);
+		intent.setType("*/*");
+		startActivityForResult(intent, OPEN_REQUEST_CODE);
 	}
 
 	private void showInfo()
 	{
+		if (this.filenames.isEmpty())
+			return;
 		RECOIL recoil;
 		try {
-			recoil = decode(gallery.getSelectedItemPosition());
+			recoil = decode(this.gallery.getSelectedItemPosition());
 		}
 		catch (RECOILException ex) {
 			// whole screen already contains the error message
@@ -187,11 +252,8 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
-		if (gallery == null)
-			return false;
 		getMenuInflater().inflate(R.menu.viewer, menu);
-		favoriteMenuItem = menu.findItem(R.id.menu_favorite);
-		setFavoriteIcon(filenames.get(gallery.getSelectedItemPosition()));
+		this.infoMenuItem = menu.findItem(R.id.menu_info);
 		return true;
 	}
 
@@ -199,18 +261,21 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
 		switch (item.getItemId()) {
-		case android.R.id.home:
-			finish();
+		case R.id.menu_open:
+			pickFile();
 			return true;
 		case R.id.menu_info:
 			showInfo();
 			return true;
-		case R.id.menu_favorite:
-			Uri uri = FileUtil.buildUri(baseUri, filenames.get(gallery.getSelectedItemPosition()));
-			FileUtil.setFavoriteIcon(item, FileUtil.toggleFavorite(this, favorites, uri));
-			return true;
 		default:
 			return false;
 		}
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	{
+		if (requestCode == OPEN_REQUEST_CODE && resultCode == RESULT_OK && data != null)
+			open(data.getData());
 	}
 }
