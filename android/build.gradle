@@ -17,29 +17,6 @@ allprojects {
     }
 }
 
-final MANIFEST_FILE = 'build/generated/AndroidManifest.xml'
-// closure has access to MANIFEST_FILE, unlike a function
-def doGenerateManifest = {
-    ant.xslt(
-        in: '../formats.xml',
-        style: 'AndroidManifest.xsl',
-        out: MANIFEST_FILE)
-}
-// call while evaluating the script, because the Android plugin 3.x
-// will read the manifest before it executes any tasks
-// and will fail if the manifest doesn't exist
-doGenerateManifest()
-// to handle "gradle clean assembleRelease" ("Rebuild" in Android Studio)
-// we need to regenerate the manifest on build
-task generateManifest() {
-    inputs.files '../formats.xml', 'AndroidManifest.xsl'
-    outputs.file MANIFEST_FILE
-    doFirst {
-        doGenerateManifest()
-    }
-}
-preBuild.dependsOn generateManifest
-
 final SOURCE_ICON = '../recoil-512x512.png'
 final ICON_DIR = file 'build/generated/res/icons'
 task generateIcon(type:Exec) {
@@ -82,9 +59,6 @@ android {
     compileSdkVersion 32
     sourceSets {
         main {
-            manifest {
-                srcFile MANIFEST_FILE
-            }
             resources {
                 srcDir JAVA_RESOURCES_DIR
             }
