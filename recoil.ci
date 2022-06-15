@@ -14344,34 +14344,36 @@ public class RECOIL
 			return false;
 		SetSize(320, height, RECOILResolution.Xe2x1);
 		byte[320 * 240] frame;
-		if (contentLength % 40 == 0) {
-			byte[128 * 1024] asm;
-			int asmLength = ReadCompanionFile(filename, "RP.INI", "rp.ini", asm, asm.Length);
-			if (asmLength > 0) {
-				RastaStream() s;
-				s.Content = asm;
-				s.ContentLength = asmLength;
-				if (!s.ReadIni())
-					return false;
-				s.ContentLength = ReadCompanionFile(filename, "PMG", "pmg", asm, asm.Length);
-				if (!s.ReadPmg())
-					return false;
-				s.ContentLength = ReadCompanionFile(filename, "RP", "rp", asm, asm.Length);
-				return s.ReadRp(content, height, frame) && ApplyAtari8Palette(frame);
-			}
-		}
-		if (height == 240) {
-			byte[1280 + 1] col;
-			switch (ReadCompanionFile(filename, "COL", "col", col, col.Length)) {
-			case 1024:
-			case 1280:
-				for (int y = 0; y < 240; y++) {
-					SetBakPF012(col, y, 256);
-					DecodeAtari8Gr15(content, y * 40, 40, frame, y * 320, 320, 1);
+		if (filename != null) {
+			if (contentLength % 40 == 0) {
+				byte[128 * 1024] asm;
+				int asmLength = ReadCompanionFile(filename, "RP.INI", "rp.ini", asm, asm.Length);
+				if (asmLength > 0) {
+					RastaStream() s;
+					s.Content = asm;
+					s.ContentLength = asmLength;
+					if (!s.ReadIni())
+						return false;
+					s.ContentLength = ReadCompanionFile(filename, "PMG", "pmg", asm, asm.Length);
+					if (!s.ReadPmg())
+						return false;
+					s.ContentLength = ReadCompanionFile(filename, "RP", "rp", asm, asm.Length);
+					return s.ReadRp(content, height, frame) && ApplyAtari8Palette(frame);
 				}
-				return ApplyAtari8Palette(frame);
-			default:
-				break;
+			}
+			if (height == 240) {
+				byte[1280 + 1] col;
+				switch (ReadCompanionFile(filename, "COL", "col", col, col.Length)) {
+				case 1024:
+				case 1280:
+					for (int y = 0; y < 240; y++) {
+						SetBakPF012(col, y, 256);
+						DecodeAtari8Gr15(content, y * 40, 40, frame, y * 320, 320, 1);
+					}
+					return ApplyAtari8Palette(frame);
+				default:
+					break;
+				}
 			}
 		}
 		DecodeAtari8Gr15(content, 0, 40, frame, 0, 320, height);
