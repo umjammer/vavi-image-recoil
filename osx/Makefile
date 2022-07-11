@@ -1,4 +1,4 @@
-VERSION = 6.1.1
+VERSION = 6.2.0
 
 CFLAGS_MIN = -O2 -Wall
 CFLAGS = $(CFLAGS_MIN) -mmacosx-version-min=10.6 -arch x86_64 -arch arm64
@@ -36,7 +36,7 @@ bin/GIMP:
 bin/file-recoil: ../file-recoil.c ../formats.h ../recoil-stdio.c ../recoil-stdio.h ../recoil.c ../recoil.h
 	mkdir -p $(@D) && $(CC) $(CFLAGS_MIN) `gimptool-2.0 --cflags` -o $@ -I .. ../file-recoil.c ../recoil-stdio.c ../recoil.c -rpath @executable_path/../../../ -L /Applications/GIMP-2.10.app/Contents/Resources/lib -lgimp-2.0.0 -lgegl-0.4.0 -lbabl-0.1.0 -lgobject-2.0.0
 ifdef PORK_CODESIGNING_IDENTITY
-	$(CODESIGN) $@
+	$(CODESIGN) --entitlements gimp-entitlements.xml $@
 endif
 
 install-gimp: bin/file-recoil

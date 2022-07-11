@@ -19,6 +19,14 @@
 	</ol>
 	<img src="qlrecoil.png" alt="Quick Look" />
 
+	<h2>GIMP plugin</h2>
+	<p>Install as follows:</p>
+	<ol>
+		<li>Install the <a href="https://www.gimp.org/downloads/">official GIMP</a> first.</li>
+		<li>Open <code>recoil-<version />-macos.dmg</code>.</li>
+		<li>Drag <code>file-recoil</code> to <code>GIMP</code>.</li>
+	</ol>
+
 	<h2>Command-line converter</h2>
 	<p>To install, open <code>recoil-<version />-macos.dmg</code> then drag <code>recoil2png</code> to <code>bin</code>.</p>
 	<recoil2png />
