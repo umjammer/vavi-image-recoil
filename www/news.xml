@@ -1,4 +1,29 @@
 ﻿<page title="News">
+	<release project="RECOIL" version="6.2.0" date="2022-07-12">
+		<ul title="New formats">
+			<li>Atari 8-bit: ASCII Maker (ASC), OD Font Editor (ODF), RastaConverter (MIC+PMG+RP+RP.INI), Visualizer (PIC)</li>
+			<li>Atari ST: ColorSTar (BIL), ColorSTar object (OBJ), MonoSTar object (OBJ)</li>
+			<li>VIC-20: Best Paint (BP), Picasso (PIC0+PIC1)</li>
+			<li>C64: CFLI Designer (CFLI), GoDot clip (CLP), Hires-Editor (HET), PetDraw64 (PDR)</li>
+			<li>HP 48: GROB (GRB/GRO)</li>
+			<li>Sam Coupe: SSX</li>
+			<li>ZX Spectrum Profi: GRF</li>
+		</ul>
+		<ul title="Improved formats">
+			<li>Additional variants of: GFA Artist (ART), Turbo Rascal Syntax Error (FLF), PI</li>
+			<li>Alias extensions: MonoSTar (ART), DDP, FLY, HFD, HRE, LRE</li>
+		</ul>
+		<ul title="Rendering">
+			<li>Pixel Aspect Ratio implemented for: BBC Micro, Commodore 16/116/Plus4, VIC-20, Oric, ZX81, ZX Spectrum</li>
+			<li>Commodore 16/116/Plus4 palette can be loaded from a VPL file in recoil2png and RECOILWin</li>
+		</ul>
+		<ul title="Ports">
+			<li>GIMP plugin (Windows/macOS/Linux)</li>
+			<li>Android app switched to system file picker. Requires Android 4.4 or newer. Supports local and cloud storage. For swiping and multi-file images, use ZIP files.</li>
+			<li>Improved Windows 10 app icons</li>
+		</ul>
+	</release>
+
 	<release project="RECOIL" version="6.1.1" date="2021-07-16">
 		<ul>
 			<li>New Atari 8-bit formats: Mad Studio (AN2, AN4, AN5, TL4), Zoom-4 graphics editor (ZM4)</li>
