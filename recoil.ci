@@ -6333,6 +6333,32 @@ public class RECOIL
 		return DecodeZxRgb3(content, contentLength, frameComponents);
 	}
 
+	bool DecodeSev!(byte[] content, int contentLength)
+	{
+		if (contentLength < 23
+		 || content[0] != 'S' || content[1] != 'e' || content[2] != 'v' || content[3] != 0
+		 || content[6] != 1 || content[7] != 0) // TODO: 2 = transparent frames
+			return false;
+		// TODO: int frames = content[8] + 1
+		int width = content[10] | content[11] << 8;
+		int height = content[12] | content[13] << 8;
+		int columns = width + 7 >> 3;
+		int rows = height + 7 >> 3;
+		if (contentLength < 14 + rows * columns * 9
+		 || !SetSize(width, height, RECOILResolution.Spectrum1x1))
+			return false;
+		SetZxPalette();
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				int offset = 14 + ((y >> 3) * columns + (x >> 3)) * 9;
+				int c = content[offset + (y & 7)] >> (~x & 7) & 1;
+				int a = content[offset + 8];
+				Pixels[y * width + x] = ContentPalette[(a >> 2 & 0x30) | (c == 0 ? 8 | (a >> 3 & 7) : a & 7)];
+			}
+		}
+		return true;
+	}
+
 	bool DecodeCh8!(byte[] content, int contentLength)
 	{
 		int height;
@@ -18775,6 +18801,7 @@ public class RECOIL
 		case PackExt("SD0"):
 		case PackExt("SD1"):
 		case PackExt("SD2"):
+		case PackExt("SEV"):
 		case PackExt("SRS"):
 		case PackExt("YJK"):
 		case PackExt("SCR"):
@@ -19629,6 +19656,8 @@ public class RECOIL
 			return DecodeSd(content, contentLength, 1);
 		case PackExt("SD2"):
 			return DecodeSd(content, contentLength, 2);
+		case PackExt("SEV"):
+			return DecodeSev(content, contentLength);
 		case PackExt("SG3"):
 			return DecodeSg3(content, contentLength);
 		case PackExt("SGE"):
