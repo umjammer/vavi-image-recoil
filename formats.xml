@@ -850,7 +850,7 @@
 		<format width="256" height="192" colors="15"><ext>SCR</ext></format>
 		<format name="SevenuP" maxWidth="256" maxHeight="192" colors="15"><ext>SEV</ext></format>
 		<format name="Stellar" width="64" height="48" frames="2"><ext>STL</ext></format>
-		<format name="ZX-Paintbrush" width="256" height="192" colors="15"><ext>ZXP</ext></format>
+		<format name="ZX-Paintbrush" colors="15"><ext>ZXP</ext></format>
 	</platform>
 	<platform name="ZX Spectrum Profi" href="https://en.wikipedia.org/wiki/List_of_ZX_Spectrum_clones#Profi">
 		<format name="Profi" width="512" height="240" colors="16"><ext>GRF</ext></format>

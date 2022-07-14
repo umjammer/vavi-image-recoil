@@ -6441,7 +6441,7 @@ public class RECOIL
 
 	bool DecodeZxp!(byte[] content, int contentLength)
 	{
-		if (contentLength < 51889 - 219 || !IsStringAt(content, 0, "ZX-Paintbrush "))
+		if (contentLength < 25 || !IsStringAt(content, 0, "ZX-Paintbrush "))
 			return false;
 		int contentOffset = 14;
 		if (IsStringAt(content, 14, "extended "))
@@ -6454,53 +6454,75 @@ public class RECOIL
 		s.ContentLength = contentLength;
 		if (s.ReadChar() != '\n' || s.ReadChar() != '\n')
 			return false;
+		contentOffset = s.ContentOffset;
 
-		byte[12288] scr;
-		for (int y = 0; y < 192; y++) {
-			int b = 0;
-			for (int x = 0; x < 256; x++) {
-				int bit = ~x & 7;
-				switch (s.ReadChar()) {
-				case '*':
-				case '0':
-					break;
-				case '1':
-					b |= 1 << bit;
-					break;
-				default:
-					return false;
-				}
-				if (bit == 0) {
-					scr[(y << 5) | (x >> 3)] = b;
-					b = 0;
-				}
+		int width = 0;
+		int height = 0;
+		int x = 0;
+		for (;;) {
+			switch (s.ReadChar()) {
+			case '*':
+			case '0':
+			case '1':
+				x++;
+				continue;
+			case '\n':
+				break;
+			default:
+				return false;
 			}
-			if (s.ReadChar() != '\n')
+			if (x == 0)
+				break;
+			if (height == 0)
+				width = x;
+			else if (x != width)
+				return false;
+			height++;
+			x = 0;
+		}
+
+		int attributesOffset = s.ContentOffset;
+		int attributesHeight = 0;
+		while (!s.IsEof()) {
+			if (s.ReadHexByte() < 0)
+				return false;
+			switch (s.ReadChar()) {
+			case ' ':
+				break;
+			case '\n':
+				attributesHeight++;
+				break;
+			default:
+				return false;
+			}
+		}
+		if ((attributesHeight != height && attributesHeight != height + 7 >> 3)
+		 || !SetSize(width, height, RECOILResolution.Spectrum1x1))
+			return false;
+		SetZxPalette();
+
+		s.ContentOffset = attributesOffset;
+		for (int y = 0; y < height; y++) {
+			if (attributesHeight != height) {
+				if ((y & 7) == 0)
+					attributesOffset = s.ContentOffset;
+				else
+					s.ContentOffset = attributesOffset;
+			}
+			int a = 0;
+			for (x = 0; x < width; x++) {
+				if ((x & 7) == 0) {
+					if (x > 0 && s.ReadChar() != ' ')
+						return false;
+					a = s.ReadHexByte();
+				}
+				Pixels[y * width + x] = ContentPalette[(a >> 2 & 0x30) | (content[contentOffset++] != '1' ? 8 | (a >> 3 & 7) : a & 7)];
+			}
+			if (content[contentOffset] == '\r')
+				contentOffset++;
+			if (content[contentOffset++] != '\n' || s.ReadChar() != '\n')
 				return false;
 		}
-		if (s.ReadChar() != '\n')
-			return false;
-
-		for (int y = 0; y < 192; y++) {
-			if (y == 24 && s.IsEof()) {
-				SetZx(RECOILResolution.Spectrum1x1);
-				DecodeZx(scr, ZxBitmapLinear, 0x1800, ZxAttributes8x8, 0);
-				return true;
-			}
-			for (int x = 0; x < 32; x++) {
-				int b = s.ReadHexByte();
-				if (b < 0)
-					return false;
-				scr[0x1800 + (y << 5) + x] = b;
-				if (s.ReadChar() != (x < 31 ? ' ' : '\n'))
-					return false;
-			}
-		}
-
-		if (!s.IsEof())
-			return false;
-		SetZx(RECOILResolution.Spectrum1x1);
-		DecodeZx(scr, ZxBitmapLinear, 0x1800, ZxAttributes8x1, 0);
 		return true;
 	}
 
