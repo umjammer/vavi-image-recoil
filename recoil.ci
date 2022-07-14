@@ -6065,8 +6065,10 @@ public class RECOIL
 	static int GetZxColor(int c)
 		=> (c >> 1 & 1) * 0xff0000 | (c >> 2 & 1) * 0x00ff00 | (c & 1) * 0x0000ff;
 
-	void SetZxPalette!()
+	bool SetZxSize!(int width, int height, RECOILResolution resolution, int frames = 1)
 	{
+		if (!SetSize(width, height, resolution, frames))
+			return false;
 		// The original ZX Spectrum palette has 16 entries: 8 normal + 8 bright.
 		// Here we layout them as ULAplus 64-entry palette
 		// so that we can share code in DecodeZx.
@@ -6076,12 +6078,12 @@ public class RECOIL
 				rgb &= 0xcdcdcd;
 			ContentPalette[i] = rgb;
 		}
+		return true;
 	}
 
 	void SetZx!(RECOILResolution resolution, int frames = 1)
 	{
-		SetSize(256, 192, resolution, frames);
-		SetZxPalette();
+		SetZxSize(256, 192, resolution, frames);
 	}
 
 	static int GetG3R3B2Color(int c)
@@ -6345,9 +6347,8 @@ public class RECOIL
 		int columns = width + 7 >> 3;
 		int rows = height + 7 >> 3;
 		if (contentLength < 14 + rows * columns * 9
-		 || !SetSize(width, height, RECOILResolution.Spectrum1x1))
+		 || !SetZxSize(width, height, RECOILResolution.Spectrum1x1))
 			return false;
-		SetZxPalette();
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
 				int offset = 14 + ((y >> 3) * columns + (x >> 3)) * 9;
@@ -6408,9 +6409,8 @@ public class RECOIL
 		}
 		int width = maxColumns << (4 + 3);
 		int height = maxRows << (4 + 3);
-		if (!SetSize(width, height, RECOILResolution.Spectrum1x1))
+		if (!SetZxSize(width, height, RECOILResolution.Spectrum1x1))
 			return false;
-		SetZxPalette();
 
 		for (int y = 0; y < height; y++) {
 			int row = y >> 3;
@@ -6497,9 +6497,8 @@ public class RECOIL
 			}
 		}
 		if ((attributesHeight != height && attributesHeight != height + 7 >> 3)
-		 || !SetSize(width, height, RECOILResolution.Spectrum1x1))
+		 || !SetZxSize(width, height, RECOILResolution.Spectrum1x1))
 			return false;
-		SetZxPalette();
 
 		s.ContentOffset = attributesOffset;
 		for (int y = 0; y < height; y++) {
