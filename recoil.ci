@@ -6065,9 +6065,8 @@ public class RECOIL
 	static int GetZxColor(int c)
 		=> (c >> 1 & 1) * 0xff0000 | (c >> 2 & 1) * 0x00ff00 | (c & 1) * 0x0000ff;
 
-	void SetZx!(RECOILResolution resolution, int frames = 1)
+	void SetZxPalette!()
 	{
-		SetSize(256, 192, resolution, frames);
 		// The original ZX Spectrum palette has 16 entries: 8 normal + 8 bright.
 		// Here we layout them as ULAplus 64-entry palette
 		// so that we can share code in DecodeZx.
@@ -6077,6 +6076,12 @@ public class RECOIL
 				rgb &= 0xcdcdcd;
 			ContentPalette[i] = rgb;
 		}
+	}
+
+	void SetZx!(RECOILResolution resolution, int frames = 1)
+	{
+		SetSize(256, 192, resolution, frames);
+		SetZxPalette();
 	}
 
 	static int GetG3R3B2Color(int c)
@@ -6343,6 +6348,68 @@ public class RECOIL
 		}
 		SetSize(256, height, RECOILResolution.Spectrum1x1);
 		DecodeBlackAndWhiteFont(content, 0, contentLength, 8);
+		return true;
+	}
+
+	static int GetChxTileOffset(byte[] content, int tile) => content[5 + (tile << 1)] | content[6 + (tile << 1)] << 8;
+
+	bool DecodeChx!(byte[] content, int contentLength)
+	{
+		if (contentLength < 517
+		 || content[0] != 'C' || content[1] != 'H' || content[2] != 'X'
+		 || content[3] != 0 || content[4] != 0)
+			return false;
+
+		int maxColumns = 0;
+		int maxRows = 0;
+		for (int tile = 0; tile < 256; tile++) {
+			int offset = GetChxTileOffset(content, tile);
+			if (offset == 0)
+				continue;
+			if (offset + 2 >= contentLength)
+				return false;
+			int transparent = content[offset];
+			if (transparent > 1)
+				return false;
+			int columns = content[offset + 1];
+			int rows = content[offset + 2];
+			if (offset + 3 + rows * columns * (9 - transparent) > contentLength)
+				return false;
+			if (maxColumns < columns)
+				maxColumns = columns;
+			if (maxRows < rows)
+				maxRows = rows;
+		}
+		int width = maxColumns << (4 + 3);
+		int height = maxRows << (4 + 3);
+		if (!SetSize(width, height, RECOILResolution.Spectrum1x1))
+			return false;
+		SetZxPalette();
+
+		for (int y = 0; y < height; y++) {
+			int row = y >> 3;
+			int rowTile = (row / maxRows) << 4;
+			row %= maxRows;
+			for (int x = 0; x < width; x++) {
+				int column = x >> 3;
+				int tile = rowTile + column / maxColumns;
+				column %= maxColumns;
+				int c = ~x ^ y;
+				int a = 0x38;
+				int offset = GetChxTileOffset(content, tile);
+				if (offset > 0) {
+					int columns = content[offset + 1];
+					if (column < columns && row < content[offset + 2]) {
+						int transparent = content[offset];
+						offset += 3 + (row * columns + column) * (9 - transparent);
+						c = content[offset + (y & 7)] >> (~x & 7);
+						if (transparent == 0)
+							a = content[offset + 8];
+					}
+				}
+				Pixels[y * width + x] = ContentPalette[(a >> 2 & 0x30) | ((c & 1) == 0 ? 8 | (a >> 3 & 7) : a & 7)];
+			}
+		}
 		return true;
 	}
 
@@ -18388,6 +18455,7 @@ public class RECOIL
 		case PackExt("CHE"):
 		case PackExt("CHR"):
 		case PackExt("CHS"):
+		case PackExt("CHX"):
 		case PackExt("CIN"):
 		case PackExt("CLE"):
 		case PackExt("CLP"):
@@ -18943,6 +19011,8 @@ public class RECOIL
 			return DecodeChr(content, contentLength);
 		case PackExt("CHS"):
 			return DecodeChs(content, contentLength);
+		case PackExt("CHX"):
+			return DecodeChx(content, contentLength);
 		case PackExt("CIN"):
 			return DecodeCin(content, contentLength);
 		case PackExt("CLE"):
