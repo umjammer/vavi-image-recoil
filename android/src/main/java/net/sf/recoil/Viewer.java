@@ -25,12 +25,15 @@ package net.sf.recoil;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -45,6 +48,7 @@ import java.io.DataInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -89,7 +93,7 @@ class ZipRECOIL extends RECOIL
 			}
 			return got;
 		}
-		catch (IOException ex) {
+		catch (IOException e) {
 			return -1;
 		}
 	}
@@ -102,7 +106,7 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 	private static final long ZIP_FILE_LENGTH = -1;
 	private final ArrayList<String> filenames = new ArrayList<String>();
 	private Gallery gallery;
-	private MenuItem infoMenuItem;
+	private Menu menu;
 
 	private static boolean isZip(String filename)
 	{
@@ -150,19 +154,18 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 		}
 	}
 
-	private View getGalleryView(int position, View convertView)
+	private RECOIL decodeOrNull(String filename)
 	{
-		String filename = this.filenames.get(position);
-		RECOIL recoil;
 		try {
-			recoil = decode(filename);
+			return decode(filename);
 		}
-		catch (IOException ex) {
-			return getError(R.string.error_reading_file, filename);
+		catch (IOException e) {
+			return null;
 		}
-		if (recoil == null)
-			return getError(R.string.error_decoding_file, filename);
+	}
 
+	private Bitmap getBitmap(RECOIL recoil)
+	{
 		int[] pixels = recoil.getPixels();
 		int width = recoil.getWidth();
 		int height = recoil.getHeight();
@@ -174,9 +177,25 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 
 		Bitmap bitmap = Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888);
 		bitmap.setHasAlpha(false);
+		return bitmap;
+	}
+
+	private View getGalleryView(int position, View convertView)
+	{
+		String filename = this.filenames.get(position);
+		RECOIL recoil;
+		try {
+			recoil = decode(filename);
+		}
+		catch (IOException e) {
+			return getError(R.string.error_reading_file, filename);
+		}
+		if (recoil == null)
+			return getError(R.string.error_decoding_file, filename);
+
 		ImageView imageView = convertView instanceof ImageView ? (ImageView) convertView : new ImageView(this);
 		imageView.setLayoutParams(new Gallery.LayoutParams(Gallery.LayoutParams.MATCH_PARENT, Gallery.LayoutParams.MATCH_PARENT));
-		imageView.setImageBitmap(bitmap);
+		imageView.setImageBitmap(getBitmap(recoil));
 		return imageView;
 	}
 
@@ -193,7 +212,7 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 				}
 			}
 		}
-		catch (IOException ex) {
+		catch (IOException e) {
 			return getError(R.string.error_reading_file, filename);
 		}
 		if (this.filenames.isEmpty())
@@ -244,7 +263,9 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 	{
 		View view = getView(uri);
 		setContentView(view);
-		this.infoMenuItem.setVisible(!(view instanceof TextView));
+		boolean enableMenu = !(view instanceof TextView);
+		this.menu.findItem(R.id.menu_info).setVisible(enableMenu);
+		this.menu.findItem(R.id.menu_share_as_png).setVisible(enableMenu);
 	}
 
 	public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
@@ -277,32 +298,58 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 		startActivityForResult(intent, OPEN_REQUEST_CODE);
 	}
 
+	private String getFilename()
+	{
+		return this.filenames.get(this.filenames.size() == 1 ? 0 : this.gallery.getSelectedItemPosition());
+	}
+
 	private void showInfo()
 	{
 		if (this.filenames.isEmpty())
 			return;
-		String filename = this.filenames.get(this.filenames.size() == 1 ? 0 : this.gallery.getSelectedItemPosition());
-		RECOIL recoil;
-		try {
-			recoil = decode(filename);
-		}
-		catch (IOException ex) {
-			// whole screen already contains the error message
-			return;
-		}
-		if (recoil == null) {
-			// whole screen already contains the error message
-			return;
-		}
+		RECOIL recoil = decodeOrNull(getFilename());
+		if (recoil == null)
+			return; // whole screen already contains the error message
 		String message = getString(R.string.info_message, recoil.getPlatform(), recoil.getOriginalWidth(), recoil.getOriginalHeight(), recoil.getColors());
 		new AlertDialog.Builder(this).setTitle(R.string.info_title).setMessage(message).show();
+	}
+
+	private void shareAsPng()
+	{
+		if (this.filenames.isEmpty())
+			return;
+		String filename = getFilename();
+		RECOIL recoil = decodeOrNull(filename);
+		if (recoil == null)
+			return; // whole screen already contains the error message
+
+		Long now = System.currentTimeMillis() / 1000;
+		ContentValues values = new ContentValues();
+		values.put(MediaStore.MediaColumns.DISPLAY_NAME, filename);
+		values.put(MediaStore.MediaColumns.MIME_TYPE, "image/png");
+		values.put(MediaStore.MediaColumns.DATE_ADDED, now);
+		values.put(MediaStore.MediaColumns.DATE_MODIFIED, now);
+		ContentResolver cr = getContentResolver();
+		Uri uri = cr.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+		try (OutputStream os = cr.openOutputStream(uri)) {
+			getBitmap(recoil).compress(Bitmap.CompressFormat.PNG, 0, os);
+		}
+		catch (IOException e) {
+			cr.delete(uri, null, null);
+			return;
+		}
+
+		Intent intent = new Intent(Intent.ACTION_SEND);
+		intent.setType("image/png");
+		intent.putExtra(Intent.EXTRA_STREAM, uri);
+		startActivity(intent);
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
 		getMenuInflater().inflate(R.menu.viewer, menu);
-		this.infoMenuItem = menu.findItem(R.id.menu_info);
+		this.menu = menu;
 		return true;
 	}
 
@@ -315,6 +362,9 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 			return true;
 		case R.id.menu_info:
 			showInfo();
+			return true;
+		case R.id.menu_share_as_png:
+			shareAsPng();
 			return true;
 		default:
 			return false;

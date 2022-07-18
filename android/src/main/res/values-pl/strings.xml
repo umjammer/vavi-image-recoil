@@ -9,6 +9,7 @@
 	<string name="error_no_our_files">Brak obsługiwanych plików w %1$s</string>
 	<string name="menu_open">Otwórz</string>
 	<string name="menu_info">Informacje o pliku</string>
+	<string name="menu_share_as_png">Prześlij jako PNG</string>
 	<string name="info_title">Informacje o pliku</string>
 	<string name="info_message">Komputer: %1$s\nRozdzielczość: %2$dx%3$d\nKolorów: %4$d</string>
 </resources>
