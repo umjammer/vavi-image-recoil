@@ -274,6 +274,10 @@
 		<format name="Texture Maker0 16x16x16" width="16" height="16" colors="16"><ext>TX0</ext></format>
 		<format name="Texture Editor by Mikey" width="80" height="96" grayscale="16"><ext>TXE</ext></format>
 		<format width="16" height="16" grayscale="16"><ext>TXS</ext></format>
+		<format name="Graph2Font vertical scroll" width="336" colors="256">
+			<ext>VSC</ext>
+			<companionExt anyName="true">G2F</companionExt>
+		</format>
 		<format name="VertiZontal Interlacing" width="160" height="200" grayscale="31" frames="2"><ext>VZI</ext></format>
 		<format name="Blazing Paddles window" maxWidth="160" maxHeight="192" colors="4"><ext>WND</ext></format>
 		<format name="XL-Paint" width="160" maxHeight="200" colors="7" frames="2"><ext>XLP</ext></format>

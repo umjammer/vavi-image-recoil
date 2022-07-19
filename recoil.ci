@@ -3756,7 +3756,7 @@ abstract class GtiaRenderer
 	/// Returns playfield byte, plus bit 8 for character code bit 7 ("inverse").
 	protected abstract int GetPlayfieldByte!(int y, int column);
 
-	internal int DrawSpan!(int y, int hpos, int untilHpos, AnticMode anticMode, byte[]! frame, int width)
+	internal int DrawSpan!(int y, int hpos, int untilHpos, AnticMode anticMode, byte[]! frame, int width, int yOffset = 0)
 	{
 		int gtiaMode = Prior >> 6;
 		for (; hpos < untilHpos; hpos++) {
@@ -3802,7 +3802,7 @@ abstract class GtiaRenderer
 			int c = GetColor(objects);
 
 			// set pixels, adding hires or GTIA 9/11 pixels if needed
-			int frameOffset = y * width + (hpos + (width >> 2) - 128 << 1);
+			int frameOffset = (yOffset + y) * width + (hpos + (width >> 2) - 128 << 1);
 			switch (gtiaMode) {
 			case 0:
 				if (anticMode != AnticMode.HiRes)
@@ -4818,6 +4818,16 @@ public class RECOIL
 		}
 		string() filename = baseFilename.Substring(0, i + 1);
 		filename += lower ? lowerExt : upperExt;
+		return ReadFile(filename, content, contentLength);
+	}
+
+	int ReadSiblingFile(string baseFilename, string newFilename, byte[]! content, int contentLength)
+	{
+		int i = baseFilename.Length;
+		while (i > 0 && baseFilename[i - 1] != '/' && baseFilename[i - 1] != '\\')
+			i--;
+		string() filename = baseFilename.Substring(0, i);
+		filename += newFilename;
 		return ReadFile(filename, content, contentLength);
 	}
 
@@ -17846,7 +17856,7 @@ public class RECOIL
 	static bool G2fHasRaster(byte[] content, int contentOffset)
 		=> HasG2fRaster(content, contentOffset, 240 * 12, content[0] < 0x80 ? 0x16 : 0x1e);
 
-	bool DecodeG2fUnpacked!(byte[] content, int contentLength)
+	bool DecodeG2fUnpacked!(byte[] content, int contentLength, byte[]! frame, int yOffset)
 	{
 		const int modeOffset = 30 + 33 * 256 + 2 * 240 * 290 + 256 + 240 * 24;
 		if (contentLength < 3 + 30 * 32 + 1024 + modeOffset + 30)
@@ -17890,7 +17900,6 @@ public class RECOIL
 		default: // TODO: PGR
 			return false;
 		}
-		RECOILResolution resolution = RECOILResolution.Xe4x1;
 
 		if (contentLength < vbxeOffset + (3 + 48 * 240 * 12))
 			vbxeOffset = -1;
@@ -17903,14 +17912,13 @@ public class RECOIL
 				if (content[vbxeOffset + 1] != 8 // TODO: different color map widths
 				 || content[vbxeOffset + 2] == 0)
 					return false;
-				resolution = RECOILResolution.Vbxe2x1;
+				Resolution = RECOILResolution.Vbxe2x1;
 				break;
 			default:
 				return false;
 			}
 		}
 
-		byte[336 * 240] frame;
 		G2fRenderer() gtia;
 		gtia.Content = content;
 		gtia.PlayfieldColumns = columns;
@@ -17932,12 +17940,12 @@ public class RECOIL
 			AnticMode anticMode;
 			switch (content[fontNumberOffset + modeOffset + row]) {
 			case 1:
-				resolution = resolution == RECOILResolution.Vbxe2x1 || resolution == RECOILResolution.Vbxe1x1 ? RECOILResolution.Vbxe1x1 : RECOILResolution.Xe1x1;
+				Resolution = Resolution == RECOILResolution.Vbxe2x1 || Resolution == RECOILResolution.Vbxe1x1 ? RECOILResolution.Vbxe1x1 : RECOILResolution.Xe1x1;
 				anticMode = AnticMode.HiRes;
 				break;
 			case 2:
-				if (resolution == RECOILResolution.Xe4x1)
-					resolution = RECOILResolution.Xe2x1;
+				if (Resolution == RECOILResolution.Xe4x1)
+					Resolution = RECOILResolution.Xe2x1;
 				anticMode = charMode ? AnticMode.FiveColor : AnticMode.FourColor;
 				break;
 			case 4:
@@ -17967,28 +17975,66 @@ public class RECOIL
 			gtia.Prior = prior;
 
 			gtia.StartLine(0x2c);
-			gtia.DrawSpan(y, 0x2c, 0xd4, anticMode, frame, 336);
+			gtia.DrawSpan(y, 0x2c, 0xd4, anticMode, frame, 336, yOffset);
 		}
-		SetSize(336, 240, resolution);
-		return ApplyAtari8Palette(frame);
+		return true;
 	}
 
-	bool DecodeG2f!(byte[] content, int contentLength)
+	const int G2fMaxUnpackedLength = 3 + 30 * 48 + 30 * 1024 + 30 + 33 * 256 + 2 * 240 * 290 + 256 + 240 * 24
+		+ 256 + 1 + 5 * 256 + 3 + 48 * 240 * 12 + 1 + 30 * 48;
+
+	bool DecodeG2fFrame!(byte[] content, int contentLength, byte[]! frame, int yOffset)
 	{
 		if (contentLength < 11)
 			return false;
 		if (IsStringAt(content, 0, "G2FZLIB")) {
-			const int maxUnpackedLength = 3 + 30 * 48 + 30 * 1024 + 30 + 33 * 256 + 2 * 240 * 290 + 256 + 240 * 24
-				+ 256 + 1 + 5 * 256 + 3 + 48 * 240 * 12 + 1 + 30 * 48;
-			byte[]# unpacked = new byte[maxUnpackedLength];
+			byte[]# unpacked = new byte[G2fMaxUnpackedLength];
 			InflateStream() stream;
 			stream.Content = content;
 			stream.ContentOffset = 7;
 			stream.ContentLength = contentLength;
-			contentLength = stream.Uncompress(unpacked, maxUnpackedLength);
-			return DecodeG2fUnpacked(unpacked, contentLength);
+			contentLength = stream.Uncompress(unpacked, G2fMaxUnpackedLength);
+			return DecodeG2fUnpacked(unpacked, contentLength, frame, yOffset);
 		}
-		return DecodeG2fUnpacked(content, contentLength);
+		return DecodeG2fUnpacked(content, contentLength, frame, yOffset);
+	}
+
+	bool DecodeG2f!(byte[] content, int contentLength)
+	{
+		byte[336 * 240] frame;
+		Resolution = RECOILResolution.Xe4x1;
+		if (!DecodeG2fFrame(content, contentLength, frame, 0))
+			return false;
+		SetSize(336, 240, Resolution);
+		return ApplyAtari8Palette(frame);
+	}
+
+	bool DecodeVsc!(string vscFilename, byte[] content, int contentLength)
+	{
+		Stream() s;
+		s.Content = content;
+		s.ContentOffset = 0;
+		s.ContentLength = contentLength;
+		int height = 0;
+		while (s.SkipUntilByte('\r'))
+			height += 240;
+		byte[]# frame = new byte[336 * height];
+		byte[]# g2f = new byte[G2fMaxUnpackedLength];
+		s.ContentOffset = 0;
+		Resolution = RECOILResolution.Xe4x1;
+		for (height = 0; ; height += 240) {
+			int filenameOffset = s.ContentOffset;
+			if (!s.SkipUntilByte('\r'))
+				break;
+			if (s.ReadByte() != '\n')
+				return false;
+			string() filename = Encoding.UTF8.GetString(content, filenameOffset, s.ContentOffset - 2 - filenameOffset);
+			contentLength = ReadSiblingFile(vscFilename, filename, g2f, G2fMaxUnpackedLength);
+			if (!DecodeG2fFrame(g2f, contentLength, frame, height))
+				return false;
+		}
+		return SetSize(336, height, Resolution)
+			&& ApplyAtari8Palette(frame);
 	}
 
 	bool DecodeDap!(byte[] content, int contentLength)
@@ -18899,6 +18945,7 @@ public class RECOIL
 		case PackExt("VBM"):
 		case PackExt("BM"):
 		case PackExt("VIC"):
+		case PackExt("VSC"):
 		case PackExt("VZI"):
 		case PackExt("WIN"):
 		case PackExt("WND"):
@@ -19799,6 +19846,8 @@ public class RECOIL
 			return DecodeVbm(content, contentLength);
 		case PackExt("VIC"):
 			return DecodeVic(content, contentLength);
+		case PackExt("VSC"):
+			return DecodeVsc(filename, content, contentLength);
 		case PackExt("VZI"):
 			return DecodeVzi(content, contentLength);
 		case PackExt("WIN"):
