@@ -266,6 +266,7 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 		boolean enableMenu = !(view instanceof TextView);
 		this.menu.findItem(R.id.menu_info).setVisible(enableMenu);
 		this.menu.findItem(R.id.menu_share_as_png).setVisible(enableMenu);
+		this.menu.findItem(R.id.menu_save_as_png).setVisible(enableMenu);
 	}
 
 	public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
@@ -289,8 +290,9 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 	}
 
 	private static final int OPEN_REQUEST_CODE = 1;
+	private static final int SAVE_REQUEST_CODE = 2;
 
-	private void pickFile()
+	private void pickOpenFile()
 	{
 		Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
 		intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -314,6 +316,19 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 		new AlertDialog.Builder(this).setTitle(R.string.info_title).setMessage(message).show();
 	}
 
+	private boolean savePng(Uri uri, RECOIL recoil)
+	{
+		ContentResolver cr = getContentResolver();
+		try (OutputStream os = cr.openOutputStream(uri)) {
+			getBitmap(recoil).compress(Bitmap.CompressFormat.PNG, 0, os);
+			return true;
+		}
+		catch (IOException e) {
+			cr.delete(uri, null, null);
+			return false;
+		}
+	}
+
 	private void shareAsPng()
 	{
 		if (this.filenames.isEmpty())
@@ -329,20 +344,37 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 		values.put(MediaStore.MediaColumns.MIME_TYPE, "image/png");
 		values.put(MediaStore.MediaColumns.DATE_ADDED, now);
 		values.put(MediaStore.MediaColumns.DATE_MODIFIED, now);
-		ContentResolver cr = getContentResolver();
-		Uri uri = cr.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-		try (OutputStream os = cr.openOutputStream(uri)) {
-			getBitmap(recoil).compress(Bitmap.CompressFormat.PNG, 0, os);
-		}
-		catch (IOException e) {
-			cr.delete(uri, null, null);
+		Uri uri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+		if (!savePng(uri, recoil))
 			return;
-		}
 
 		Intent intent = new Intent(Intent.ACTION_SEND);
 		intent.setType("image/png");
 		intent.putExtra(Intent.EXTRA_STREAM, uri);
 		startActivity(intent);
+	}
+
+	private void pickSaveFile()
+	{
+		if (this.filenames.isEmpty())
+			return;
+		Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+		intent.addCategory(Intent.CATEGORY_OPENABLE);
+		intent.setType("image/png");
+		intent.putExtra(Intent.EXTRA_TITLE, getFilename() + ".png");
+		startActivityForResult(intent, SAVE_REQUEST_CODE);
+	}
+
+	private void save(Uri uri)
+	{
+		if (this.filenames.isEmpty())
+			return;
+		String filename = getFilename();
+		RECOIL recoil = decodeOrNull(filename);
+		if (recoil == null)
+			return; // whole screen already contains the error message
+
+		savePng(uri, recoil); // TODO: report error
 	}
 
 	@Override
@@ -358,13 +390,16 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 	{
 		switch (item.getItemId()) {
 		case R.id.menu_open:
-			pickFile();
+			pickOpenFile();
 			return true;
 		case R.id.menu_info:
 			showInfo();
 			return true;
 		case R.id.menu_share_as_png:
 			shareAsPng();
+			return true;
+		case R.id.menu_save_as_png:
+			pickSaveFile();
 			return true;
 		default:
 			return false;
@@ -374,7 +409,11 @@ public class Viewer extends Activity implements AdapterView.OnItemSelectedListen
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
-		if (requestCode == OPEN_REQUEST_CODE && resultCode == RESULT_OK && data != null)
+		if (resultCode != RESULT_OK || data == null)
+			return;
+		if (requestCode == OPEN_REQUEST_CODE)
 			open(data.getData());
+		else if (requestCode == SAVE_REQUEST_CODE)
+			save(data.getData());
 	}
 }

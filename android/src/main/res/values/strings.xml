@@ -10,6 +10,7 @@
 	<string name="menu_open">Open</string>
 	<string name="menu_info">File information</string>
 	<string name="menu_share_as_png">Share as PNG</string>
+	<string name="menu_save_as_png">Save as PNG</string>
 	<string name="info_title">File information</string>
 	<string name="info_message">Platform: %1$s\nResolution: %2$dx%3$d\nColors: %4$d</string>
 </resources>

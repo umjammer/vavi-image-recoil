@@ -3,4 +3,5 @@
 	<item android:id="@+id/menu_open" android:title="@string/menu_open" android:icon="@drawable/ic_menu_open" android:showAsAction="ifRoom" />
 	<item android:id="@+id/menu_info" android:title="@string/menu_info" android:icon="@android:drawable/ic_menu_info_details" android:showAsAction="ifRoom" android:visible="false" />
 	<item android:id="@+id/menu_share_as_png" android:title="@string/menu_share_as_png" android:icon="@android:drawable/ic_menu_share" android:showAsAction="ifRoom" android:visible="false" />
+	<item android:id="@+id/menu_save_as_png" android:title="@string/menu_save_as_png" android:icon="@android:drawable/ic_menu_save" android:showAsAction="ifRoom" android:visible="false" />
 </menu>
