@@ -18016,18 +18016,33 @@ public class RECOIL
 		s.ContentOffset = 0;
 		s.ContentLength = contentLength;
 		int height = 0;
-		while (s.SkipUntilByte('\r'))
-			height += 240;
+		for (;;) {
+			int c = s.ReadByte();
+			if (c < 0)
+				break;
+			switch (c) {
+			case '\r':
+				if (s.ReadByte() != '\n')
+					return false;
+				height += 240;
+				break;
+			case '/':
+			case '\\':
+				return false;
+			default:
+				if (c < ' ' || c > '~')
+					return false;
+				break;
+			}
+		}
 		byte[]# frame = new byte[336 * height];
 		byte[]# g2f = new byte[G2fMaxUnpackedLength];
 		s.ContentOffset = 0;
 		Resolution = RECOILResolution.Xe4x1;
 		for (height = 0; ; height += 240) {
 			int filenameOffset = s.ContentOffset;
-			if (!s.SkipUntilByte('\r'))
+			if (!s.SkipUntilByte('\n'))
 				break;
-			if (s.ReadByte() != '\n')
-				return false;
 			string() filename = Encoding.UTF8.GetString(content, filenameOffset, s.ContentOffset - 2 - filenameOffset);
 			contentLength = ReadSiblingFile(vscFilename, filename, g2f, G2fMaxUnpackedLength);
 			if (!DecodeG2fFrame(g2f, contentLength, frame, height))
