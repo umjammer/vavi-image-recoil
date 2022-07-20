@@ -6311,7 +6311,7 @@ public class RECOIL
 					int rgb = GetZxColor((x & 4) == 0 ? b >> 3 : b);
 					if ((b & 0x40) == 0)
 						rgb &= 0xcdcdcd;
-					Pixels[f * 192 + y << 8 | x] = rgb;
+					Pixels[(f * 192 + y << 8) + x] = rgb;
 				}
 			}
 		}
@@ -6365,7 +6365,7 @@ public class RECOIL
 					return false;
 				c = content[12 + (c << 3) + (y & 7)] >> (~x & 7) & 1;
 				int a = content[0x68c + offset];
-				Pixels[y << 8 | x] = ContentPalette[(a >> 2 & 0x30) | (c == 0 ? 8 | (a >> 3 & 7) : a & 7)];
+				Pixels[(y << 8) + x] = ContentPalette[(a >> 2 & 0x30) | (c == 0 ? 8 | (a >> 3 & 7) : a & 7)];
 			}
 		}
 		return true;
@@ -15999,7 +15999,7 @@ public class RECOIL
 		byte[256 * 40] frame;
 		for (int y = 0; y < 40; y++) {
 			for (int x = 0; x < 256; x++)
-				frame[y << 8 | x] = (content[(y / 10) * 320 + (x >> 3) * 10 + y % 10] >> (~x & 7) & 1) == 0 ? 0 : 0xe;
+				frame[(y << 8) + x] = (content[(y / 10) * 320 + (x >> 3) * 10 + y % 10] >> (~x & 7) & 1) == 0 ? 0 : 0xe;
 		}
 		return ApplyAtari8Palette(frame);
 	}
