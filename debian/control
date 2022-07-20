@@ -14,7 +14,7 @@ Description: Provides "recoil2png" command-line converter
  BBC Micro, Commodore VIC-20/64/16/116/Plus4/128, Electronika BK, FM Towns,
  HP 48, Macintosh 128K, MSX, NEC PC-80/88/98, Oric, Psion Series 3, SAM Coupe,
  Sharp X68000, Tandy 1000, Timex 2048, TRS-80, TRS-80 Color Computer,
- ZX81 and ZX Spectrum computers.
+ Vector-06C, ZX81 and ZX Spectrum computers.
 
 Package: recoil-gimp
 Architecture: any
@@ -24,7 +24,7 @@ Description: GIMP plugin capable of loading pictures in native formats of
  BBC Micro, Commodore VIC-20/64/16/116/Plus4/128, Electronika BK, FM Towns,
  HP 48, Macintosh 128K, MSX, NEC PC-80/88/98, Oric, Psion Series 3, SAM Coupe,
  Sharp X68000, Tandy 1000, Timex 2048, TRS-80, TRS-80 Color Computer,
- ZX81 and ZX Spectrum computers.
+ Vector-06C, ZX81 and ZX Spectrum computers.
 
 Package: recoil-thumbnailer
 Architecture: all
@@ -34,7 +34,7 @@ Description: GNOME thumbnailer for pictures in native formats of
  BBC Micro, Commodore VIC-20/64/16/116/Plus4/128, Electronika BK, FM Towns,
  HP 48, Macintosh 128K, MSX, NEC PC-80/88/98, Oric, Psion Series 3, SAM Coupe,
  Sharp X68000, Tandy 1000, Timex 2048, TRS-80, TRS-80 Color Computer,
- ZX81 and ZX Spectrum computers.
+ Vector-06C, ZX81 and ZX Spectrum computers.
 
 Package: recoil-xnview
 Architecture: any
@@ -44,4 +44,4 @@ Description: Plugin for XnView MP to decode pictures in native formats of
  BBC Micro, Commodore VIC-20/64/16/116/Plus4/128, Electronika BK, FM Towns,
  HP 48, Macintosh 128K, MSX, NEC PC-80/88/98, Oric, Psion Series 3, SAM Coupe,
  Sharp X68000, Tandy 1000, Timex 2048, TRS-80, TRS-80 Color Computer,
- ZX81 and ZX Spectrum computers.
+ Vector-06C, ZX81 and ZX Spectrum computers.

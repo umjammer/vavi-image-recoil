@@ -6114,7 +6114,7 @@ public class RECOIL
 
 	static int GetG3R3B2Color(int c)
 	{
-		// 0bGGGRRRBB -> 0bRRRRRRRRGGGGGGGGBBBBBBBB
+		// 0bGGGRRRBB -> 0xRRGGBB
 		return (c & 0x1c) * 0x49 >> 3 << 16
 			| (c >> 5) * 0x49 >> 1 << 8
 			| (c & 3) * 0x55;
@@ -18295,8 +18295,6 @@ public class RECOIL
 
 	bool DecodeVectorSpr!(byte[] content, int contentLength)
 	{
-		while (contentLength > 0 && content[contentLength - 1] == 0)
-			contentLength--;
 		VectorSprStream() rle;
 		rle.Content = content;
 		rle.ContentOffset = contentLength;
@@ -18304,8 +18302,7 @@ public class RECOIL
 		if (!rle.Unpack(unpacked, 0, 1, 32768))
 			return false;
 		for (int i = 0; i < 16; i++) {
-			int c = content[i];
-			// 0bBBGGGRRR
+			int c = content[i]; // 0bBBGGGRRR
 			ContentPalette[i] = (c & 7) * 0x49 >> 1 << 16
 				| (c >> 3 & 7) * 0x48 >> 1 << 8
 				| (c >> 6) * 0x55;
