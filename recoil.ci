@@ -6350,6 +6350,27 @@ public class RECOIL
 		return DecodeZxRgb3(content, contentLength, frameComponents);
 	}
 
+	bool DecodeZxs!(byte[] content, int contentLength)
+	{
+		if (contentLength != 2452
+		 || !IsStringAt(content, 0, "ZX_SSCII")
+		 || content[8] != 0x94 || content[9] != 9 || content[10] != 0 || content[11] != 0)
+			return false;
+		SetZx(RECOILResolution.Spectrum1x1);
+		for (int y = 0; y < 192; y++) {
+			for (int x = 0; x < 256; x++) {
+				int offset = (x & ~7) * 3 + (y >> 3);
+				int c = content[0x38c + offset];
+				if (c >= 0x70)
+					return false;
+				c = content[12 + (c << 3) + (y & 7)] >> (~x & 7) & 1;
+				int a = content[0x68c + offset];
+				Pixels[y << 8 | x] = ContentPalette[(a >> 2 & 0x30) | (c == 0 ? 8 | (a >> 3 & 7) : a & 7)];
+			}
+		}
+		return true;
+	}
+
 	bool DecodeSev!(byte[] content, int contentLength)
 	{
 		if (contentLength < 23
@@ -18970,6 +18991,7 @@ public class RECOIL
 		case PackExt("ZM4"):
 		case PackExt("ZP1"):
 		case PackExt("ZXP"):
+		case PackExt("ZXS"):
 			return true;
 		default:
 			return false;
@@ -19881,6 +19903,8 @@ public class RECOIL
 			return DecodeZp1(content, contentLength);
 		case PackExt("ZXP"):
 			return DecodeZxp(content, contentLength);
+		case PackExt("ZXS"):
+			return DecodeZxs(content, contentLength);
 		default:
 			return false;
 		}
