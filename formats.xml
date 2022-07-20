@@ -824,6 +824,9 @@
 		<format width="256" height="192" colors="2"><ext>GRF</ext><ext>MAX</ext><ext>P41</ext><ext>PIX</ext></format>
 		<format width="128" height="96" colors="4"><ext>P11</ext></format>
 	</platform>
+	<platform name="Vector-06C" href="https://en.wikipedia.org/wiki/Vector-06C">
+		<format name="256" height="256" colors="16"><ext>SPR</ext></format>
+	</platform>
 	<platform name="ZX81" href="https://en.wikipedia.org/wiki/ZX81">
 		<format name="Sinclair BASIC" width="32" height="24" unit="characters" colors="2"><ext>P</ext></format>
 		<format name="ZXPaintyONE v2.0" width="32" height="24" unit="characters" colors="2"><ext>RAW</ext></format>

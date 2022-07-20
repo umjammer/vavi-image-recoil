@@ -125,6 +125,7 @@ enum RECOILResolution
 	SamCoupe1x2,
 	X68K1x1,
 	Tandy1x1,
+	Vector1x1,
 	Zx811x1,
 	Spectrum1x1,
 	Spectrum4x4,
@@ -372,7 +373,7 @@ class ZxpStream : Stream
 	internal bool IsEof() => ContentOffset >= ContentLength;
 }
 
-class SprStream : Stream
+class AppleSprStream : Stream
 {
 	const int Width = 320;
 	const int Height = 200;
@@ -1199,7 +1200,7 @@ class PgcStream : RleStream
 {
 	protected override bool ReadCommand!()
 	{
-		int b = ReadByte();
+		int b = ReadValue();
 		if (b < 0)
 			return false;
 		if (b < 128) {
@@ -1208,9 +1209,19 @@ class PgcStream : RleStream
 		}
 		else {
 			RepeatCount = b - 128;
-			RepeatValue = ReadByte();
+			RepeatValue = ReadValue();
 		}
 		return true;
+	}
+}
+
+class VectorSprStream : PgcStream
+{
+	internal override int ReadValue!()
+	{
+		if (ContentOffset <= 16)
+			return -1;
+		return Content[--ContentOffset];
 	}
 }
 
@@ -7904,15 +7915,15 @@ public class RECOIL
 	{
 		for (int x = 0; x < 8; x++) {
 			if ((b >> (7 - x) & 1) != 0)
-				Pixels[y * SprStream.Width + x1 + x] = 0xffffff;
+				Pixels[y * AppleSprStream.Width + x1 + x] = 0xffffff;
 		}
 	}
 
 	bool DecodeAppleSpr!(byte[] content, int contentLength)
 	{
-		SetSize(SprStream.Width, SprStream.Height, RECOILResolution.AppleII1x1);
-		Pixels.Fill(0, 0, SprStream.Width * SprStream.Height);
-		SprStream() s;
+		SetSize(AppleSprStream.Width, AppleSprStream.Height, RECOILResolution.AppleII1x1);
+		Pixels.Fill(0, 0, AppleSprStream.Width * AppleSprStream.Height);
+		AppleSprStream() s;
 		s.Content = content;
 		s.ContentOffset = 0;
 		s.ContentLength = contentLength;
@@ -7934,7 +7945,7 @@ public class RECOIL
 				return false;
 			if (rows == 0)
 				break;
-			if (cols == 0 || x + (cols << 3) > SprStream.Width || y + rows > SprStream.Height)
+			if (cols == 0 || x + (cols << 3) > AppleSprStream.Width || y + rows > AppleSprStream.Height)
 				return false;
 			if (order == 2) {
 				for (int col = 0; col < cols; col++) {
@@ -18280,6 +18291,33 @@ public class RECOIL
 		return true;
 	}
 
+	// Vector-06C formats.
+
+	bool DecodeVectorSpr!(byte[] content, int contentLength)
+	{
+		while (contentLength > 0 && content[contentLength - 1] == 0)
+			contentLength--;
+		VectorSprStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = contentLength;
+		byte[32768] unpacked;
+		if (!rle.Unpack(unpacked, 0, 1, 32768))
+			return false;
+		for (int i = 0; i < 16; i++) {
+			int c = content[i];
+			// 0bBBGGGRRR
+			ContentPalette[i] = (c & 7) * 0x49 >> 1 << 16
+				| (c >> 3 & 7) * 0x48 >> 1 << 8
+				| (c >> 6) * 0x55;
+		}
+		SetSize(256, 256, RECOILResolution.Vector1x1);
+		for (int y = 0; y < 256; y++) {
+			for (int x = 0; x < 256; x++)
+				Pixels[(y << 8) + x] = ContentPalette[GetBitplanePixel(unpacked, 31 - (x >> 3) << 8 | y, x, 4, 8192)];
+		}
+		return true;
+	}
+
 	// Various platform formats.
 
 	bool DecodePi9!(byte[] content, int contentLength)
@@ -19817,7 +19855,8 @@ public class RECOIL
 			return DecodeSpd(content, contentLength);
 		case PackExt("SPR"):
 			return DecodeAppleSpr(content, contentLength)
-				|| DecodeAtari8Spr(content, contentLength);
+				|| DecodeAtari8Spr(content, contentLength)
+				|| DecodeVectorSpr(content, contentLength);
 		case PackExt("SPS"):
 			return DecodeSps(content, contentLength);
 		case PackExt("SPU"):
@@ -20032,6 +20071,8 @@ public class RECOIL
 			return "Sharp X68000";
 		case RECOILResolution.Tandy1x1:
 			return "Tandy 1000";
+		case RECOILResolution.Vector1x1:
+			return "Vector-06C";
 		case RECOILResolution.Zx811x1:
 			return "ZX81";
 		case RECOILResolution.Spectrum1x1:
