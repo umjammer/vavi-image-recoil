@@ -628,6 +628,9 @@
 		<format width="256" height="256" colors="4"><ext>PIC</ext></format>
 		<format maxWidth="512" height="256" maxFrames="2"><ext>BKS</ext></format>
 	</platform>
+	<platform name="Electronika MC 0515" href="http://www.leningrad.su/museum/show_calc.php?n=267">
+		<format width="640" height="200" colors="2"><ext>SCR</ext></format>
+	</platform>
 	<platform name="FM Towns" href="https://en.wikipedia.org/wiki/FM_Towns">
 		<format><ext>PI</ext></format>
 		<format><ext>PIC</ext></format>

@@ -101,8 +101,9 @@ enum RECOILResolution
 	C641x1,
 	C642x1,
 	C1281x1,
-	Electronika1x1,
-	Electronika1x2,
+	Bk1x1,
+	Bk1x2,
+	Mc05151x2,
 	FmTowns1x1,
 	Hp481x1,
 	Msx11x1,
@@ -4732,6 +4733,7 @@ public class RECOIL
 		case RECOILResolution.AppleIIGS1x2:
 		case RECOILResolution.St1x2:
 		case RECOILResolution.Ste1x2:
+		case RECOILResolution.Mc05151x2:
 		case RECOILResolution.Pc801x2:
 		case RECOILResolution.Pc881x2:
 		case RECOILResolution.Msx21x2:
@@ -18277,7 +18279,7 @@ public class RECOIL
 
 	// Electronika BK formats.
 
-	void DecodeElectronikaMono!(byte[] content, int height)
+	void DecodeBkMono!(byte[] content, int height)
 	{
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < 512; x++) {
@@ -18289,7 +18291,7 @@ public class RECOIL
 		}
 	}
 
-	void DecodeElectronikaColorFrame!(byte[] content, int paletteOffset, int frame)
+	void DecodeBkColorFrame!(byte[] content, int paletteOffset, int frame)
 	{
 		paletteOffset <<= 2;
 		for (int i = 0; i < 256 * 256; i++) {
@@ -18315,10 +18317,10 @@ public class RECOIL
 		}
 	}
 
-	bool DecodeElectronikaColor!(byte[] content, int palette)
+	bool DecodeBkColor!(byte[] content, int palette)
 	{
-		SetSize(256, 256, RECOILResolution.Electronika1x1);
-		DecodeElectronikaColorFrame(content, palette, 0);
+		SetSize(256, 256, RECOILResolution.Bk1x1);
+		DecodeBkColorFrame(content, palette, 0);
 		return true;
 	}
 
@@ -18326,28 +18328,28 @@ public class RECOIL
 	{
 		switch (contentLength) {
 		case 16384:
-			if (!SetSize(512, 512, RECOILResolution.Electronika1x2))
+			if (!SetSize(512, 512, RECOILResolution.Bk1x2))
 				return false;
-			DecodeElectronikaMono(content, 512);
+			DecodeBkMono(content, 512);
 			return true;
 		case 16385:
 			int palette = content[0x4000];
 			if (palette > 15)
 				return false;
-			return DecodeElectronikaColor(content, palette);
+			return DecodeBkColor(content, palette);
 		case 32768:
-			if (!SetSize(512, 512, RECOILResolution.Electronika1x2, 2))
+			if (!SetSize(512, 512, RECOILResolution.Bk1x2, 2))
 				return false;
-			DecodeElectronikaMono(content, 1024);
+			DecodeBkMono(content, 1024);
 			return ApplyBlend();
 		case 32770:
 			int palette1 = content[0x8000];
 			int palette2 = content[0x8001];
 			if (palette1 > 15 || palette2 > 15)
 				return false;
-			SetSize(256, 256, RECOILResolution.Electronika1x1, 2);
-			DecodeElectronikaColorFrame(content, palette1, 0);
-			DecodeElectronikaColorFrame(content, palette2, 1);
+			SetSize(256, 256, RECOILResolution.Bk1x1, 2);
+			DecodeBkColorFrame(content, palette1, 0);
+			DecodeBkColorFrame(content, palette2, 1);
 			return ApplyBlend();
 		default:
 			return false;
@@ -18415,7 +18417,7 @@ public class RECOIL
 		case 7685:
 			return DecodeMic(null, content, contentLength);
 		case 16384:
-			return DecodeElectronikaColor(content, 0);
+			return DecodeBkColor(content, 0);
 		case 32000:
 			return DecodeDoo(content, contentLength);
 		case 32768:
@@ -18457,6 +18459,12 @@ public class RECOIL
 		case 12352: // untested, based on https://web.archive.org/web/20140315185332/http://www.zxshed.co.uk/sinclairfaq/index.php5?title=ULAplus
 			SetUlaPlus(content, 0x3000);
 			DecodeZx(content, 0, 0x1800, ZxAttributesTimex, 0);
+			return true;
+		case 16000:
+			SetSize(640, 400, RECOILResolution.Mc05151x2);
+			ContentPalette[0] = 0;
+			ContentPalette[1] = 0xffffff;
+			DecodeScaledBitplanes(content, 0, 640, 200, 1, false, null);
 			return true;
 		case 32768:
 			return DecodeAppleIIShr(content, contentLength);
@@ -20092,9 +20100,11 @@ public class RECOIL
 			return "Commodore 64";
 		case RECOILResolution.C1281x1:
 			return "Commodore 128";
-		case RECOILResolution.Electronika1x1:
-		case RECOILResolution.Electronika1x2:
+		case RECOILResolution.Bk1x1:
+		case RECOILResolution.Bk1x2:
 			return "Electronika BK";
+		case RECOILResolution.Mc05151x2:
+			return "Electronika MC 0515";
 		case RECOILResolution.FmTowns1x1:
 			return "FM Towns";
 		case RECOILResolution.Hp481x1:
@@ -20212,7 +20222,8 @@ public class RECOIL
 		case RECOILResolution.St1x2:
 		case RECOILResolution.Ste1x2:
 		case RECOILResolution.Bbc1x2:
-		case RECOILResolution.Electronika1x2:
+		case RECOILResolution.Bk1x2:
+		case RECOILResolution.Mc05151x2:
 		case RECOILResolution.Msx21x2:
 		case RECOILResolution.Pc801x2:
 		case RECOILResolution.Pc881x2:
