@@ -626,6 +626,7 @@
 	</platform>
 	<platform name="Electronika BK" href="https://en.wikipedia.org/wiki/Electronika_BK">
 		<format width="256" height="256" colors="4"><ext>PIC</ext></format>
+		<format maxWidth="512" height="256" maxFrames="2"><ext>BKS</ext></format>
 	</platform>
 	<platform name="FM Towns" href="https://en.wikipedia.org/wiki/FM_Towns">
 		<format><ext>PI</ext></format>

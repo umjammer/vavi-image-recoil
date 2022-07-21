@@ -102,6 +102,7 @@ enum RECOILResolution
 	C642x1,
 	C1281x1,
 	Electronika1x1,
+	Electronika1x2,
 	FmTowns1x1,
 	Hp481x1,
 	Msx11x1,
@@ -18276,19 +18277,81 @@ public class RECOIL
 
 	// Electronika BK formats.
 
-	bool DecodeElectronika!(byte[] content)
+	void DecodeElectronikaMono!(byte[] content, int height)
+	{
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < 512; x++) {
+				int c = content[(y >> 1 << 6) + (x >> 3)] >> (x & 7) & 1;
+				if (c != 0)
+					c = 0xffffff;
+				Pixels[(y << 9) + x] = c;
+			}
+		}
+	}
+
+	void DecodeElectronikaColorFrame!(byte[] content, int paletteOffset, int frame)
+	{
+		paletteOffset <<= 2;
+		for (int i = 0; i < 256 * 256; i++) {
+			const int[16 * 4] palette = {
+				0x000000, 0x0000ff, 0x00ff00, 0xff0000, // blue, green, red
+				0x000000, 0xffff00, 0xff00ff, 0xff0000, // yellow, magenta, red
+				0x000000, 0x00ffff, 0x0000ff, 0xff00ff, // cyan, blue, magenta
+				0x000000, 0x00ff00, 0x00ffff, 0xffff00, // green, cyan, yellow
+				0x000000, 0xff00ff, 0x00ffff, 0xffffff, // magenta, cyan, white
+				0x000000, 0xffffff, 0xffffff, 0xffffff, // white, white, white
+				0x000000, 0xc00000, 0x800000, 0xff0000, // dark red, brown, red
+				0x000000, 0x00ff00, 0x00ffff, 0xffff00, // green, cyan, yellow
+				0x000000, 0xc000c0, 0x8000ff, 0xff00ff, // violet, light blue, magenta
+				0x000000, 0xffff00, 0x8000ff, 0xc00000, // yellow, light blue, dark red
+				0x000000, 0xffff00, 0xc000c0, 0xff0000, // yellow, violet, red
+				0x000000, 0x00ffff, 0xffff00, 0xff0000, // cyan, yellow, red
+				0x000000, 0xff0000, 0x00ff00, 0x00ffff, // red, green, cyan
+				0x000000, 0x00ffff, 0xffff00, 0xffffff, // cyan, yellow, white
+				0x000000, 0xffff00, 0x00ff00, 0xffffff, // yellow, green, white
+				0x000000, 0x00ffff, 0x00ff00, 0xffffff  // cyan, green, white
+			};
+			Pixels[(frame << 16) + i] = palette[paletteOffset + (content[(frame << 14) + (i >> 2)] >> ((i & 3) << 1) & 3)];
+		}
+	}
+
+	bool DecodeElectronikaColor!(byte[] content, int palette)
 	{
 		SetSize(256, 256, RECOILResolution.Electronika1x1);
-		for (int i = 0; i < 256 * 256; i++) {
-			const int[4] palette = {
-				0x000000,
-				0x0000ff,
-				0x00ff00,
-				0xff0000
-			};
-			Pixels[i] = palette[content[i >> 2] >> ((i & 3) << 1) & 3];
-		}
+		DecodeElectronikaColorFrame(content, palette, 0);
 		return true;
+	}
+
+	bool DecodeBks!(byte[] content, int contentLength)
+	{
+		switch (contentLength) {
+		case 16384:
+			if (!SetSize(512, 512, RECOILResolution.Electronika1x2))
+				return false;
+			DecodeElectronikaMono(content, 512);
+			return true;
+		case 16385:
+			int palette = content[0x4000];
+			if (palette > 15)
+				return false;
+			return DecodeElectronikaColor(content, palette);
+		case 32768:
+			if (!SetSize(512, 512, RECOILResolution.Electronika1x2, 2))
+				return false;
+			DecodeElectronikaMono(content, 1024);
+			return ApplyBlend();
+		case 32770:
+			int palette1 = content[0x8000];
+			int palette2 = content[0x8001];
+			if (palette1 > 15 || palette2 > 15)
+				return false;
+			SetSize(256, 256, RECOILResolution.Electronika1x1, 2);
+			DecodeElectronikaColorFrame(content, palette1, 0);
+			DecodeElectronikaColorFrame(content, palette2, 1);
+			return ApplyBlend();
+		default:
+			return false;
+		}
 	}
 
 	// Vector-06C formats.
@@ -18352,7 +18415,7 @@ public class RECOIL
 		case 7685:
 			return DecodeMic(null, content, contentLength);
 		case 16384:
-			return DecodeElectronika(content);
+			return DecodeElectronikaColor(content, 0);
 		case 32000:
 			return DecodeDoo(content, contentLength);
 		case 32768:
@@ -18614,6 +18677,7 @@ public class RECOIL
 		case PackExt("G09"):
 		case PackExt("BGP"):
 		case PackExt("BKG"):
+		case PackExt("BKS"):
 		case PackExt("BL1"):
 		case PackExt("BL2"):
 		case PackExt("BL3"):
@@ -19151,6 +19215,8 @@ public class RECOIL
 			return DecodeBil(content, contentLength);
 		case PackExt("BKG"):
 			return DecodeBkg(content, contentLength);
+		case PackExt("BKS"):
+			return DecodeBks(content, contentLength);
 		case PackExt("BRUS"):
 		case PackExt("IP"):
 		case PackExt("PICT"):
@@ -20027,6 +20093,7 @@ public class RECOIL
 		case RECOILResolution.C1281x1:
 			return "Commodore 128";
 		case RECOILResolution.Electronika1x1:
+		case RECOILResolution.Electronika1x2:
 			return "Electronika BK";
 		case RECOILResolution.FmTowns1x1:
 			return "FM Towns";
@@ -20145,6 +20212,7 @@ public class RECOIL
 		case RECOILResolution.St1x2:
 		case RECOILResolution.Ste1x2:
 		case RECOILResolution.Bbc1x2:
+		case RECOILResolution.Electronika1x2:
 		case RECOILResolution.Msx21x2:
 		case RECOILResolution.Pc801x2:
 		case RECOILResolution.Pc881x2:
