@@ -514,7 +514,10 @@
 			<ext>DD</ext>
 			<ext>DDP</ext>
 		</format>
-		<format name="Dolphin Ed" width="160" height="200" colors="16"><ext>DOL</ext></format>
+		<format name="Dolphin Ed" width="160" height="200" colors="16">
+			<ext>DOL</ext>
+			<ext>BED</ext>
+		</format>
 		<format name="Drazlace" maxWidth="320" height="200" frames="2">
 			<ext>DRL</ext>
 			<ext>DLP</ext>

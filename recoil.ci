@@ -9723,7 +9723,7 @@ public class RECOIL
 	bool DecodeDol!(byte[] content, int contentLength)
 	{
 		switch (contentLength) {
-		case 10241: // VIC
+		case 10241: // BED, VIC
 		case 10242: // DOL
 		case 10050: // VID
 			break;
@@ -18770,6 +18770,7 @@ public class RECOIL
 		case PackExt("DIT"):
 		case PackExt("DLM"):
 		case PackExt("DOL"):
+		case PackExt("BED"):
 		case PackExt("VID"):
 		case PackExt("DOO"):
 		case PackExt("DPH"):
@@ -19364,6 +19365,7 @@ public class RECOIL
 		case PackExt("DLM"):
 			return DecodeDlm(content, contentLength);
 		case PackExt("DOL"):
+		case PackExt("BED"):
 		case PackExt("VID"):
 			return DecodeDol(content, contentLength);
 		case PackExt("DOO"):
