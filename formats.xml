@@ -565,6 +565,7 @@
 		<format name="Hires Interlace by Feniks" width="320" height="200" frames="2"><ext>HLF</ext></format>
 		<format name="Hi-Pic Creator" width="320" height="200" colors="16"><ext>HPC</ext></format>
 		<format name="Interlace Hires Editor" width="320" height="200" colors="3" frames="2"><ext>IHE</ext></format>
+		<format name="Interlaced Logo Editor" width="320" height="48" colors="10" frames="2"><ext>ILE</ext></format>
 		<format name="Interpaint" width="320" height="200" colors="16">
 			<ext>IPH</ext>
 			<ext name="Gigapaint">GIG</ext>

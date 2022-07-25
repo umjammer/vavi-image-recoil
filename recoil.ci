@@ -9420,21 +9420,40 @@ public class RECOIL
 		return true;
 	}
 
+	void DecodeC64FourColor!(byte[] content, int contentOffset, int frame)
+	{
+		for (int y = 0; y < Height; y++) {
+			for (int x = 0; x < 320; x++) {
+				int i = x - frame;
+				int c = i < 0 ? 0 : content[contentOffset + (y & ~7) * 40 + (i & ~7) + (y & 7)] >> (~i & 6) & 3;
+				Pixels[(frame * Height + y) * 320 + x] = ContentPalette[c];
+			}
+		}
+	}
+
 	bool DecodeCle!(byte[] content, int contentLength)
 	{
 		if (contentLength != 8194)
 			return false;
 		SetSize(320, 200, RECOILResolution.C641x1);
-		int[4] palette;
-		palette[0] = C64Palette[content[8004] & 0xf];
-		palette[1] = C64Palette[content[8002] >> 4];
-		palette[2] = C64Palette[content[8002] & 0xf];
-		palette[3] = C64Palette[content[8003] & 0xf];
-		for (int y = 0; y < 200; y++) {
-			for (int x = 0; x < 320; x++)
-				Pixels[y * 320 + x] = palette[content[2 + (y & ~7) * 40 + (x & ~7) + (y & 7)] >> (~x & 6) & 3];
-		}
+		ContentPalette[0] = C64Palette[content[8004] & 0xf];
+		ContentPalette[1] = C64Palette[content[8002] >> 4];
+		ContentPalette[2] = C64Palette[content[8002] & 0xf];
+		ContentPalette[3] = C64Palette[content[8003] & 0xf];
+		DecodeC64FourColor(content, 2, 0);
 		return true;
+	}
+
+	bool DecodeIle!(byte[] content, int contentLength)
+	{
+		if (contentLength != 4098)
+			return false;
+		SetSize(320, 48, RECOILResolution.C641x1, 2);
+		for (int i = 0; i < 4; i++)
+			ContentPalette[i] = C64Palette[content[0xffe + i] & 0xf];
+		DecodeC64FourColor(content, 0x802, 0);
+		DecodeC64FourColor(content, 2, 1);
+		return ApplyBlend();
 	}
 
 	bool DecodeCfli!(byte[] content, int contentLength)
@@ -18879,6 +18898,7 @@ public class RECOIL
 		case PackExt("IHE"):
 		case PackExt("IIM"):
 		case PackExt("ILD"):
+		case PackExt("ILE"):
 		case PackExt("ILS"):
 		case PackExt("IMG"):
 		case PackExt("TIMG"):
@@ -19579,6 +19599,8 @@ public class RECOIL
 			return DecodeIim(content, contentLength);
 		case PackExt("ILD"):
 			return DecodeIld(content, contentLength);
+		case PackExt("ILE"):
+			return DecodeIle(content, contentLength);
 		case PackExt("ILS"):
 			return DecodeIls(content, contentLength);
 		case PackExt("IMG"):
