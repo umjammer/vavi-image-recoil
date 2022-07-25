@@ -602,7 +602,10 @@
 		</format>
 		<format name="PetDraw64" width="40" height="25" unit="characters" colors="16"><ext>PDR</ext></format>
 		<format name="PETSCII Editor" width="40" height="25" unit="characters" colors="16"><ext>PET</ext></format>
-		<format name="Blazing Paddles" width="160" height="200" colors="16"><ext>PI</ext></format>
+		<format name="Blazing Paddles" width="160" height="200" colors="16">
+			<ext>PI</ext>
+			<ext>BPL</ext>
+		</format>
 		<format name="Paint Magic" width="160" height="200" colors="16"><ext>PMG</ext></format>
 		<format name="Pixel Perfect" width="296" height="200" frames="2"><ext>PP</ext></format>
 		<format name="Pixel Perfect (compressed)" width="296" height="200" frames="2"><ext>PPP</ext></format>

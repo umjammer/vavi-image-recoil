@@ -9601,6 +9601,9 @@ public class RECOIL
 	bool DecodeOcp!(byte[] content, int contentLength)
 		=> contentLength == 10018 && DecodeC64Multicolor(320, content, 2, 0x1f42, 0x233a, content[0x232b]);
 
+	bool DecodeBpl!(byte[] content, int contentLength)
+		=> contentLength == 10242 && DecodeC64Multicolor(320, content, 2, 0x2002, 0x2402, content[0x1f82]);
+
 	bool DecodeRpo!(byte[] content, int contentLength)
 	{
 		if (contentLength != 8002)
@@ -18733,6 +18736,7 @@ public class RECOIL
 		case PackExt("BLD"):
 		case PackExt("BML"):
 		case PackExt("BP"):
+		case PackExt("BPL"):
 		case PackExt("BRU"):
 		case PackExt("BSC"):
 		case PackExt("BMC4"):
@@ -19286,6 +19290,8 @@ public class RECOIL
 			return DecodeBml(content, contentLength);
 		case PackExt("BP"):
 			return DecodeBp(content, contentLength);
+		case PackExt("BPL"):
+			return DecodeBpl(content, contentLength);
 		case PackExt("BRU"):
 			return DecodeBru(content, contentLength);
 		case PackExt("BSC"):
@@ -19813,7 +19819,7 @@ public class RECOIL
 			return DecodePgr(content, contentLength);
 		case PackExt("PI"):
 			return DecodePi(content, contentLength)
-				|| (contentLength == 10242 && DecodeC64Multicolor(320, content, 2, 0x2002, 0x2402, content[0x1f82]));
+				|| DecodeBpl(content, contentLength);
 		case PackExt("PI1"):
 		case PackExt("PI2"):
 		case PackExt("PI3"):
