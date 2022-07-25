@@ -553,7 +553,6 @@
 			<ext>HBM</ext>
 			<ext>HIR</ext>
 			<ext>HPI</ext>
-			<ext name="Gigapaint">GIH</ext>
 			<ext name="Fun Graphics Machine">FGS</ext>
 		</format>
 		<format name="Hi-Eddi" width="320" height="200" colors="16"><ext>HED</ext></format>
@@ -599,6 +598,10 @@
 		<format name="Pixel Perfect (compressed)" width="296" height="200" frames="2"><ext>PPP</ext></format>
 		<format name="Rainbow Painter" width="160" height="200" colors="16"><ext>RP</ext></format>
 		<format name="Run Paint" width="160" height="200" colors="16"><ext>RPM</ext></format>
+		<format name="Run Paint" width="320" height="200" colors="2">
+			<ext>RPO</ext>
+			<ext name="Gigapaint">GIH</ext>
+		</format>
 		<format name="Saracen Paint" width="160" height="200" colors="16"><ext>SAR</ext></format>
 		<format name="PETSCII Editor" width="40" height="25" unit="characters" colors="16">
 			<ext>SCR</ext>
