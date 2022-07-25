@@ -9627,7 +9627,7 @@ public class RECOIL
 	bool DecodeDd!(byte[] content, int contentLength)
 	{
 		switch (contentLength) {
-		case 9026:
+		case 9026: // Run paint
 		case 9217: // Hires-Editor
 		case 9218:
 		case 9346:
@@ -18742,6 +18742,7 @@ public class RECOIL
 		case PackExt("DD"):
 		case PackExt("DDP"):
 		case PackExt("HET"):
+		case PackExt("RPH"):
 		case PackExt("DEL"):
 		case PackExt("DG1"):
 		case PackExt("DHGR"):
@@ -19323,6 +19324,7 @@ public class RECOIL
 		case PackExt("DD"):
 		case PackExt("DDP"):
 		case PackExt("HET"):
+		case PackExt("RPH"):
 			return DecodeDd(content, contentLength);
 		case PackExt("DEL"):
 			return DecodeDel(content, contentLength);

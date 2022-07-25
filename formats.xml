@@ -598,6 +598,7 @@
 		<format name="Pixel Perfect" width="296" height="200" frames="2"><ext>PP</ext></format>
 		<format name="Pixel Perfect (compressed)" width="296" height="200" frames="2"><ext>PPP</ext></format>
 		<format name="Rainbow Painter" width="160" height="200" colors="16"><ext>RP</ext></format>
+		<format name="Run Paint" width="320" height="200" colors="16"><ext>RPH</ext></format>
 		<format name="Run Paint" width="160" height="200" colors="16"><ext>RPM</ext></format>
 		<format name="Run Paint" width="320" height="200" colors="2">
 			<ext>RPO</ext>
