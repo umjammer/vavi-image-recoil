@@ -9870,7 +9870,7 @@ public class RECOIL
 	bool DecodeEci!(byte[] content, int contentLength)
 	{
 		if (contentLength != 32770)
-			return false;
+			return DecodeEcp(content, contentLength);
 		SetSize(320 - FliBugCharacters * 8, 200, RECOILResolution.C641x1, 2);
 		DecodeC64HiresFrame(content, 2 + FliBugCharacters * 8, 0x2002 + FliBugCharacters, 0);
 		DecodeC64HiresFrame(content, 0x4002 + FliBugCharacters * 8, 0x6002 + FliBugCharacters, 296 * 200);
