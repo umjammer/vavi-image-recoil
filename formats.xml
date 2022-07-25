@@ -568,6 +568,7 @@
 		<format name="Interpaint" width="320" height="200" colors="16">
 			<ext>IPH</ext>
 			<ext name="Gigapaint">GIG</ext>
+			<ext>HPI</ext>
 			<ext>HRE</ext>
 		</format>
 		<format name="Interpaint" width="160" height="200" colors="16">

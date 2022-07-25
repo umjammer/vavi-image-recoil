@@ -9605,7 +9605,7 @@ public class RECOIL
 	bool DecodeIph!(byte[] content, int contentLength)
 	{
 		switch (contentLength) {
-		case 9002: // IPH, GIG
+		case 9002: // IPH, GIG, HPI
 		case 9003: // HPC
 		case 9009: // AAS, ART
 			break;
@@ -18825,6 +18825,10 @@ public class RECOIL
 		case PackExt("IIGS"):
 		case PackExt("32K"):
 		case PackExt("GUN"):
+		case PackExt("HBM"):
+		case PackExt("FGS"):
+		case PackExt("MON"):
+		case PackExt("GCD"):
 		case PackExt("HCM"):
 		case PackExt("HED"):
 		case PackExt("HFC"):
@@ -18834,14 +18838,10 @@ public class RECOIL
 		case PackExt("HIM"):
 		case PackExt("HIP"):
 		case PackExt("HIR"):
-		case PackExt("HBM"):
-		case PackExt("HPI"):
-		case PackExt("FGS"):
-		case PackExt("MON"):
-		case PackExt("GCD"):
 		case PackExt("HLF"):
 		case PackExt("HLR"):
 		case PackExt("HPC"):
+		case PackExt("HPI"):
 		case PackExt("HPM"):
 		case PackExt("HPS"):
 		case PackExt("HR"):
@@ -19487,6 +19487,11 @@ public class RECOIL
 			return DecodeApfShr(content, contentLength);
 		case PackExt("GUN"):
 			return DecodeGun(content, contentLength);
+		case PackExt("HBM"):
+		case PackExt("FGS"):
+		case PackExt("MON"):
+		case PackExt("GCD"):
+			return DecodeC64Hir(content, contentLength);
 		case PackExt("HCM"):
 			return DecodeHcm(content, contentLength);
 		case PackExt("HED"):
@@ -19506,18 +19511,15 @@ public class RECOIL
 			return DecodeFalconHir(content, contentLength)
 				|| DecodeC64Hir(content, contentLength)
 				|| DecodeHrs(content, contentLength);
-		case PackExt("HBM"):
-		case PackExt("HPI"):
-		case PackExt("FGS"):
-		case PackExt("MON"):
-		case PackExt("GCD"):
-			return DecodeC64Hir(content, contentLength);
 		case PackExt("HLF"):
 			return DecodeHlf(content, contentLength);
 		case PackExt("HLR"):
 			return DecodeHlr(content, contentLength);
 		case PackExt("HPC"):
 			return DecodeIph(content, contentLength);
+		case PackExt("HPI"):
+			return DecodeC64Hir(content, contentLength)
+				|| DecodeIph(content, contentLength);
 		case PackExt("HPM"):
 			return DecodeHpm(content, contentLength);
 		case PackExt("HPS"):
