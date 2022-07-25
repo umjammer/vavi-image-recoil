@@ -565,6 +565,7 @@
 			<ext name="Hires FLI Designer">HFD</ext>
 		</format>
 		<format name="Hires Manager by Cosmos" width="296" height="192" colors="16"><ext>HIM</ext></format>
+		<format name="Hireslace Editor" width="320" height="200" frames="2"><ext>HLE</ext></format>
 		<format name="Hires Interlace by Feniks" width="320" height="200" frames="2"><ext>HLF</ext></format>
 		<format name="Hi-Pic Creator" width="320" height="200" colors="16"><ext>HPC</ext></format>
 		<format name="Interlace Hires Editor" width="320" height="200" colors="3" frames="2"><ext>IHE</ext></format>

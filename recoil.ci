@@ -9627,16 +9627,6 @@ public class RECOIL
 		return true;
 	}
 
-	bool DecodeIhe!(byte[] content, int contentLength)
-	{
-		if (contentLength != 16194)
-			return false;
-		SetSize(320, 200, RECOILResolution.C641x1, 2);
-		DecodeC64HiresFrame(content, 2, -0x0c, 0);
-		DecodeC64HiresFrame(content, 0x2002, -0x0c, 320 * 200);
-		return ApplyBlend();
-	}
-
 	bool DecodeIph!(byte[] content, int contentLength)
 	{
 		switch (contentLength) {
@@ -9763,15 +9753,19 @@ public class RECOIL
 			&& DecodeKoa(unpacked, 10003);
 	}
 
-	bool DecodeHlf!(byte[] content, int contentLength)
+	bool DecodeC64HiresInterlace!(byte[] content, int bitmap1Offset, int videoMatrix1Offset, int bitmap2Offset, int videoMatrix2Offset)
 	{
-		if (contentLength != 24578)
-			return false;
 		SetSize(320 , 200, RECOILResolution.C641x1, 2);
-		DecodeC64HiresFrame(content, 2, 0x2402, 0);
-		DecodeC64HiresFrame(content, 0x4002, 0x2802, 320 * 200);
+		DecodeC64HiresFrame(content, bitmap1Offset, videoMatrix1Offset, 0);
+		DecodeC64HiresFrame(content, bitmap2Offset, videoMatrix2Offset, 320 * 200);
 		return ApplyBlend();
 	}
+
+	bool DecodeIhe!(byte[] content, int contentLength) => contentLength == 16194 && DecodeC64HiresInterlace(content, 2, -0x0c, 0x2002, -0x0c);
+
+	bool DecodeHlf!(byte[] content, int contentLength) => contentLength == 24578 && DecodeC64HiresInterlace(content, 2, 0x2402, 0x4002, 0x2802);
+
+	bool DecodeHle!(byte[] content, int contentLength) => contentLength == 32770 && DecodeC64HiresInterlace(content, 2, 0x2002, 0x6002, 0x4002);
 
 	bool DecodeMci!(byte[] content, int contentLength)
 	{
@@ -18875,6 +18869,7 @@ public class RECOIL
 		case PackExt("HIM"):
 		case PackExt("HIP"):
 		case PackExt("HIR"):
+		case PackExt("HLE"):
 		case PackExt("HLF"):
 		case PackExt("HLR"):
 		case PackExt("HPC"):
@@ -19554,6 +19549,8 @@ public class RECOIL
 			return DecodeFalconHir(content, contentLength)
 				|| DecodeC64Hir(content, contentLength)
 				|| DecodeHrs(content, contentLength);
+		case PackExt("HLE"):
+			return DecodeHle(content, contentLength);
 		case PackExt("HLF"):
 			return DecodeHlf(content, contentLength);
 		case PackExt("HLR"):
