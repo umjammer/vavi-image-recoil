@@ -18972,6 +18972,8 @@ public class RECOIL
 		case PackExt("NXI"):
 		case PackExt("OBJ"):
 		case PackExt("OCP"):
+		case PackExt("MPI"):
+		case PackExt("MPIC"):
 		case PackExt("ODF"):
 		case PackExt("P"):
 		case PackExt("P11"):
@@ -19744,6 +19746,8 @@ public class RECOIL
 		case PackExt("OBJ"):
 			return DecodeObj(content, contentLength);
 		case PackExt("OCP"):
+		case PackExt("MPI"):
+		case PackExt("MPIC"):
 			return DecodeOcp(content, contentLength);
 		case PackExt("ODF"):
 			return DecodeOdf(content, contentLength);
