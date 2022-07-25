@@ -18805,6 +18805,7 @@ public class RECOIL
 		case PackExt("FCP"):
 		case PackExt("FPT"):
 		case PackExt("FD2"):
+		case PackExt("FFL"):
 		case PackExt("FFLI"):
 		case PackExt("FGE"):
 		case PackExt("FLF"):
@@ -19422,6 +19423,7 @@ public class RECOIL
 			return contentLength == 10004 && DecodeC64Multicolor(320, content, 2, 0x1f42, 0x232a, content[0x2712]);
 		case PackExt("FD2"):
 			return DecodeFli(content, contentLength);
+		case PackExt("FFL"):
 		case PackExt("FFLI"):
 			return DecodeFfli(content, contentLength);
 		case PackExt("FGE"):
