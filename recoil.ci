@@ -9468,21 +9468,22 @@ public class RECOIL
 		return true;
 	}
 
-	bool DecodeGodot!(int width, int height, byte[] content, int contentOffset, int contentLength)
+	static bool IsGodot(byte[] content, int contentLength) => content[0] == 'G' && content[1] == 'O' && content[2] == 'D' && content[contentLength - 1] == 0xad;
+
+	bool DecodeGodot!(int width, int height, byte[] content, int contentOffset, int contentLength, bool compressed)
 	{
-		if (content[0] != 'G' || content[1] != 'O' || content[2] != 'D' || content[contentLength - 1] != 0xad
-		 || !SetSize(width, height, RECOILResolution.C641x1))
+		if (!SetSize(width, height, RECOILResolution.C641x1))
 			return false;
 		GoDotStream() rle;
 		rle.Content = content;
 		rle.ContentOffset = contentOffset;
-		rle.ContentLength = contentLength - 1;
+		rle.ContentLength = contentLength;
 		for (int row = 0; row < height; row += 8) {
 			for (int column = 0; column < width; column += 8) {
 				for (int y = 0; y < 8; y++) {
 					int pixelsOffset = (row + y) * width + column;
 					for (int x = 0; x < 4; x++) {
-						int b = rle.ReadRle();
+						int b = compressed ? rle.ReadRle() : rle.ReadByte();
 						if (b < 0)
 							return false;
 						const byte[16] byBrightness = { 0, 6, 9, 11, 2, 4, 8, 12, 14, 10, 5, 15, 3, 7, 13, 1 };
@@ -9495,9 +9496,21 @@ public class RECOIL
 		return true;
 	}
 
-	bool Decode4bt!(byte[] content, int contentLength) => contentLength >= 5 && content[3] == '0' && DecodeGodot(320, 200, content, 4, contentLength);
+	bool Decode4bt!(byte[] content, int contentLength)
+	{
+		if (contentLength < 5)
+			return false;
+		if (contentLength == 32002 && content[0] == 0)
+			return DecodeGodot(320, 200, content, 2, contentLength, false);
+		return content[3] == '0' && IsGodot(content, contentLength)
+			&& DecodeGodot(320, 200, content, 4, contentLength - 1, true);
+	}
 
-	bool DecodeGodotClp!(byte[] content, int contentLength) => contentLength >= 9 && content[3] == '1' && DecodeGodot(content[6] << 3, content[7] << 3, content, 8, contentLength);
+	bool DecodeGodotClp!(byte[] content, int contentLength)
+	{
+		return contentLength >= 9 && content[3] == '1' && IsGodot(content, contentLength)
+			&& DecodeGodot(content[6] << 3, content[7] << 3, content, 8, contentLength - 1, true);
+	}
 
 	const int FliBugCharacters = 3;
 
