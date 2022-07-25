@@ -9605,7 +9605,7 @@ public class RECOIL
 	bool DecodeIph!(byte[] content, int contentLength)
 	{
 		switch (contentLength) {
-		case 9002: // IPH
+		case 9002: // IPH, GIG
 		case 9003: // HPC
 		case 9009: // AAS, ART
 			break;
@@ -18795,6 +18795,7 @@ public class RECOIL
 		case PackExt("GFB"):
 		case PackExt("GG"):
 		case PackExt("GHG"):
+		case PackExt("GIG"):
 		case PackExt("GL5"):
 		case PackExt("GL6"):
 		case PackExt("GL7"):
@@ -18902,7 +18903,6 @@ public class RECOIL
 		case PackExt("KID"):
 		case PackExt("KLA"):
 		case PackExt("KOA"):
-		case PackExt("GIG"):
 		case PackExt("RPM"):
 		case PackExt("KPR"):
 		case PackExt("KSS"):
@@ -19432,6 +19432,9 @@ public class RECOIL
 			return DecodeGg(content, contentLength);
 		case PackExt("GHG"):
 			return DecodeGhg(content, contentLength);
+		case PackExt("GIG"):
+			return DecodeIph(content, contentLength)
+				|| DecodeKoa(content, contentLength);
 		case PackExt("GL5"):
 			return DecodeGl5(filename, content, contentLength);
 		case PackExt("GL6"):
@@ -19621,7 +19624,6 @@ public class RECOIL
 			return DecodeKid(content, contentLength);
 		case PackExt("KLA"):
 		case PackExt("KOA"):
-		case PackExt("GIG"):
 		case PackExt("RPM"):
 			return DecodeKoa(content, contentLength);
 		case PackExt("KPR"):
