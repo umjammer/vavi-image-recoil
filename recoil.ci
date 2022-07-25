@@ -9767,16 +9767,19 @@ public class RECOIL
 
 	bool DecodeHle!(byte[] content, int contentLength) => contentLength == 32770 && DecodeC64HiresInterlace(content, 2, 0x2002, 0x6002, 0x4002);
 
-	bool DecodeMci!(byte[] content, int contentLength)
+	bool DecodeMciLike!(byte[] content, int bitmap1Offset, int videoMatrix1Offset, int bitmap2Offset, int videoMatrix2Offset, int colorOffset, int backgroundOffset, int shift)
 	{
-		if (contentLength != 19434)
-			return false;
-		SetSize(320, 200, RECOILResolution.C641x1, 2);
-		DecodeC64MulticolorFrame(content, 0x402, 2, 0x4802, content[0x3ea], 0);
-		LeftSkip = -1;
-		DecodeC64MulticolorFrame(content, 0x2402, 0x4402, 0x4802, content[0x3ea], 320 * 200);
+		SetSize(320, 200, shift == 0 ? RECOILResolution.C642x1 : RECOILResolution.C641x1, 2);
+		int background = content[backgroundOffset];
+		DecodeC64MulticolorFrame(content, bitmap1Offset, videoMatrix1Offset, colorOffset, background, 0);
+		LeftSkip = -shift;
+		DecodeC64MulticolorFrame(content, bitmap2Offset, videoMatrix2Offset, colorOffset, background, 320 * 200);
 		return ApplyBlend();
 	}
+
+	bool DecodeMci!(byte[] content, int contentLength) => contentLength == 19434 && DecodeMciLike(content, 0x402, 2, 0x2402, 0x4402, 0x4802, 0x3ea, 1);
+
+	bool DecodeFp!(byte[] content, int contentLength) => contentLength == 19266 && DecodeMciLike(content, 0xc02, 0x402, 0x2c02, 0x802, 2, 0x2b42, 1);
 
 	bool DecodeDrz!(byte[] content, int contentLength)
 	{
@@ -9793,13 +9796,7 @@ public class RECOIL
 		if (content == null)
 			return false;
 		int shift = content[0x2744];
-		if (shift > 1)
-			return false;
-		SetSize(320, 200, shift == 0 ? RECOILResolution.C642x1 : RECOILResolution.C641x1, 2);
-		DecodeC64MulticolorFrame(content, 0x802, 0x402, 2, content[0x2742], 0);
-		LeftSkip = -shift;
-		DecodeC64MulticolorFrame(content, 0x2802, 0x402, 2, content[0x2742], 320 * 200);
-		return ApplyBlend();
+		return shift <= 1 && DecodeMciLike(content, 0x802, 0x402, 0x2802, 0x402, 2, 0x2742, shift);
 	}
 
 	void DecodeMleFrame!(byte[] content, int contentOffset, int pixelsOffset)
@@ -18812,6 +18809,7 @@ public class RECOIL
 		case PackExt("FLI"):
 		case PackExt("FN2"):
 		case PackExt("FNT"):
+		case PackExt("FP"):
 		case PackExt("FP2"):
 		case PackExt("FPR"):
 		case PackExt("FTC"):
@@ -19442,6 +19440,8 @@ public class RECOIL
 				|| DecodeStFnt(content, contentLength)
 				|| DecodeAmstradFnt(content, contentLength)
 				|| DecodeImage72Fnt(content, contentLength);
+		case PackExt("FP"):
+			return DecodeFp(content, contentLength);
 		case PackExt("FP2"):
 			return DecodeC64Fun(content, contentLength);
 		case PackExt("FPR"):
