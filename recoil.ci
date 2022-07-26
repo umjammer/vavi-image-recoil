@@ -9978,8 +9978,7 @@ public class RECOIL
 		default:
 			return false;
 		}
-		DecodeC64Multicolor(320 - FliBugCharacters * 8, content, 0x2402 + FliBugCharacters * 8, 0x402 + FliBugCharacters, 2 + FliBugCharacters, 0);
-		return true;
+		return DecodeC64Multicolor(320 - FliBugCharacters * 8, content, 0x2402 + FliBugCharacters * 8, 0x402 + FliBugCharacters, 2 + FliBugCharacters, 0);
 	}
 
 	bool DecodeBml!(byte[] content, int contentLength)
@@ -9992,8 +9991,13 @@ public class RECOIL
 		default:
 			return false;
 		}
-		DecodeC64Multicolor(320 - FliBugCharacters * 8, content, 0x2502 + FliBugCharacters * 8, 0x502 + FliBugCharacters, 0x102 + FliBugCharacters, -2);
-		return true;
+		return DecodeC64Multicolor(320 - FliBugCharacters * 8, content, 0x2502 + FliBugCharacters * 8, 0x502 + FliBugCharacters, 0x102 + FliBugCharacters, -2);
+	}
+
+	bool DecodeEmc!(byte[] content, int contentLength)
+	{
+		return contentLength == 17412
+			&& DecodeC64Multicolor(320 - FliBugCharacters * 8, content, 0x2002 + FliBugCharacters * 8, 2 + FliBugCharacters, 0x4002 + FliBugCharacters, content[0x4403]);
 	}
 
 	bool DecodeFbi!(byte[] content, int contentLength)
@@ -18881,6 +18885,7 @@ public class RECOIL
 		case PackExt("EBD"):
 		case PackExt("ECI"):
 		case PackExt("ECP"):
+		case PackExt("EMC"):
 		case PackExt("EPA"):
 		case PackExt("ESM"):
 		case PackExt("EZA"):
@@ -19496,6 +19501,8 @@ public class RECOIL
 			return DecodeEci(content, contentLength);
 		case PackExt("ECP"):
 			return DecodeEcp(content, contentLength);
+		case PackExt("EMC"):
+			return DecodeEmc(content, contentLength);
 		case PackExt("EPA"):
 			return DecodeEpa(content, contentLength);
 		case PackExt("ESM"):
