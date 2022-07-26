@@ -18813,6 +18813,7 @@ public class RECOIL
 		case PackExt("BL3"):
 		case PackExt("BLD"):
 		case PackExt("BML"):
+		case PackExt("FLG"):
 		case PackExt("BP"):
 		case PackExt("BPL"):
 		case PackExt("BRU"):
@@ -19371,6 +19372,7 @@ public class RECOIL
 		case PackExt("BLD"):
 			return DecodeBld(content, contentLength);
 		case PackExt("BML"):
+		case PackExt("FLG"):
 			return DecodeBml(content, contentLength);
 		case PackExt("BP"):
 			return DecodeBp(content, contentLength);
