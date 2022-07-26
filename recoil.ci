@@ -9450,7 +9450,7 @@ public class RECOIL
 			return false;
 		SetSize(320, 48, RECOILResolution.C641x1, 2);
 		for (int i = 0; i < 4; i++)
-			ContentPalette[i] = C64Palette[content[0xffe + i] & 0xf];
+			ContentPalette[i] = C64Palette[content[0xffe + i] & (i < 3 ? 0xf : 7)];
 		DecodeC64FourColor(content, 0x802, 0);
 		DecodeC64FourColor(content, 2, 1);
 		return ApplyBlend();
