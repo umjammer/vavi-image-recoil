@@ -18885,6 +18885,7 @@ public class RECOIL
 		case PackExt("HIR"):
 		case PackExt("HLE"):
 		case PackExt("HLF"):
+		case PackExt("HIE"):
 		case PackExt("HLR"):
 		case PackExt("HPC"):
 		case PackExt("HPI"):
@@ -19572,6 +19573,7 @@ public class RECOIL
 		case PackExt("HLE"):
 			return DecodeHle(content, contentLength);
 		case PackExt("HLF"):
+		case PackExt("HIE"):
 			return DecodeHlf(content, contentLength);
 		case PackExt("HLR"):
 			return DecodeHlr(content, contentLength);
