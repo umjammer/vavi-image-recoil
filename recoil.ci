@@ -9767,7 +9767,7 @@ public class RECOIL
 
 	bool DecodeIhe!(byte[] content, int contentLength) => contentLength == 16194 && DecodeC64HiresInterlace(content, 2, -0x0c, 0x2002, -0x0c);
 
-	bool DecodeHlf!(byte[] content, int contentLength) => contentLength == 24578 && DecodeC64HiresInterlace(content, 2, 0x2402, 0x4002, 0x2802);
+	bool DecodeHlf!(byte[] content, int contentLength) => contentLength == 24578 && DecodeC64HiresInterlace(content, 2, 0x2802, 0x4002, 0x2402);
 
 	bool DecodeHle!(byte[] content, int contentLength) => contentLength == 32770 && DecodeC64HiresInterlace(content, 2, 0x2002, 0x6002, 0x4002);
 
