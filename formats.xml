@@ -565,6 +565,7 @@
 			<ext>HPI</ext>
 			<ext name="Fun Graphics Machine">FGS</ext>
 		</format>
+		<format name="HCB-editor" width="148" height="200" colors="16"><ext>HCB</ext></format>
 		<format name="Hi-Eddi" width="320" height="200" colors="16"><ext>HED</ext></format>
 		<format name="Hires-Editor" width="320" height="200" colors="16"><ext>HET</ext></format>
 		<format name="Hires FLI by Crest" width="296" height="112" colors="16">

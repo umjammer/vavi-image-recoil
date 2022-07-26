@@ -9542,10 +9542,11 @@ public class RECOIL
 	const int FunPaintBackground = 0;
 #endif
 	const int GunPaintBackground = -0x3f51;
+	const int HcbBackground = -1;
 
 	void DecodeC64MulticolorFrame!(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int background, int pixelsOffset)
 	{
-		bool fli = Width == 320 - FliBugCharacters * 8;
+		bool fli = Width == 320 - FliBugCharacters * 8 && background != HcbBackground;
 		bool bottomBfli = pixelsOffset != 0 && Height == 400;
 		for (int y = 0; y < 200; y++) {
 			int lineBackground;
@@ -9557,6 +9558,8 @@ public class RECOIL
 #endif
 			else if (background == GunPaintBackground && y >= 177)
 				lineBackground = content[y < 197 ? 0x47ea - 177 + y : 0x47fd];
+			else if (background == HcbBackground)
+				lineBackground = content[0x2f42 + (y >> 2)];
 			else
 				lineBackground = content[y - background];
 			for (int x = 0; x < Width; x++) {
@@ -9566,21 +9569,22 @@ public class RECOIL
 					int offset = (y & ~7) * 40 + (i & ~7) + (y & 7);
 					if (bottomBfli)
 						offset = offset - (24 - FliBugCharacters) * 8 & 0x1fff;
+					int charOffset = offset >> 3;
+					if (background == HcbBackground)
+						charOffset += (y & 4) << 8;
 					switch (content[bitmapOffset + offset] >> (~i & 6) & 3) {
 					case 1:
-						offset >>= 3;
 						if (fli)
-							offset += (y & 7) << 10;
-						c = content[videoMatrixOffset + offset] >> 4;
+							charOffset += (y & 7) << 10;
+						c = content[videoMatrixOffset + charOffset] >> 4;
 						break;
 					case 2:
-						offset >>= 3;
 						if (fli)
-							offset += (y & 7) << 10;
-						c = content[videoMatrixOffset + offset];
+							charOffset += (y & 7) << 10;
+						c = content[videoMatrixOffset + charOffset];
 						break;
 					case 3:
-						c = colorOffset < 0 ? content[-colorOffset] : content[colorOffset + (offset >> 3)];
+						c = colorOffset < 0 ? content[-colorOffset] : content[colorOffset + charOffset];
 						break;
 					default:
 						break;
@@ -9755,7 +9759,7 @@ public class RECOIL
 
 	bool DecodeC64HiresInterlace!(byte[] content, int bitmap1Offset, int videoMatrix1Offset, int bitmap2Offset, int videoMatrix2Offset)
 	{
-		SetSize(320 , 200, RECOILResolution.C641x1, 2);
+		SetSize(320, 200, RECOILResolution.C641x1, 2);
 		DecodeC64HiresFrame(content, bitmap1Offset, videoMatrix1Offset, 0);
 		DecodeC64HiresFrame(content, bitmap2Offset, videoMatrix2Offset, 320 * 200);
 		return ApplyBlend();
@@ -9826,6 +9830,15 @@ public class RECOIL
 		LeftSkip = -1;
 		DecodeMleFrame(content, 2, 320 * 56);
 		return ApplyBlend();
+	}
+
+	bool DecodeHcb!(byte[] content, int contentLength)
+	{
+		if (contentLength != 12148)
+			return false;
+		SetSize(320 - FliBugCharacters * 8, 200, RECOILResolution.C642x1);
+		DecodeC64MulticolorFrame(content, 0x1002, 0x802, 2, HcbBackground, 0);
+		return true;
 	}
 
 	bool DecodeHimUnpacked!(byte[] content)
@@ -18860,6 +18873,7 @@ public class RECOIL
 		case PackExt("FGS"):
 		case PackExt("MON"):
 		case PackExt("GCD"):
+		case PackExt("HCB"):
 		case PackExt("HCM"):
 		case PackExt("HED"):
 		case PackExt("HFC"):
@@ -19534,6 +19548,8 @@ public class RECOIL
 		case PackExt("MON"):
 		case PackExt("GCD"):
 			return DecodeC64Hir(content, contentLength);
+		case PackExt("HCB"):
+			return DecodeHcb(content, contentLength);
 		case PackExt("HCM"):
 			return DecodeHcm(content, contentLength);
 		case PackExt("HED"):
