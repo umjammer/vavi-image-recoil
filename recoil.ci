@@ -9778,7 +9778,7 @@ public class RECOIL
 		case 10006: // RPM
 			return DecodeC64Multicolor(320, content, 2, 0x1f42, 0x232a, content[0x2712]);
 		default:
-			return false;
+			return DecodeGg(content, contentLength);
 		}
 	}
 
