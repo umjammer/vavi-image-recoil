@@ -9631,10 +9631,10 @@ public class RECOIL
 				int c = lineBackground;
 				int i = x + LeftSkip;
 				if (i >= 0) {
-					int offset = (y & ~7) * 40 + (i & ~7) + (y & 7);
+					int charOffset = (y & ~7) * 5 + (i >> 3);
 					if (bottomBfli)
-						offset = offset - (24 - FliBugCharacters) * 8 & 0x1fff;
-					int charOffset = offset >> 3;
+						charOffset = charOffset - (24 - FliBugCharacters) & 0x3ff;
+					int offset = (charOffset << 3) + (y & 7);
 					if (background == HcbBackground)
 						charOffset += (y & 4) << 8;
 					switch (content[bitmapOffset + offset] >> (~i & 6) & 3) {
