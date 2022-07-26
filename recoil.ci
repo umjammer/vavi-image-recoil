@@ -968,6 +968,17 @@ abstract class RleStream : BitStream
 		unpacked[1] = Content[1];
 		return Unpack(unpacked, 2, 1, unpackedLength);
 	}
+
+	internal bool UnpackBackwards!(byte[]! unpacked, int unpackedOffset, int unpackedEnd)
+	{
+		while (unpackedEnd >= unpackedOffset) {
+			int b = ReadRle();
+			if (b < 0)
+				return false;
+			unpacked[unpackedEnd--] = b;
+		}
+		return true;
+	}
 }
 
 class BldStream : RleStream
@@ -2274,6 +2285,60 @@ class Tre1Stream : RleStream
 		LastRgb = RECOIL.GetFalconTrueColor(Content, ContentOffset);
 		ContentOffset += 2;
 		return LastRgb;
+	}
+}
+
+class MciStream : RleStream
+{
+	protected override bool ReadCommand!()
+	{
+		if (ContentOffset < 2)
+			return false;
+		int b = Content[ContentOffset--];
+		for (int e = 8; e >= 0; e--) {
+			if (b == Content[0x81 + e]) {
+				switch (Content[0x78 + e]) {
+				case 0x00:
+					RepeatCount = 2;
+					RepeatValue = Content[0x85 + e];
+					return true;
+				case 0x07:
+					if (ContentOffset < 2)
+						return false;
+					RepeatCount = 2 + Content[ContentOffset--];
+					RepeatValue = Content[0x4f];
+					return true;
+				case 0x0b:
+					RepeatCount = 3;
+					RepeatValue = Content[0x4f];
+					return true;
+				case 0x11:
+					if (ContentOffset < 3)
+						return false;
+					RepeatCount = 2 + Content[ContentOffset--];
+					RepeatValue = Content[ContentOffset--];
+					return true;
+				case 0x17:
+					if (ContentOffset < 2)
+						return false;
+					RepeatCount = 3;
+					RepeatValue = Content[ContentOffset--];
+					return true;
+				case 0x19:
+					if (ContentOffset < 2)
+						return false;
+					b = Content[ContentOffset--];
+					break;
+				default:
+					// TODO: return false; ?
+					break;
+				}
+				break;
+			}
+		}
+		RepeatCount = 1;
+		RepeatValue = b;
+		return true;
 	}
 }
 
@@ -9781,9 +9846,22 @@ public class RECOIL
 		return ApplyBlend();
 	}
 
-	bool DecodeMci!(byte[] content, int contentLength) => contentLength == 19434 && DecodeMciLike(content, 0x402, 2, 0x2402, 0x4402, 0x4802, 0x3ea, 1);
-
 	bool DecodeFp!(byte[] content, int contentLength) => contentLength == 19266 && DecodeMciLike(content, 0xc02, 0x402, 0x2c02, 0x802, 2, 0x2b42, 1);
+
+	bool DecodeMciUnpacked!(byte[] content) => DecodeMciLike(content, 0x402, 2, 0x2402, 0x4402, 0x4802, 0x3ea, 1);
+
+	bool DecodeMci!(byte[] content, int contentLength)
+	{
+		if (contentLength == 19434)
+			return DecodeMciUnpacked(content);
+		if (contentLength < 142)
+			return false;
+		byte[19434] unpacked;
+		MciStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = contentLength - 1;
+		return rle.UnpackBackwards(unpacked, 2, 19433) && DecodeMciUnpacked(unpacked);
+	}
 
 	bool DecodeDrz!(byte[] content, int contentLength)
 	{
@@ -9862,13 +9940,8 @@ public class RECOIL
 		HimStream() rle;
 		rle.Content = content;
 		rle.ContentOffset = contentLength - 1;
-		for (int unpackedOffset = 0x3ff3; unpackedOffset >= 2 + 320; unpackedOffset--) {
-			int b = rle.ReadRle();
-			if (b < 0)
-				return false;
-			unpacked[unpackedOffset] = b;
-		}
-		return DecodeHimUnpacked(unpacked);
+		return rle.UnpackBackwards(unpacked, 2 + 320, 16371)
+			&& DecodeHimUnpacked(unpacked);
 	}
 
 	bool DecodeEci!(byte[] content, int contentLength)
