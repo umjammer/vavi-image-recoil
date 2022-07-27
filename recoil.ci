@@ -10536,6 +10536,32 @@ public class RECOIL
 		return true;
 	}
 
+	static int GetShe1Pixel(byte[] content, int x, int y)
+	{
+		int bit = ~x & 7;
+		if (y < 84) {
+			int spriteOffset = (((y / 21 << 3) + x / 24) << 6) + y % 21 * 3 + (x >> 3) % 3;
+			if ((content[0x5a6 + spriteOffset] >> bit & 1) != 0)
+				return content[0xca7];
+			if ((content[0x4a6 + spriteOffset] >> bit & 1) != 0)
+				return content[0xca6];
+		}
+		int offset = (y >> 3) * 12 + (x >> 3);
+		return content[0x422 + offset] >> ((content[2 + (offset << 3) + (y & 7)] >> bit & 1) << 2);
+	}
+
+	bool DecodeShe!(byte[] content, int contentLength)
+	{
+		if (contentLength != 3250)
+			return false;
+		SetSize(96, 88, RECOILResolution.C641x1);
+		for (int y = 0; y < 88; y++) {
+			for (int x = 0; x < 96; x++)
+				Pixels[y * 96 + x] = C64Palette[GetShe1Pixel(content, x, y) & 15];
+		}
+		return true;
+	}
+
 	// Atari ST formats.
 
 	bool DecodeDoo!(byte[] content, int contentLength)
@@ -19243,6 +19269,7 @@ public class RECOIL
 		case PackExt("SH3"):
 		case PackExt("3200"):
 		case PackExt("SHC"):
+		case PackExt("SHE"):
 		case PackExt("SHP"):
 		case PackExt("SHR"):
 		case PackExt("SIF"):
@@ -20134,6 +20161,8 @@ public class RECOIL
 				|| DecodeAppleIIShr(content, contentLength);
 		case PackExt("SHC"):
 			return DecodeShc(content, contentLength);
+		case PackExt("SHE"):
+			return DecodeShe(content, contentLength);
 		case PackExt("SHP"):
 			return DecodeShp(content, contentLength);
 		case PackExt("SHR"):
