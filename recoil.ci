@@ -9613,7 +9613,13 @@ public class RECOIL
 	{
 		bool fli = Width == 320 - FliBugCharacters * 8 && background != HcbBackground;
 		bool bottomBfli = pixelsOffset != 0 && Height == 400;
-		for (int y = 0; y < 200; y++) {
+		for (int outputY = 0; outputY < 200; outputY++) {
+			int y = outputY;
+			if (Height == 192) { // EMC
+				if (y >= 192)
+					break;
+				y += 4;
+			}
 			int lineBackground;
 			if (background >= 0)
 				lineBackground = background;
@@ -9655,7 +9661,7 @@ public class RECOIL
 						break;
 					}
 				}
-				Pixels[pixelsOffset + y * Width + x] = C64Palette[c & 0xf];
+				Pixels[pixelsOffset + outputY * Width + x] = C64Palette[c & 0xf];
 			}
 		}
 	}
@@ -9910,14 +9916,7 @@ public class RECOIL
 		return ApplyBlend();
 	}
 
-	bool DecodeHcb!(byte[] content, int contentLength)
-	{
-		if (contentLength != 12148)
-			return false;
-		SetSize(320 - FliBugCharacters * 8, 200, RECOILResolution.C642x1);
-		DecodeC64MulticolorFrame(content, 0x1002, 0x802, 2, HcbBackground, 0);
-		return true;
-	}
+	bool DecodeHcb!(byte[] content, int contentLength) => contentLength == 12148 && DecodeC64Multicolor(320 - FliBugCharacters * 8, content, 0x1002, 0x802, 2, HcbBackground);
 
 	bool DecodeHimUnpacked!(byte[] content)
 	{
@@ -9996,8 +9995,11 @@ public class RECOIL
 
 	bool DecodeEmc!(byte[] content, int contentLength)
 	{
-		return contentLength == 17412
-			&& DecodeC64Multicolor(320 - FliBugCharacters * 8, content, 0x2002 + FliBugCharacters * 8, 2 + FliBugCharacters, 0x4002 + FliBugCharacters, content[0x4403]);
+		if (contentLength != 17412)
+			return false;
+		SetSize(320 - FliBugCharacters * 8, 192, RECOILResolution.C642x1);
+		DecodeC64MulticolorFrame(content, 0x2002 + FliBugCharacters * 8, 2 + FliBugCharacters, 0x4002 + FliBugCharacters, content[0x4403], 0);
+		return true;
 	}
 
 	bool DecodeFbi!(byte[] content, int contentLength)
