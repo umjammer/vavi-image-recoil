@@ -10536,11 +10536,13 @@ public class RECOIL
 		return true;
 	}
 
+	static int GetSheSpriteOffset(int x, int y) => (((y / 21 << 3) + x / 24) << 6) + y % 21 * 3 + (x >> 3) % 3;
+
 	static int GetShe1Pixel(byte[] content, int x, int y)
 	{
 		int bit = ~x & 7;
 		if (y < 84) {
-			int spriteOffset = (((y / 21 << 3) + x / 24) << 6) + y % 21 * 3 + (x >> 3) % 3;
+			int spriteOffset = GetSheSpriteOffset(x, y);
 			if ((content[0x5a6 + spriteOffset] >> bit & 1) != 0)
 				return content[0xca7];
 			if ((content[0x4a6 + spriteOffset] >> bit & 1) != 0)
@@ -10552,14 +10554,33 @@ public class RECOIL
 
 	bool DecodeShe!(byte[] content, int contentLength)
 	{
-		if (contentLength != 3250)
+		switch (contentLength) {
+		case 3250:
+			SetSize(96, 88, RECOILResolution.C641x1);
+			for (int y = 0; y < 88; y++) {
+				for (int x = 0; x < 96; x++)
+					Pixels[y * 96 + x] = C64Palette[GetShe1Pixel(content, x, y) & 15];
+			}
+			return true;
+		case 8642:
+			SetSize(192, 168, RECOILResolution.C641x1);
+			for (int y = 0; y < 168; y++) {
+				for (int x = 0; x < 192; x++) {
+					int bit = ~x & 7;
+					int c;
+					if (y > 0 && (content[0xfc2 + GetSheSpriteOffset(x, y - 1)] >> bit & 1) != 0)
+						c = content[0x21ba + x / 24];
+					else {
+						int offset = (y & ~7) * 3 + (x >> 3);
+						c = content[0x1fc2 + offset] >> ((content[2 + (offset << 3) + (y & 7)] >> bit & 1) << 2);
+					}
+					Pixels[y * 192 + x] = C64Palette[c & 15];
+				}
+			}
+			return true;
+		default:
 			return false;
-		SetSize(96, 88, RECOILResolution.C641x1);
-		for (int y = 0; y < 88; y++) {
-			for (int x = 0; x < 96; x++)
-				Pixels[y * 96 + x] = C64Palette[GetShe1Pixel(content, x, y) & 15];
 		}
-		return true;
 	}
 
 	// Atari ST formats.
