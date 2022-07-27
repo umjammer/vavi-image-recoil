@@ -9916,7 +9916,7 @@ public class RECOIL
 		return ApplyBlend();
 	}
 
-	bool DecodeHcb!(byte[] content, int contentLength) => contentLength == 12148 && DecodeC64Multicolor(320 - FliBugCharacters * 8, content, 0x1002, 0x802, 2, HcbBackground);
+	bool DecodeHcb!(byte[] content, int contentLength) => contentLength == 12148 && DecodeC64Multicolor(320 - FliBugCharacters * 8, content, 0x1002 + FliBugCharacters * 8, 0x802 + FliBugCharacters, 2 + FliBugCharacters, HcbBackground);
 
 	bool DecodeFed!(byte[] content, int contentLength) => contentLength == 17665 && DecodeC64Multicolor(320 - FliBugCharacters * 8, content, 0x2502 + FliBugCharacters * 8, 0x502 + FliBugCharacters, 0x102 + FliBugCharacters, -8);
 
