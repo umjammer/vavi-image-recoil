@@ -539,6 +539,7 @@
 			<ext>FPT</ext>
 		</format>
 		<format name="FLI Designer" width="148" height="200" colors="16"><ext>FD2</ext></format>
+		<format name="FLI Editor" width="148" height="200" colors="16"><ext>FED</ext></format>
 		<format name="Flash FLI" width="148" height="200" frames="2">
 			<ext>FFL</ext>
 			<ext>FFLI</ext>
