@@ -10536,6 +10536,36 @@ public class RECOIL
 		return true;
 	}
 
+	static int GetShsPixel(byte[] content, int x, int y)
+	{
+		int bit = ~x & 7;
+		int column = x >> 3;
+		if (y >= 17 && y < 17 + 168 && column >= 2 && column < 2 + 12) {
+			int spriteColumn = column - 2;
+			int spriteInLine = spriteColumn / 3;
+			int spriteY = y - 17;
+			int spriteOffset = (((spriteInLine << 3) + spriteY / 21) << 6) + spriteY % 21 * 3 + spriteColumn % 3;
+			if ((content[0x2802 + spriteOffset] >> bit & 1) != 0)
+				return content[0x1f46 + spriteInLine] & 15;
+			if ((content[0x2002 + spriteOffset] >> bit & 1) != 0)
+				return content[0x1f42 + spriteInLine] & 15;
+		}
+		int offset = (y >> 3) * 40 + column;
+		return content[0x3402 + offset] >> ((content[2 + (offset << 3) + (y & 7)] >> bit & 1) << 2);
+	}
+
+	bool DecodeShs!(byte[] content, int contentLength)
+	{
+		if (contentLength != 14338)
+			return false;
+		SetSize(320, 200, RECOILResolution.C641x1);
+		for (int y = 0; y < 200; y++) {
+			for (int x = 0; x < 320; x++)
+				Pixels[y * 320 + x] = C64Palette[GetShsPixel(content, x, y) & 15];
+		}
+		return true;
+	}
+
 	static int GetSheSpriteOffset(int x, int y) => (((y / 21 << 3) + x / 24) << 6) + y % 21 * 3 + (x >> 3) % 3;
 
 	static int GetShe1Pixel(byte[] content, int x, int y)
@@ -20191,6 +20221,8 @@ public class RECOIL
 				|| DecodeAppleIIShr(content, contentLength)
 				|| DecodeSh3(content, contentLength)
 				|| DecodeTrsShr(content, contentLength);
+		case PackExt("SHS"):
+			return DecodeShs(content, contentLength);
 		case PackExt("SIF"):
 			return DecodeSif(content, contentLength);
 		case PackExt("SKP"):
