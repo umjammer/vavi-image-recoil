@@ -1578,6 +1578,42 @@ class CpiStream : RleStream
 	}
 }
 
+class VbmStream : RleStream
+{
+	protected override bool ReadCommand!()
+	{
+		int b = ReadByte();
+		if (b == Content[9]) {
+			RepeatValue = ReadByte();
+			RepeatCount = ReadByte();
+			return RepeatCount > 0;
+		}
+		if (b == Content[10]) {
+			RepeatValue = 0;
+			RepeatCount = ReadByte();
+			return RepeatCount > 0;
+		}
+		if (b == Content[11]) {
+			RepeatValue = 0xff;
+			RepeatCount = ReadByte();
+			return RepeatCount > 0;
+		}
+		if (b == Content[12]) {
+			RepeatValue = 0;
+			RepeatCount = 2;
+			return true;
+		}
+		if (b == Content[13]) {
+			RepeatValue = 0xff;
+			RepeatCount = 2;
+			return true;
+		}
+		RepeatValue = b;
+		RepeatCount = 1;
+		return true;
+	}
+}
+
 class XeKoalaStream : RleStream
 {
 	protected override bool ReadCommand!()
@@ -9251,23 +9287,27 @@ public class RECOIL
 	{
 		if (contentLength < 9 || content[0] != 'B' || content[1] != 'M' || content[2] != 0xcb)
 			return false;
-		int contentOffset;
+		int width = content[4] << 8 | content[5];
+		int height = content[6] << 8 | content[7];
+		if (!SetSize(width, height, RECOILResolution.C1281x1))
+			return false;
 		switch (content[3]) {
 		case 2:
-			contentOffset = 8;
-			break;
+			return DecodeBlackAndWhite(content, 8, contentLength, false, 0xffffff);
 		case 3:
 			if (contentLength < 19)
 				return false;
-			contentOffset = 18 + (content[16] << 8) + content[17];
-			break;
+			int contentOffset = 18 + (content[16] << 8) + content[17];
+			if (content[8] == 0)
+				return DecodeBlackAndWhite(content, contentOffset, contentLength, false, 0);
+			VbmStream() rle;
+			rle.Content = content;
+			rle.ContentOffset = contentOffset;
+			rle.ContentLength = contentLength;
+			return DecodeRleBlackAndWhite(rle, 0);
 		default:
 			return false;
 		}
-		int width = content[4] << 8 | content[5];
-		int height = content[6] << 8 | content[7];
-		return SetSize(width, height, RECOILResolution.C1281x1)
-			&& DecodeBlackAndWhite(content, contentOffset, contentLength, false, 0xffffff);
 	}
 
 	bool DecodeBrus!(byte[] content, int contentLength)
