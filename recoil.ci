@@ -10566,28 +10566,7 @@ public class RECOIL
 		return true;
 	}
 
-	const int Sh2SpriteOffset = 0xfc0;
-
 	static int GetShSpriteOffset(int x, int y, int rowShift) => (((y / 21 << rowShift) + x / 24) << 6) + y % 21 * 3 + (x >> 3) % 3;
-
-	bool DecodeSuperHires2!(byte[] content, int bitmapOffset, int videoMatrixOffset, int screenStride, int spritesOffset, int spritesY, int spriteColorsOffset)
-	{
-		SetSize(192, 168, RECOILResolution.C641x1);
-		for (int y = 0; y < 168; y++) {
-			for (int x = 0; x < 192; x++) {
-				int bit = ~x & 7;
-				int c;
-				if (y >= spritesY && (content[spritesOffset + (spritesOffset == Sh2SpriteOffset ? (x >> 3) * 168 + y : GetShSpriteOffset(x, y - spritesY, 3))] >> bit & 1) != 0)
-					c = content[spriteColorsOffset + x / 24];
-				else {
-					int offset = (y >> 3) * screenStride + (x >> 3);
-					c = content[videoMatrixOffset + offset] >> ((content[bitmapOffset + (offset << 3) + (y & 7)] >> bit & 1) << 2);
-				}
-				Pixels[y * 192 + x] = C64Palette[c & 15];
-			}
-		}
-		return true;
-	}
 
 	static int GetSh1Pixel(byte[] content, bool compressed, int bitmapOffset, int videoMatrixOffset, int screenStride, int foreSpriteOffset, int backSpriteOffset, int foreColorOffset, int backColorOffset, int x, int y)
 	{
@@ -10611,27 +10590,54 @@ public class RECOIL
 		return true;
 	}
 
+	static bool UnpackSh(byte[] content, int contentLength, byte[]! unpacked, int unpackedLength)
+	{
+		if (contentLength < 3)
+			return false;
+		DrpStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = 1;
+		rle.ContentLength = contentLength;
+		rle.Escape = content[0];
+		return rle.Unpack(unpacked, 0, 1, unpackedLength);
+	}
+
 	bool DecodeSh1!(byte[] content, int contentLength)
 	{
 		if (contentLength == 14770)
 			return DecodeSh1Unpacked(content, false, 0x1a22, 0x1c0, 40, 0x11b2, 0x9b2, 0x1ae, 0x1aa);
-		// TODO
-		return false;
+		byte[6304] unpacked;
+		return UnpackSh(content, contentLength, unpacked, 6304)
+			&& DecodeSh1Unpacked(unpacked, true, 0, 0x17a0, 12, 0xfc0, 0x7e0, 0x189c, 0x189c);
+	}
+
+	const int Sh2SpriteOffset = 0xfc0;
+
+	bool DecodeSuperHires2!(byte[] content, int bitmapOffset, int videoMatrixOffset, int screenStride, int spritesOffset, int spritesY, int spriteColorsOffset)
+	{
+		SetSize(192, 168, RECOILResolution.C641x1);
+		for (int y = 0; y < 168; y++) {
+			for (int x = 0; x < 192; x++) {
+				int bit = ~x & 7;
+				int c;
+				if (y >= spritesY && (content[spritesOffset + (spritesOffset == Sh2SpriteOffset ? (x >> 3) * 168 + y : GetShSpriteOffset(x, y - spritesY, 3))] >> bit & 1) != 0)
+					c = content[spriteColorsOffset + x / 24];
+				else {
+					int offset = (y >> 3) * screenStride + (x >> 3);
+					c = content[videoMatrixOffset + offset] >> ((content[bitmapOffset + (offset << 3) + (y & 7)] >> bit & 1) << 2);
+				}
+				Pixels[y * 192 + x] = C64Palette[c & 15];
+			}
+		}
+		return true;
 	}
 
 	bool DecodeSh2!(byte[] content, int contentLength)
 	{
 		if (contentLength == 14770)
 			return DecodeSuperHires2(content, 0x19f2, 0x1ba, 40, 0x9b2, 0, 0x1aa);
-		if (contentLength < 3)
-			return false;
 		byte[8576] unpacked;
-		DrpStream() rle;
-		rle.Content = content;
-		rle.ContentOffset = 1;
-		rle.ContentLength = contentLength;
-		rle.Escape = content[0];
-		return rle.Unpack(unpacked, 0, 1, 8576)
+		return UnpackSh(content, contentLength, unpacked, 8576)
 			&& DecodeSuperHires2(unpacked, 0, 0x1f80, 24, Sh2SpriteOffset, 0, 0x2178);
 	}
 
