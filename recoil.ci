@@ -10568,7 +10568,7 @@ public class RECOIL
 
 	const int Sh2SpriteOffset = 0xfc0;
 
-	static int GetShSpriteOffset(int x, int y) => (((y / 21 << 3) + x / 24) << 6) + y % 21 * 3 + (x >> 3) % 3;
+	static int GetShSpriteOffset(int x, int y, int rowShift) => (((y / 21 << rowShift) + x / 24) << 6) + y % 21 * 3 + (x >> 3) % 3;
 
 	bool DecodeSuperHires2!(byte[] content, int bitmapOffset, int videoMatrixOffset, int screenStride, int spritesOffset, int spritesY, int spriteColorsOffset)
 	{
@@ -10577,7 +10577,7 @@ public class RECOIL
 			for (int x = 0; x < 192; x++) {
 				int bit = ~x & 7;
 				int c;
-				if (y >= spritesY && (content[spritesOffset + (spritesOffset == Sh2SpriteOffset ? (x >> 3) * 168 + y : GetShSpriteOffset(x, y - spritesY))] >> bit & 1) != 0)
+				if (y >= spritesY && (content[spritesOffset + (spritesOffset == Sh2SpriteOffset ? (x >> 3) * 168 + y : GetShSpriteOffset(x, y - spritesY, 3))] >> bit & 1) != 0)
 					c = content[spriteColorsOffset + x / 24];
 				else {
 					int offset = (y >> 3) * screenStride + (x >> 3);
@@ -10587,6 +10587,36 @@ public class RECOIL
 			}
 		}
 		return true;
+	}
+
+	static int GetSh1Pixel(byte[] content, bool compressed, int bitmapOffset, int videoMatrixOffset, int screenStride, int foreSpriteOffset, int backSpriteOffset, int foreColorOffset, int backColorOffset, int x, int y)
+	{
+		int bit = ~x & 7;
+		int spriteOffset = compressed ? (x >> 3) * 168 + y : GetShSpriteOffset(x, y, 2);
+		if ((content[foreSpriteOffset + spriteOffset] >> bit & 1) != 0)
+			return content[foreColorOffset + x / 24] >> (foreColorOffset == backColorOffset ? 4 : 0);
+		if ((content[backSpriteOffset + spriteOffset] >> bit & 1) != 0)
+			return content[backColorOffset + x / 24];
+		int offset = (y >> 3) * screenStride + (x >> 3);
+		return content[videoMatrixOffset + offset] >> ((content[bitmapOffset + (offset << 3) + (y & 7)] >> bit & 1) << 2);
+	}
+
+	bool DecodeSh1Unpacked!(byte[] content, bool compressed, int bitmapOffset, int videoMatrixOffset, int screenStride, int foreSpriteOffset, int backSpriteOffset, int foreColorOffset, int backColorOffset)
+	{
+		SetSize(96, 168, RECOILResolution.C641x1);
+		for (int y = 0; y < 168; y++) {
+			for (int x = 0; x < 96; x++)
+				Pixels[y * 96 + x] = C64Palette[GetSh1Pixel(content, compressed, bitmapOffset, videoMatrixOffset, screenStride, foreSpriteOffset, backSpriteOffset, foreColorOffset, backColorOffset, x, y) & 15];
+		}
+		return true;
+	}
+
+	bool DecodeSh1!(byte[] content, int contentLength)
+	{
+		if (contentLength == 14770)
+			return DecodeSh1Unpacked(content, false, 0x1a22, 0x1c0, 40, 0x11b2, 0x9b2, 0x1ae, 0x1aa);
+		// TODO
+		return false;
 	}
 
 	bool DecodeSh2!(byte[] content, int contentLength)
@@ -10609,7 +10639,7 @@ public class RECOIL
 	{
 		int bit = ~x & 7;
 		if (y < 84) {
-			int spriteOffset = GetShSpriteOffset(x, y);
+			int spriteOffset = GetShSpriteOffset(x, y, 3);
 			if ((content[0x5a6 + spriteOffset] >> bit & 1) != 0)
 				return content[0xca7];
 			if ((content[0x4a6 + spriteOffset] >> bit & 1) != 0)
@@ -19340,6 +19370,7 @@ public class RECOIL
 		case PackExt("SG3"):
 		case PackExt("SGE"):
 		case PackExt("SGX"):
+		case PackExt("SH1"):
 		case PackExt("SH2"):
 		case PackExt("SH3"):
 		case PackExt("3200"):
@@ -20228,6 +20259,8 @@ public class RECOIL
 			return DecodeSge(content, contentLength);
 		case PackExt("SGX"):
 			return DecodeSgx(content, contentLength);
+		case PackExt("SH1"):
+			return DecodeSh1(content, contentLength);
 		case PackExt("SH2"):
 			return DecodeSh2(content, contentLength);
 		case PackExt("SH3"):
