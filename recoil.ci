@@ -10617,8 +10617,13 @@ public class RECOIL
 	{
 		if (contentLength == 15355 && content[2] == 0)
 			return DecodeShiUnpacked(content);
-		// TODO
-		return false;
+		byte[15355] unpacked;
+		PgcStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = 3;
+		rle.ContentLength = contentLength;
+		return rle.Unpack(unpacked, 3, 1, 15355)
+			&& DecodeShiUnpacked(unpacked);
 	}
 
 	const int Sh2SpriteOffset = 0xfc0;
