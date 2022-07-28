@@ -10566,13 +10566,34 @@ public class RECOIL
 		return true;
 	}
 
-	static int GetSheSpriteOffset(int x, int y) => (((y / 21 << 3) + x / 24) << 6) + y % 21 * 3 + (x >> 3) % 3;
+	static int GetShSpriteOffset(int x, int y) => (((y / 21 << 3) + x / 24) << 6) + y % 21 * 3 + (x >> 3) % 3;
+
+	bool DecodeSuperHires2!(byte[] content, int bitmapOffset, int videoMatrixOffset, int screenStride, int spritesOffset, int spritesY, int spriteColorsOffset)
+	{
+		SetSize(192, 168, RECOILResolution.C641x1);
+		for (int y = 0; y < 168; y++) {
+			for (int x = 0; x < 192; x++) {
+				int bit = ~x & 7;
+				int c;
+				if (y >= spritesY && (content[spritesOffset + GetShSpriteOffset(x, y - spritesY)] >> bit & 1) != 0)
+					c = content[spriteColorsOffset + x / 24];
+				else {
+					int offset = (y >> 3) * screenStride + (x >> 3);
+					c = content[videoMatrixOffset + offset] >> ((content[bitmapOffset + (offset << 3) + (y & 7)] >> bit & 1) << 2);
+				}
+				Pixels[y * 192 + x] = C64Palette[c & 15];
+			}
+		}
+		return true;
+	}
+
+	bool DecodeSh2!(byte[] content, int contentLength) => contentLength == 14770 && DecodeSuperHires2(content, 0x19f2, 0x1ba, 40, 0x9b2, 0, 0x1aa);
 
 	static int GetShe1Pixel(byte[] content, int x, int y)
 	{
 		int bit = ~x & 7;
 		if (y < 84) {
-			int spriteOffset = GetSheSpriteOffset(x, y);
+			int spriteOffset = GetShSpriteOffset(x, y);
 			if ((content[0x5a6 + spriteOffset] >> bit & 1) != 0)
 				return content[0xca7];
 			if ((content[0x4a6 + spriteOffset] >> bit & 1) != 0)
@@ -10593,21 +10614,7 @@ public class RECOIL
 			}
 			return true;
 		case 8642:
-			SetSize(192, 168, RECOILResolution.C641x1);
-			for (int y = 0; y < 168; y++) {
-				for (int x = 0; x < 192; x++) {
-					int bit = ~x & 7;
-					int c;
-					if (y > 0 && (content[0xfc2 + GetSheSpriteOffset(x, y - 1)] >> bit & 1) != 0)
-						c = content[0x21ba + x / 24];
-					else {
-						int offset = (y & ~7) * 3 + (x >> 3);
-						c = content[0x1fc2 + offset] >> ((content[2 + (offset << 3) + (y & 7)] >> bit & 1) << 2);
-					}
-					Pixels[y * 192 + x] = C64Palette[c & 15];
-				}
-			}
-			return true;
+			return DecodeSuperHires2(content, 2, 0x1fc2, 24, 0xfc2, 1, 0x21ba);
 		default:
 			return false;
 		}
@@ -19317,6 +19324,7 @@ public class RECOIL
 		case PackExt("SG3"):
 		case PackExt("SGE"):
 		case PackExt("SGX"):
+		case PackExt("SH2"):
 		case PackExt("SH3"):
 		case PackExt("3200"):
 		case PackExt("SHC"):
@@ -20204,6 +20212,8 @@ public class RECOIL
 			return DecodeSge(content, contentLength);
 		case PackExt("SGX"):
 			return DecodeSgx(content, contentLength);
+		case PackExt("SH2"):
+			return DecodeSh2(content, contentLength);
 		case PackExt("SH3"):
 		case PackExt("3200"):
 			return DecodeApfShr(content, contentLength)
