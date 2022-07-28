@@ -10557,23 +10557,23 @@ public class RECOIL
 
 	static int GetShSpriteOffset(int x, int y, int rowShift) => (((y / 21 << rowShift) + x / 24) << 6) + y % 21 * 3 + (x >> 3) % 3;
 
-	static int GetSh1Pixel(byte[] content, int bitmapOffset, int videoMatrixOffset, int screenStride, int foreSpriteOffset, int backSpriteOffset, int foreColorOffset, int backColorOffset, int x, int y, int rowShift)
-	{
-		int bit = ~x & 7;
-		int spriteOffset = rowShift == 0 ? (x >> 3) * 168 + y : GetShSpriteOffset(x, y, rowShift);
-		if ((content[foreSpriteOffset + spriteOffset] >> bit & 1) != 0)
-			return content[foreColorOffset + x / 24] >> (foreColorOffset == backColorOffset ? 4 : 0);
-		if ((content[backSpriteOffset + spriteOffset] >> bit & 1) != 0)
-			return content[backColorOffset + x / 24];
-		int offset = (y >> 3) * screenStride + (x >> 3);
-		return content[videoMatrixOffset + offset] >> ((content[bitmapOffset + (offset << 3) + (y & 7)] >> bit & 1) << 2);
-	}
-
 	void DecodeSh1Frame!(byte[] content, int bitmapOffset, int videoMatrixOffset, int screenStride, int foreSpriteOffset, int backSpriteOffset, int foreColorOffset, int backColorOffset, int rowShift, int pixelsOffset)
 	{
 		for (int y = 0; y < Height; y++) {
-			for (int x = 0; x < 96; x++)
-				Pixels[pixelsOffset + y * 96 + x] = C64Palette[GetSh1Pixel(content, bitmapOffset, videoMatrixOffset, screenStride, foreSpriteOffset, backSpriteOffset, foreColorOffset, backColorOffset, x, y, rowShift) & 15];
+			for (int x = 0; x < 96; x++) {
+				int bit = ~x & 7;
+				int spriteOffset = rowShift == 0 ? (x >> 3) * 168 + y : GetShSpriteOffset(x, y, rowShift);
+				int c;
+				if ((content[foreSpriteOffset + spriteOffset] >> bit & 1) != 0)
+					c = content[foreColorOffset + x / 24] >> (foreColorOffset == backColorOffset ? 4 : 0);
+				else if ((content[backSpriteOffset + spriteOffset] >> bit & 1) != 0)
+					c = content[backColorOffset + x / 24];
+				else {
+					int offset = (y >> 3) * screenStride + (x >> 3);
+					c = content[videoMatrixOffset + offset] >> ((content[bitmapOffset + (offset << 3) + (y & 7)] >> bit & 1) << 2);
+				}
+				Pixels[pixelsOffset + y * 96 + x] = C64Palette[c & 15];
+			}
 		}
 	}
 
