@@ -10037,7 +10037,13 @@ public class RECOIL
 		case 17666: // VIC
 			return DecodeC64MulticolorFli(content, 0x2502, 0x502, 0x102, 2);
 		default:
-			return false;
+			byte[17472] unpacked;
+			UifStream() rle;
+			rle.Content = content;
+			rle.ContentOffset = contentLength ;
+			rle.Escape = content[2];
+			return rle.UnpackBackwards(unpacked, 0, 17471)
+				&& DecodeC64MulticolorFli(unpacked, 0x2500, 0x500, 0x100, 0 /* bars */);
 		}
 	}
 
