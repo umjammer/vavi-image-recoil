@@ -1089,8 +1089,7 @@ class CmpStream : RleStream
 	{
 		int b = ReadByte();
 		if (b == Escape) {
-			b = ReadByte();
-			RepeatCount = 1 + b;
+			RepeatCount = ReadByte() + 1;
 			b = ReadByte();
 		}
 		else
@@ -1157,19 +1156,27 @@ class UflStream : RleStream
 
 	protected override bool ReadCommand!()
 	{
-		int b = ReadByte();
-		if (b < 0)
-			return false;
+		int b = ReadValue();
 		if (b == Escape) {
-			RepeatCount = ReadByte();
+			RepeatCount = ReadValue();
 			if (RepeatCount == 0)
 				RepeatCount = 256;
-			RepeatValue = ReadByte();
-			return RepeatValue >= 0;
+			b = ReadValue();
 		}
-		RepeatCount = 1;
+		else
+			RepeatCount = 1;
 		RepeatValue = b;
-		return true;
+		return b >= 0;
+	}
+}
+
+class UifStream : UflStream
+{
+	internal override int ReadValue!()
+	{
+		if (ContentOffset <= 3)
+			return -1;
+		return Content[--ContentOffset];
 	}
 }
 
@@ -10678,21 +10685,26 @@ public class RECOIL
 		}
 	}
 
-	bool DecodeUflUnpacked!(byte[] content)
+	void DecodeUflFrame!(byte[] content, int bitmapOffset, int videoMatrixOffset, int spritesOffset, int spriteColorsOffset, int pixelsOffset)
 	{
-		SetSize(288, 200, RECOILResolution.C641x1);
 		for (int y = 0; y < 200; y++) {
 			for (int x = 0; x < 288; x++) {
 				int column = x >> 3;
 				int offset = FliBugCharacters + (y & ~7) * 5 + column;
-				int c = content[0x1002 + ((y & 6) << 9) + offset];
-				if ((content[0x2002 + (offset << 3) + (y & 7)] >> (~x & 7) & 1) != 0)
+				int c = content[videoMatrixOffset + ((y & 6) << 9) + offset];
+				if ((content[bitmapOffset + (offset << 3) + (y & 7)] >> (~x & 7) & 1) != 0)
 					c >>= 4;
-				else if ((content[2 + ((y / 40) * 12 + (y & 2) * 3 + column / 6 << 6) + (y + 1 >> 1) % 21 * 3 + (column >> 1) % 3] >> (~x >> 1 & 7) & 1) != 0)
-					c = content[content[0xff1] == 1 ? 0xff4 + column / 6 : 0xff2];
-				Pixels[y * 288 + x] = C64Palette[c & 15];
+				else if ((content[spritesOffset + ((y / 40) * 12 + (y & 2) * 3 + column / 6 << 6) + (y + 1 >> 1) % 21 * 3 + (column >> 1) % 3] >> (~x >> 1 & 7) & 1) != 0)
+					c = content[spriteColorsOffset == 0xff4 ? 0xff4 + column / 6 : spriteColorsOffset];
+				Pixels[pixelsOffset + y * 288 + x] = C64Palette[c & 15];
 			}
 		}
+	}
+
+	bool DecodeUflUnpacked!(byte[] content)
+	{
+		SetSize(288, 200, RECOILResolution.C641x1);
+		DecodeUflFrame(content, 0x2002, 0x1002, 2, content[0xff1] == 1 ? 0xff4 : 0xff2, 0);
 		return true;
 	}
 
@@ -10710,6 +10722,23 @@ public class RECOIL
 		rle.Escape = content[2];
 		return rle.Unpack(unpacked, 2, 1, 16194)
 			&& DecodeUflUnpacked(unpacked);
+	}
+
+	bool DecodeUif!(byte[] content, int contentLength)
+	{
+		if (contentLength < 6)
+			return false;
+		byte[32576] unpacked;
+		UifStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = contentLength;
+		rle.Escape = content[2];
+		if (!rle.UnpackBackwards(unpacked, 0, 32575))
+			return false;
+		SetSize(288, 200, RECOILResolution.C641x1, 2);
+		DecodeUflFrame(unpacked, 0x2000, 0x0000, 0x1000, 0xff0, 0);
+		DecodeUflFrame(unpacked, 0x6000, 0x4000, 0x5000, 0xff0, 288 * 200);
+		return ApplyBlend();
 	}
 
 	// Atari ST formats.
@@ -19464,6 +19493,7 @@ public class RECOIL
 		case PackExt("TXE"):
 		case PackExt("TXS"):
 		case PackExt("UFL"):
+		case PackExt("UIF"):
 		case PackExt("VBM"):
 		case PackExt("BM"):
 		case PackExt("VIC"):
@@ -20407,6 +20437,8 @@ public class RECOIL
 			return DecodeTxs(content, contentLength);
 		case PackExt("UFL"):
 			return DecodeUfl(content, contentLength);
+		case PackExt("UIF"):
+			return DecodeUif(content, contentLength);
 		case PackExt("VBM"):
 		case PackExt("BM"):
 			return DecodeVbm(content, contentLength);
