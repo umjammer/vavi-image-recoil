@@ -643,6 +643,7 @@
 		<format name="Super Hires Interlace Editor" width="96" height="200" frames="2"><ext>SHI</ext></format>
 		<format name="Super Hires Studio" width="320" height="200" colors="16"><ext>SHS</ext></format>
 		<format name="SpritePad"><ext>SPD</ext></format>
+		<format name="UFLI-editor" width="288" height="200" colors="16"><ext>UFL</ext></format>
 		<format maxWidth="320" height="200" colors="16"><ext>VIC</ext></format>
 		<format name="Vidcom 64Paint" width="160" height="200" colors="16"><ext>VID</ext></format>
 	</platform>
