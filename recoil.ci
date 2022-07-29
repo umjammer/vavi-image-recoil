@@ -1055,11 +1055,10 @@ class MspStream : RleStream
 		if (b == 0) {
 			RepeatCount = ReadByte();
 			RepeatValue = ReadByte();
+			return RepeatValue >= 0;
 		}
-		else {
-			RepeatCount = b;
-			RepeatValue = -1;
-		}
+		RepeatCount = b;
+		RepeatValue = -1;
 		return true;
 	}
 }
@@ -1074,32 +1073,10 @@ class C64KoalaStream : RleStream
 		if (b == 0xfe) {
 			RepeatValue = ReadByte();
 			RepeatCount = ReadByte();
+			return RepeatCount >= 0;
 		}
-		else {
-			RepeatValue = b;
-			RepeatCount = 1;
-		}
-		return true;
-	}
-}
-
-class GoDotStream : RleStream
-{
-	protected override bool ReadCommand!()
-	{
-		int b = ReadByte();
-		if (b < 0)
-			return false;
-		if (b == 0xad) {
-			RepeatCount = ReadByte();
-			if (RepeatCount == 0)
-				RepeatCount = 256;
-			RepeatValue = ReadByte();
-		}
-		else {
-			RepeatCount = 1;
-			RepeatValue = b;
-		}
+		RepeatValue = b;
+		RepeatCount = 1;
 		return true;
 	}
 }
@@ -1113,16 +1090,13 @@ class CmpStream : RleStream
 		int b = ReadByte();
 		if (b == Escape) {
 			b = ReadByte();
-			if (b < 0)
-				return false;
 			RepeatCount = 1 + b;
-			RepeatValue = ReadByte();
+			b = ReadByte();
 		}
-		else {
+		else
 			RepeatCount = 1;
-			RepeatValue = b;
-		}
-		return true;
+		RepeatValue = b;
+		return b >= 0;
 	}
 }
 
@@ -1133,17 +1107,14 @@ class DrpStream : RleStream
 	protected override bool ReadCommand!()
 	{
 		int b = ReadByte();
-		if (b < 0)
-			return false;
 		if (b == Escape) {
 			RepeatCount = ReadByte();
-			RepeatValue = ReadByte();
+			b = ReadByte();
 		}
-		else {
+		else
 			RepeatCount = 1;
-			RepeatValue = b;
-		}
-		return true;
+		RepeatValue = b;
+		return b >= 0;
 	}
 
 	internal static byte[] UnpackFile(byte[] content, int contentLength, string signature, byte[]! unpacked, int unpackedLength)
@@ -1169,16 +1140,35 @@ class HpmStream : RleStream
 	protected override bool ReadCommand!()
 	{
 		int b = ReadByte();
-		if (b < 0)
-			return false;
 		if (b == 0) {
 			RepeatValue = ReadByte();
-			RepeatCount = ReadByte();
+			b = ReadByte();
 		}
-		else {
-			RepeatCount = b;
+		else
 			RepeatValue = -1;
+		RepeatCount = b;
+		return b >= 0;
+	}
+}
+
+class UflStream : RleStream
+{
+	internal int Escape;
+
+	protected override bool ReadCommand!()
+	{
+		int b = ReadByte();
+		if (b < 0)
+			return false;
+		if (b == Escape) {
+			RepeatCount = ReadByte();
+			if (RepeatCount == 0)
+				RepeatCount = 256;
+			RepeatValue = ReadByte();
+			return RepeatValue >= 0;
 		}
+		RepeatCount = 1;
+		RepeatValue = b;
 		return true;
 	}
 }
@@ -1739,7 +1729,7 @@ class ImgStream : RleStream
 
 class CaStream : RleStream
 {
-	int EscapeByte;
+	int Escape;
 	int DefaultValue;
 
 	protected override bool ReadCommand!()
@@ -1747,7 +1737,7 @@ class CaStream : RleStream
 		int b = ReadByte();
 		if (b < 0)
 			return false;
-		if (b != EscapeByte) {
+		if (b != Escape) {
 			RepeatCount = 1;
 			RepeatValue = b;
 			return true;
@@ -1755,7 +1745,7 @@ class CaStream : RleStream
 		int c = ReadByte();
 		if (c < 0)
 			return false;
-		if (c == EscapeByte) {
+		if (c == Escape) {
 			RepeatCount = 1;
 			RepeatValue = c;
 			return true;
@@ -1798,7 +1788,7 @@ class CaStream : RleStream
 	{
 		if (ContentOffset > ContentLength - 4)
 			return false;
-		EscapeByte = Content[ContentOffset];
+		Escape = Content[ContentOffset];
 		DefaultValue = Content[ContentOffset + 1];
 		int unpackedStep = Content[ContentOffset + 2] << 8 | Content[ContentOffset + 3];
 		if (unpackedStep >= 32000)
@@ -9581,10 +9571,11 @@ public class RECOIL
 	{
 		if (!SetSize(width, height, RECOILResolution.C641x1))
 			return false;
-		GoDotStream() rle;
+		UflStream() rle;
 		rle.Content = content;
 		rle.ContentOffset = contentOffset;
 		rle.ContentLength = contentLength;
+		rle.Escape = 0xad;
 		for (int row = 0; row < height; row += 8) {
 			for (int column = 0; column < width; column += 8) {
 				for (int y = 0; y < 8; y++) {
@@ -10687,10 +10678,8 @@ public class RECOIL
 		}
 	}
 
-	bool DecodeUfl!(byte[] content, int contentLength)
+	bool DecodeUflUnpacked!(byte[] content)
 	{
-		if (contentLength != 16194)
-			return false;
 		SetSize(288, 200, RECOILResolution.C641x1);
 		for (int y = 0; y < 200; y++) {
 			for (int x = 0; x < 288; x++) {
@@ -10705,6 +10694,22 @@ public class RECOIL
 			}
 		}
 		return true;
+	}
+
+	bool DecodeUfl!(byte[] content, int contentLength)
+	{
+		if (contentLength == 16194)
+			return DecodeUflUnpacked(content);
+		if (contentLength < 6)
+			return false;
+		byte[16194] unpacked;
+		UflStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = 3;
+		rle.ContentLength = contentLength;
+		rle.Escape = content[2];
+		return rle.Unpack(unpacked, 2, 1, 16194)
+			&& DecodeUflUnpacked(unpacked);
 	}
 
 	// Atari ST formats.
