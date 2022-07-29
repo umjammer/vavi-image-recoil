@@ -647,6 +647,7 @@
 		<format name="UIFLI-editor" width="288" height="200" frames="2"><ext>UIF</ext></format>
 		<format maxWidth="320" height="200" colors="16"><ext>VIC</ext></format>
 		<format name="Vidcom 64Paint" width="160" height="200" colors="16"><ext>VID</ext></format>
+		<format name="Zoomatic" width="160" height="200" colors="16"><ext>ZOM</ext></format>
 	</platform>
 	<platform name="Commodore 16/116/Plus4" href="https://en.wikipedia.org/wiki/Commodore_16">
 		<format name="Botticelli" width="320" height="200" colors="121"><ext>P4I</ext></format>

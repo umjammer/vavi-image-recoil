@@ -1174,7 +1174,7 @@ class UifStream : UflStream
 {
 	internal override int ReadValue!()
 	{
-		if (ContentOffset <= 3)
+		if (ContentOffset <= 2)
 			return -1;
 		return Content[--ContentOffset];
 	}
@@ -9826,6 +9826,19 @@ public class RECOIL
 		default:
 			return DecodeGg(content, contentLength);
 		}
+	}
+
+	bool DecodeZom!(byte[] content, int contentLength)
+	{
+		if (contentLength < 6)
+			return false;
+		byte[10001] unpacked;
+		UifStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = contentLength - 1;
+		rle.Escape = content[contentLength - 1];
+		return rle.UnpackBackwards(unpacked, 0, 10000)
+			&& DecodeKoa(unpacked, 10001);
 	}
 
 	bool DecodeGg!(byte[] content, int contentLength)
@@ -19505,6 +19518,7 @@ public class RECOIL
 		case PackExt("XLP"):
 		case PackExt("ZIM"):
 		case PackExt("ZM4"):
+		case PackExt("ZOM"):
 		case PackExt("ZP1"):
 		case PackExt("ZXP"):
 		case PackExt("ZXS"):
@@ -20460,6 +20474,8 @@ public class RECOIL
 			return DecodeZim(content, contentLength);
 		case PackExt("ZM4"):
 			return DecodeZm4(content, contentLength);
+		case PackExt("ZOM"):
+			return DecodeZom(content, contentLength);
 		case PackExt("ZP1"):
 			return DecodeZp1(content, contentLength);
 		case PackExt("ZXP"):
