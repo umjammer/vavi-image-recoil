@@ -9560,14 +9560,17 @@ public class RECOIL
 		return ApplyBlend();
 	}
 
+	const int FliBugCharacters = 3;
+	const int FliWidth = 320 - FliBugCharacters * 8;
+
 	bool DecodeCfli!(byte[] content, int contentLength)
 	{
 		if (contentLength != 8170)
 			return false;
-		SetSize(296, 200, RECOILResolution.C641x1);
+		SetSize(FliWidth, 200, RECOILResolution.C641x1);
 		for (int y = 0; y < 200; y++) {
-			for (int x = 0; x < 296; x++)
-				Pixels[y * 296 + x] = C64Palette[content[2 + 3 + ((y & 7) << 10) + (y & ~7) * 5 + (x >> 3)] >> ((~x & 1) << 2) & 0xf];
+			for (int x = 0; x < FliWidth; x++)
+				Pixels[y * FliWidth + x] = C64Palette[content[2 + 3 + ((y & 7) << 10) + (y & ~7) * 5 + (x >> 3)] >> ((~x & 1) << 2) & 0xf];
 		}
 		return true;
 	}
@@ -9617,11 +9620,9 @@ public class RECOIL
 			&& DecodeGodot(content[6] << 3, content[7] << 3, content, 8, contentLength - 1, true);
 	}
 
-	const int FliBugCharacters = 3;
-
 	void DecodeC64HiresFrame!(byte[] content, int bitmapOffset, int videoMatrixOffset, int pixelsOffset)
 	{
-		bool afli = Width == 320 - FliBugCharacters * 8;
+		bool afli = Width == FliWidth;
 		for (int y = 0; y < Height; y++) {
 			for (int x = 0; x < Width; x++) {
 				int offset = (y & ~7) * 40 + (x & ~7) + (y & 7);
@@ -9641,83 +9642,51 @@ public class RECOIL
 		}
 	}
 
-#if FUNPAINT_BORDER
-	const int FunPaintBackground = -0x3f5a;
-#else
-	const int FunPaintBackground = 0;
-#endif
-	const int GunPaintBackground = -0x3f51;
-	const int HcbBackground = -1;
-
-	void DecodeC64MulticolorFrame!(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int background, int pixelsOffset)
+	int GetC64Multicolor(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int background, bool bottomBfli, int x, int y)
 	{
-		bool fli = Width == 320 - FliBugCharacters * 8 && background != HcbBackground;
-		bool bottomBfli = pixelsOffset != 0 && Height == 400;
-		for (int outputY = 0; outputY < 200; outputY++) {
-			int y = outputY;
-			if (Height == 192) { // EMC
-				if (y >= 192)
-					break;
-				y += 4;
-			}
-			int lineBackground;
-			if (background >= 0)
-				lineBackground = background;
-#if FUNPAINT_BORDER
-			else if (background == FunPaintBackground && y >= 100)
-				lineBackground = content[0x833a - 100 + y];
-#endif
-			else if (background == GunPaintBackground && y >= 177)
-				lineBackground = content[y < 197 ? 0x47ea - 177 + y : 0x47fd];
-			else if (background == HcbBackground)
-				lineBackground = content[0x2f42 + (y >> 2)];
-			else
-				lineBackground = content[y - background];
-			for (int x = 0; x < Width; x++) {
-				int c = lineBackground;
-				int i = x + LeftSkip;
-				if (i >= 0) {
-					int charOffset = (y & ~7) * 5 + (i >> 3);
-					if (bottomBfli)
-						charOffset = charOffset - (24 - FliBugCharacters) & 0x3ff;
-					int offset = (charOffset << 3) + (y & 7);
-					if (background == HcbBackground)
-						charOffset += (y & 4) << 8;
-					switch (content[bitmapOffset + offset] >> (~i & 6) & 3) {
-					case 1:
-						if (fli)
-							charOffset += (y & 7) << 10;
-						c = content[videoMatrixOffset + charOffset] >> 4;
-						break;
-					case 2:
-						if (fli)
-							charOffset += (y & 7) << 10;
-						c = content[videoMatrixOffset + charOffset];
-						break;
-					case 3:
-						c = colorOffset < 0 ? content[-colorOffset] : content[colorOffset + charOffset];
-						break;
-					default:
-						break;
-					}
-				}
-				Pixels[pixelsOffset + outputY * Width + x] = C64Palette[c & 0xf];
-			}
+		x += LeftSkip;
+		if (x < 0)
+			return background;
+		int charOffset = (y & ~7) * 5 + (x >> 3);
+		if (bottomBfli)
+			charOffset = charOffset - (24 - FliBugCharacters) & 0x3ff;
+		switch (content[bitmapOffset + (charOffset << 3) + (y & 7)] >> (~x & 6) & 3) {
+		case 1:
+			return content[videoMatrixOffset + charOffset] >> 4;
+		case 2:
+			return content[videoMatrixOffset + charOffset];
+		case 3:
+			return colorOffset < 0 ? content[-colorOffset] : content[colorOffset + charOffset];
+		default:
+			return background;
 		}
 	}
 
-	bool DecodeC64Multicolor!(int width, byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int background)
+	void DecodeC64MulticolorLine!(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int background, bool bottomBfli, int y, int pixelsOffset)
 	{
-		SetSize(width, 200, RECOILResolution.C642x1);
-		DecodeC64MulticolorFrame(content, bitmapOffset, videoMatrixOffset, colorOffset, background, 0);
+		for (int x = 0; x < Width; x++)
+			Pixels[pixelsOffset + x] = C64Palette[GetC64Multicolor(content, bitmapOffset, videoMatrixOffset, colorOffset, background, bottomBfli, x, y) & 0xf];
+	}
+
+	void DecodeC64MulticolorFrame!(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int backgroundOffset, int pixelsOffset)
+	{
+		int background = backgroundOffset < 0 ? 0 : content[backgroundOffset];
+		for (int y = 0; y < 200; y++)
+			DecodeC64MulticolorLine(content, bitmapOffset, videoMatrixOffset, colorOffset, background, false, y, pixelsOffset + y * 320);
+	}
+
+	bool DecodeC64Multicolor!(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int backgroundOffset)
+	{
+		SetSize(320, 200, RECOILResolution.C642x1);
+		DecodeC64MulticolorFrame(content, bitmapOffset, videoMatrixOffset, colorOffset, backgroundOffset, 0);
 		return true;
 	}
 
 	bool DecodeOcp!(byte[] content, int contentLength)
-		=> contentLength == 10018 && DecodeC64Multicolor(320, content, 2, 0x1f42, 0x233a, content[0x232b]);
+		=> contentLength == 10018 && DecodeC64Multicolor(content, 2, 0x1f42, 0x233a, 0x232b);
 
 	bool DecodeBpl!(byte[] content, int contentLength)
-		=> contentLength == 10242 && DecodeC64Multicolor(320, content, 2, 0x2002, 0x2402, content[0x1f82]);
+		=> contentLength == 10242 && DecodeC64Multicolor(content, 2, 0x2002, 0x2402, 0x1f82);
 
 	bool DecodeRpo!(byte[] content, int contentLength)
 	{
@@ -9793,11 +9762,30 @@ public class RECOIL
 			&& DecodeDd(unpacked, 9026);
 	}
 
+	void DecodeC64MulticolorFliFrame!(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int background, bool bottomBfli, int pixelsOffset)
+	{
+		for (int y = 0; y < 200; y++)
+			DecodeC64MulticolorLine(content, bitmapOffset, videoMatrixOffset + ((y & 7) << 10), colorOffset, background, bottomBfli, y, pixelsOffset + y * FliWidth);
+	}
+
+	void DecodeC64MulticolorFliBarsFrame!(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int backgroundOffset, int pixelsOffset)
+	{
+		for (int y = 0; y < 200; y++)
+			DecodeC64MulticolorLine(content, bitmapOffset, videoMatrixOffset + ((y & 7) << 10), colorOffset, backgroundOffset < 0 ? 0 : content[backgroundOffset + y], false, y, pixelsOffset + y * FliWidth);
+	}
+
+	bool DecodeC64MulticolorFli!(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int backgroundOffset)
+	{
+		SetSize(FliWidth, 200, RECOILResolution.C642x1);
+		DecodeC64MulticolorFliBarsFrame(content, bitmapOffset + FliBugCharacters * 8, videoMatrixOffset + FliBugCharacters, colorOffset + FliBugCharacters, backgroundOffset, 0);
+		return true;
+	}
+
 	bool DecodeHfc!(byte[] content, int contentLength)
 	{
 		if (contentLength != 16386)
 			return false;
-		SetSize(320 - FliBugCharacters * 8, 112, RECOILResolution.C641x1);
+		SetSize(FliWidth, 112, RECOILResolution.C641x1);
 		DecodeC64HiresFrame(content, 2 + FliBugCharacters * 8, 0x2002 + FliBugCharacters, 0);
 		return true;
 	}
@@ -9806,23 +9794,22 @@ public class RECOIL
 	{
 		if (contentLength != 16385)
 			return false;
-		SetSize(320 - FliBugCharacters * 8, 200, RECOILResolution.C641x1);
+		SetSize(FliWidth, 200, RECOILResolution.C641x1);
 		DecodeC64HiresFrame(content, 0x2002 + FliBugCharacters * 8, 2 + FliBugCharacters, 0);
 		return true;
 	}
 
 	bool DecodePmg!(byte[] content, int contentLength)
-		=> contentLength == 9332
-			&& DecodeC64Multicolor(320, content, 0x74, 0x2074, -0x1fb7, content[0x1fb4]);
+		=> contentLength == 9332 && DecodeC64Multicolor(content, 0x74, 0x2074, -0x1fb7, 0x1fb4);
 
 	bool DecodeKoa!(byte[] content, int contentLength)
 	{
 		switch (contentLength) {
 		case 10001: // KOA
-			return DecodeC64Multicolor(320, content, 0, 0x1f40, 0x2328, content[0x2710]);
+			return DecodeC64Multicolor(content, 0, 0x1f40, 0x2328, 0x2710);
 		case 10003: // GIG, KLA, KOA
 		case 10006: // RPM
-			return DecodeC64Multicolor(320, content, 2, 0x1f42, 0x232a, content[0x2712]);
+			return DecodeC64Multicolor(content, 2, 0x1f42, 0x232a, 0x2712);
 		default:
 			return DecodeGg(content, contentLength);
 		}
@@ -9864,7 +9851,7 @@ public class RECOIL
 		default:
 			return false;
 		}
-		return DecodeC64Multicolor(320, content, 0x802, 0x402, 2, content[0x7ea]);
+		return DecodeC64Multicolor(content, 0x802, 0x402, 2, 0x7ea);
 	}
 
 	bool DecodeAmi!(byte[] content, int contentLength)
@@ -9898,10 +9885,9 @@ public class RECOIL
 	bool DecodeMciLike!(byte[] content, int bitmap1Offset, int videoMatrix1Offset, int bitmap2Offset, int videoMatrix2Offset, int colorOffset, int backgroundOffset, int shift)
 	{
 		SetSize(320, 200, shift == 0 ? RECOILResolution.C642x1 : RECOILResolution.C641x1, 2);
-		int background = content[backgroundOffset];
-		DecodeC64MulticolorFrame(content, bitmap1Offset, videoMatrix1Offset, colorOffset, background, 0);
+		DecodeC64MulticolorFrame(content, bitmap1Offset, videoMatrix1Offset, colorOffset, backgroundOffset, 0);
 		LeftSkip = -shift;
-		DecodeC64MulticolorFrame(content, bitmap2Offset, videoMatrix2Offset, colorOffset, background, 320 * 200);
+		DecodeC64MulticolorFrame(content, bitmap2Offset, videoMatrix2Offset, colorOffset, backgroundOffset, 320 * 200);
 		return ApplyBlend();
 	}
 
@@ -9927,7 +9913,7 @@ public class RECOIL
 		byte[10051] unpacked;
 		content = DrpStream.UnpackFile(content, contentLength, "DRAZPAINT 1.4", unpacked, 10051);
 		return content != null
-			&& DecodeC64Multicolor(320, content, 0x802, 0x402, 2, content[0x2742]);
+			&& DecodeC64Multicolor(content, 0x802, 0x402, 2, 0x2742);
 	}
 
 	bool DecodeDrl!(byte[] content, int contentLength)
@@ -9969,13 +9955,21 @@ public class RECOIL
 		return ApplyBlend();
 	}
 
-	bool DecodeHcb!(byte[] content, int contentLength) => contentLength == 12148 && DecodeC64Multicolor(320 - FliBugCharacters * 8, content, 0x1002 + FliBugCharacters * 8, 0x802 + FliBugCharacters, 2 + FliBugCharacters, HcbBackground);
+	bool DecodeHcb!(byte[] content, int contentLength)
+	{
+		if (contentLength != 12148)
+			return false;
+		SetSize(FliWidth, 200, RECOILResolution.C642x1);
+		for (int y = 0; y < 200; y++)
+			DecodeC64MulticolorLine(content, 0x1002 + FliBugCharacters * 8, 0x802 + FliBugCharacters + ((y & 4) << 8), 0x802 + FliBugCharacters + ((y & 4) << 8), content[0x2f42 + (y >> 2)], false, y, y * FliWidth);
+		return true;
+	}
 
-	bool DecodeFed!(byte[] content, int contentLength) => contentLength == 17665 && DecodeC64Multicolor(320 - FliBugCharacters * 8, content, 0x2502 + FliBugCharacters * 8, 0x502 + FliBugCharacters, 0x102 + FliBugCharacters, -8);
+	bool DecodeFed!(byte[] content, int contentLength) => contentLength == 17665 && DecodeC64MulticolorFli(content, 0x2502, 0x502, 0x102, 8);
 
 	bool DecodeHimUnpacked!(byte[] content)
 	{
-		SetSize(320 - FliBugCharacters * 8, 192, RECOILResolution.C641x1);
+		SetSize(FliWidth, 192, RECOILResolution.C641x1);
 		DecodeC64HiresFrame(content, 2 + 40 * 8 + FliBugCharacters * 8, 0x2002 + 40 + FliBugCharacters, 0);
 		return true;
 	}
@@ -10002,9 +9996,9 @@ public class RECOIL
 	{
 		if (contentLength != 32770)
 			return DecodeEcp(content, contentLength);
-		SetSize(320 - FliBugCharacters * 8, 200, RECOILResolution.C641x1, 2);
+		SetSize(FliWidth, 200, RECOILResolution.C641x1, 2);
 		DecodeC64HiresFrame(content, 2 + FliBugCharacters * 8, 0x2002 + FliBugCharacters, 0);
-		DecodeC64HiresFrame(content, 0x4002 + FliBugCharacters * 8, 0x6002 + FliBugCharacters, 296 * 200);
+		DecodeC64HiresFrame(content, 0x4002 + FliBugCharacters * 8, 0x6002 + FliBugCharacters, FliWidth * 200);
 		return ApplyBlend();
 	}
 
@@ -10032,7 +10026,7 @@ public class RECOIL
 		default:
 			return false;
 		}
-		return DecodeC64Multicolor(320 - FliBugCharacters * 8, content, 0x2402 + FliBugCharacters * 8, 0x402 + FliBugCharacters, 2 + FliBugCharacters, 0);
+		return DecodeC64MulticolorFli(content, 0x2402, 0x402, 2, -1);
 	}
 
 	bool DecodeBml!(byte[] content, int contentLength)
@@ -10041,19 +10035,19 @@ public class RECOIL
 		case 17474: // BML
 		case 17665: // VIC
 		case 17666: // VIC
-			break;
+			return DecodeC64MulticolorFli(content, 0x2502, 0x502, 0x102, 2);
 		default:
 			return false;
 		}
-		return DecodeC64Multicolor(320 - FliBugCharacters * 8, content, 0x2502 + FliBugCharacters * 8, 0x502 + FliBugCharacters, 0x102 + FliBugCharacters, -2);
 	}
 
 	bool DecodeEmc!(byte[] content, int contentLength)
 	{
 		if (contentLength != 17412)
 			return false;
-		SetSize(320 - FliBugCharacters * 8, 192, RECOILResolution.C642x1);
-		DecodeC64MulticolorFrame(content, 0x2002 + FliBugCharacters * 8, 2 + FliBugCharacters, 0x4002 + FliBugCharacters, content[0x4403], 0);
+		SetSize(FliWidth, 192, RECOILResolution.C642x1);
+		for (int y = 0; y < 192; y++)
+			DecodeC64MulticolorLine(content, 0x2002 + FliBugCharacters * 8, 2 + FliBugCharacters + ((y + 4 & 7) << 10), 0x4002 + FliBugCharacters, content[0x4403], false, y + 4, y * FliWidth);
 		return true;
 	}
 
@@ -10080,7 +10074,7 @@ public class RECOIL
 		}
 		if (unpackedOffset != 0)
 			return false;
-		DecodeC64Multicolor(320 - FliBugCharacters * 8, unpacked, 0x2400 + FliBugCharacters * 8, 0x400 + FliBugCharacters, FliBugCharacters, 0);
+		DecodeC64MulticolorFli(unpacked, 0x2400, 0x400, 0, -1);
 		return true;
 	}
 
@@ -10088,18 +10082,18 @@ public class RECOIL
 	{
 		if (contentLength != 26115 || content[2] != 'f')
 			return false;
-		SetSize(320 - FliBugCharacters * 8, 200, RECOILResolution.C642x1, 2);
-		DecodeC64MulticolorFrame(content, 0x2503 + FliBugCharacters * 8, 0x503 + FliBugCharacters, 0x103 + FliBugCharacters, -3, 0);
-		DecodeC64MulticolorFrame(content, 0x2503 + FliBugCharacters * 8, 0x4503 + FliBugCharacters, 0x103 + FliBugCharacters, -0x6503, 296 * 200);
+		SetSize(FliWidth, 200, RECOILResolution.C642x1, 2);
+		DecodeC64MulticolorFliBarsFrame(content, 0x2503 + FliBugCharacters * 8, 0x503 + FliBugCharacters, 0x103 + FliBugCharacters, 3, 0);
+		DecodeC64MulticolorFliBarsFrame(content, 0x2503 + FliBugCharacters * 8, 0x4503 + FliBugCharacters, 0x103 + FliBugCharacters, 0x6503, FliWidth * 200);
 		return ApplyBlend();
 	}
 
 	bool DecodeIfli!(byte[] content, int bitmap1Offset, int bitmap2Offset, int videoMatrix1Offset, int videoMatrix2Offset, int colorOffset, int background)
 	{
-		SetSize(320 - FliBugCharacters * 8, 200, RECOILResolution.C641x1, 2);
-		DecodeC64MulticolorFrame(content, bitmap1Offset + FliBugCharacters * 8, videoMatrix1Offset + FliBugCharacters, colorOffset + FliBugCharacters, background, 0);
+		SetSize(FliWidth, 200, RECOILResolution.C641x1, 2);
+		DecodeC64MulticolorFliFrame(content, bitmap1Offset + FliBugCharacters * 8, videoMatrix1Offset + FliBugCharacters, colorOffset + FliBugCharacters, background, false, 0);
 		LeftSkip = -1;
-		DecodeC64MulticolorFrame(content, bitmap2Offset + FliBugCharacters * 8, videoMatrix2Offset + FliBugCharacters, colorOffset + FliBugCharacters, background, 296 * 200);
+		DecodeC64MulticolorFliFrame(content, bitmap2Offset + FliBugCharacters * 8, videoMatrix2Offset + FliBugCharacters, colorOffset + FliBugCharacters, background, false, FliWidth * 200);
 		return ApplyBlend();
 	}
 
@@ -10124,17 +10118,8 @@ public class RECOIL
 		return contentLength == 33602 && DecodePpUnpacked(content);
 	}
 
-	bool DecodeGun!(byte[] content, int contentLength)
-	{
-		if (contentLength != 33602 && contentLength != 33603)
-			return false;
-		//if (!IsStringAt(content, 0x3ea, "GUNPAINT (JZ)   "))
-		//	return false;
-		return DecodeIfli(content, 0x2002, 0x6402, 2, 0x4402, 0x4002, GunPaintBackground);
-	}
-
 	bool DecodeFunUnpacked!(byte[] content)
-		=> DecodeIfli(content, 0x2012, 0x63fa, 0x12, 0x43fa, 0x4012, FunPaintBackground);
+		=> DecodeIfli(content, 0x2012, 0x63fa, 0x12, 0x43fa, 0x4012, 0);
 
 	bool DecodeC64Fun!(byte[] content, int contentLength)
 	{
@@ -10154,13 +10139,34 @@ public class RECOIL
 		return contentLength == 33694 && DecodeFunUnpacked(content);
 	}
 
+	void DecodeGunFrame!(byte[] content, int bitmapOffset, int videoMatrixOffset, int pixelsOffset)
+	{
+		for (int y = 0; y < 200; y++) {
+			int background = content[y < 177 ? 0x3f51 + y : y < 197 ? 0x47ea - 177 + y : 0x47fd];
+			DecodeC64MulticolorLine(content, bitmapOffset + FliBugCharacters * 8, videoMatrixOffset + FliBugCharacters + ((y & 7) << 10), 0x4002 + FliBugCharacters, background, false, y, pixelsOffset + y * FliWidth);
+		}
+	}
+
+	bool DecodeGun!(byte[] content, int contentLength)
+	{
+		if (contentLength != 33602 && contentLength != 33603)
+			return false;
+		//if (!IsStringAt(content, 0x3ea, "GUNPAINT (JZ)   "))
+		//	return false;
+		SetSize(FliWidth, 200, RECOILResolution.C641x1, 2);
+		DecodeGunFrame(content, 0x2002, 2, 0);
+		LeftSkip = -1;
+		DecodeGunFrame(content, 0x6402, 0x4402, FliWidth * 200);
+		return ApplyBlend();
+	}
+
 	bool DecodeBfli!(byte[] content, int contentLength)
 	{
 		if (contentLength != 33795 || content[2] != 'b')
 			return false;
-		SetSize(320 - FliBugCharacters * 8, 400, RECOILResolution.C642x1);
-		DecodeC64MulticolorFrame(content, 0x2403 + FliBugCharacters * 8, 0x403 + FliBugCharacters, 3 + FliBugCharacters, 0, 0);
-		DecodeC64MulticolorFrame(content, 0x6403, 0x4403, 3, 0, 296 * 200);
+		SetSize(FliWidth, 400, RECOILResolution.C642x1);
+		DecodeC64MulticolorFliFrame(content, 0x2403 + FliBugCharacters * 8, 0x403 + FliBugCharacters, 3 + FliBugCharacters, 0, false, 0);
+		DecodeC64MulticolorFliFrame(content, 0x6403, 0x4403, 3, 0, true, FliWidth * 200);
 		return true;
 	}
 
@@ -19562,7 +19568,7 @@ public class RECOIL
 			return DecodeA4r(content, contentLength);
 		case PackExt("A64"):
 		case PackExt("WIG"):
-			return contentLength == 10242 && DecodeC64Multicolor(320, content, 2, 0x2002, 0x2402, content[0x2801]);
+			return contentLength == 10242 && DecodeC64Multicolor(content, 2, 0x2002, 0x2402, 0x2801);
 		case PackExt("AAS"):
 		case PackExt("IPH"):
 		case PackExt("HRE"):
@@ -19680,7 +19686,7 @@ public class RECOIL
 		case PackExt("CCI"):
 			return DecodeCci(content, contentLength);
 		case PackExt("CDU"):
-			return contentLength == 10277 && DecodeC64Multicolor(320, content, 0x113, 0x2053, 0x243b, content[0x2823]);
+			return contentLength == 10277 && DecodeC64Multicolor(content, 0x113, 0x2053, 0x243b, 0x2823);
 		case PackExt("CE1"):
 		case PackExt("CE2"):
 		case PackExt("CE3"):
@@ -19696,7 +19702,7 @@ public class RECOIL
 		case PackExt("CH8"):
 			return DecodeCh8(content, contentLength);
 		case PackExt("CHE"):
-			return contentLength == 20482 && DecodeC64Multicolor(320, content, 2, 0x4202, 0x4802, content[0x4fff]);
+			return contentLength == 20482 && DecodeC64Multicolor(content, 2, 0x4202, 0x4802, 0x4fff);
 		case PackExt("CHR"):
 			return DecodeChr(content, contentLength);
 		case PackExt("CHS"):
@@ -19730,7 +19736,7 @@ public class RECOIL
 		case PackExt("CUT"):
 			return DecodeGr8Raw(content, contentLength, 96, 99);
 		case PackExt("CWG"):
-			return contentLength == 10007 && DecodeC64Multicolor(320, content, 2, 0x1f42, 0x232a, content[0x2713]);
+			return contentLength == 10007 && DecodeC64Multicolor(content, 2, 0x1f42, 0x232a, 0x2713);
 		case PackExt("DA4"):
 			return DecodeDa4(content, contentLength);
 		case PackExt("DAP"):
@@ -19798,7 +19804,7 @@ public class RECOIL
 			return DecodeFbi(content, contentLength);
 		case PackExt("FCP"):
 		case PackExt("FPT"):
-			return contentLength == 10004 && DecodeC64Multicolor(320, content, 2, 0x1f42, 0x232a, content[0x2712]);
+			return contentLength == 10004 && DecodeC64Multicolor(content, 2, 0x1f42, 0x232a, 0x2712);
 		case PackExt("FD2"):
 			return DecodeFli(content, contentLength);
 		case PackExt("FED"):
@@ -20038,7 +20044,7 @@ public class RECOIL
 			return DecodeAtari8Ice(content, contentLength, false, 19);
 		case PackExt("IPT"):
 		case PackExt("LRE"):
-			return contentLength == 10003 && DecodeC64Multicolor(320, content, 2, 0x1f42, 0x232a, content[0x2712]);
+			return contentLength == 10003 && DecodeC64Multicolor(content, 2, 0x1f42, 0x232a, 0x2712);
 		case PackExt("IR2"):
 			return DecodeAtari8Ice(content, contentLength, false, 2);
 		case PackExt("IRG"):
@@ -20046,7 +20052,7 @@ public class RECOIL
 		case PackExt("ISH"):
 			return contentLength == 9194 && DecodeIsh(content);
 		case PackExt("ISM"):
-			return contentLength == 10218 && DecodeC64Multicolor(320, content, 0x402, 0x2402, 2, content[0x2401]);
+			return contentLength == 10218 && DecodeC64Multicolor(content, 0x402, 0x2402, 2, 0x2401);
 		case PackExt("IST"):
 			return DecodeIst(content, contentLength);
 		case PackExt("JGP"):
@@ -20120,7 +20126,7 @@ public class RECOIL
 		case PackExt("MIG"):
 			return DecodeMig(content, contentLength);
 		case PackExt("MIL"):
-			return contentLength == 10022 && DecodeC64Multicolor(320, content, 0x7e6, 0x16, 0x3fe, 0);
+			return contentLength == 10022 && DecodeC64Multicolor(content, 0x7e6, 0x16, 0x3fe, -1);
 		case PackExt("MIS"):
 			return DecodeMis(content, contentLength);
 		case PackExt("ML1"):
@@ -20170,7 +20176,7 @@ public class RECOIL
 			return DecodeP4i(content, contentLength);
 		case PackExt("P64"):
 		case PackExt("FLY"):
-			return contentLength == 10050 && DecodeC64Multicolor(320, content, 0x802, 0x402, 2, content[0x801]);
+			return contentLength == 10050 && DecodeC64Multicolor(content, 0x802, 0x402, 2, 0x801);
 		case PackExt("PA3"):
 			return DecodeStPpp(content, contentLength);
 		case PackExt("PAC"):
@@ -20289,7 +20295,7 @@ public class RECOIL
 		case PackExt("RM4"):
 			return DecodeRm(content, contentLength, 4, RECOILResolution.Xe2x1);
 		case PackExt("RP"):
-			return contentLength == 10242 && DecodeC64Multicolor(320, content, 0x402, 2, 0x2402, 0);
+			return contentLength == 10242 && DecodeC64Multicolor(content, 0x402, 2, 0x2402, -1);
 		case PackExt("RPO"):
 		case PackExt("GIH"):
 			return DecodeRpo(content, contentLength);
@@ -20299,7 +20305,7 @@ public class RECOIL
 		case PackExt("RYS"):
 			return DecodeRys(content, contentLength);
 		case PackExt("SAR"):
-			return contentLength == 10219 && DecodeC64Multicolor(320, content, 0x402, 2, 0x2402, content[0x3f2]);
+			return contentLength == 10219 && DecodeC64Multicolor(content, 0x402, 2, 0x2402, 0x3f2);
 		case PackExt("CL0"):
 		case PackExt("CL1"):
 		case PackExt("CL2"):
