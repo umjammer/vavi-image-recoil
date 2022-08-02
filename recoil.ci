@@ -10211,44 +10211,52 @@ public class RECOIL
 		return true;
 	}
 
+	bool DecodeMilPacked!(byte[] content, int contentLength, bool vertical)
+	{
+		byte[10000] unpacked;
+		XeKoalaStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = 22;
+		rle.ContentLength = contentLength;
+		if (!rle.Unpack(unpacked, 0, 1, 10000))
+			return false;
+		SetSize(320, 200, RECOILResolution.C642x1);
+		for (int y = 0; y < 200; y++) {
+			for (int x = 0; x < 320; x++) {
+				int column = x >> 3;
+				int charOffset = vertical ? column * 25 + (y >> 3 & 1) * 13 + (y >> 4) : (y & ~7) * 5 + column;
+				int c;
+				switch (unpacked[2000 + (vertical ? column * 200 + (y & 1) * 100 + (y >> 1) : y * 40 + column)] >> (~x & 6) & 3) {
+				case 1:
+					c = unpacked[charOffset] >> 4;
+					break;
+				case 2:
+					c = unpacked[charOffset];
+					break;
+				case 3:
+					c = unpacked[1000 + charOffset];
+					break;
+				default:
+					c = content[8];
+					break;
+				}
+				Pixels[y * 320 + x] = C64Palette[c & 15];
+			}
+		}
+		return true;
+	}
+
 	bool DecodeMil!(byte[] content, int contentLength)
 	{
-		if (contentLength < 21)
+		if (contentLength < 26)
 			return false;
 		switch (content[7]) {
 		case 0:
 			return contentLength == 10022 && DecodeC64Multicolor(content, 0x7e6, 0x16, 0x3fe, 8);
+		case 1:
+			return DecodeMilPacked(content, contentLength, true);
 		case 2:
-			byte[10000] unpacked;
-			XeKoalaStream() rle;
-			rle.Content = content;
-			rle.ContentOffset = 22;
-			rle.ContentLength = contentLength;
-			if (!rle.Unpack(unpacked, 0, 1, 10000))
-				return false;
-			SetSize(320, 200, RECOILResolution.C642x1);
-			for (int y = 0; y < 200; y++) {
-				for (int x = 0; x < 320; x++) {
-					int charOffset = (y & ~7) * 5 + (x >> 3);
-					int c;
-					switch (unpacked[2000 + y * 40 + (x >> 3)] >> (~x & 6) & 3) {
-					case 1:
-						c = unpacked[charOffset] >> 4;
-						break;
-					case 2:
-						c = unpacked[charOffset];
-						break;
-					case 3:
-						c = unpacked[1000 + charOffset];
-						break;
-					default:
-						c = content[8];
-						break;
-					}
-					Pixels[y * 320 + x] = C64Palette[c & 15];
-				}
-			}
-			return true;
+			return DecodeMilPacked(content, contentLength, false);
 		default:
 			return false;
 		}
