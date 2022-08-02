@@ -1358,6 +1358,28 @@ class SpsStream : RleStream
 	}
 }
 
+class VhiStream : RleStream
+{
+	protected override bool ReadCommand!()
+	{
+		int c;
+		switch (ReadByte()) {
+		case 0:
+			c = ReadByte();
+			RepeatValue = -1;
+			break;
+		case 1:
+			c = ReadByte();
+			RepeatValue = ReadByte();
+			break;
+		default:
+			return false;
+		}
+		RepeatCount = c == 0 ? 256 : c;
+		return true;
+	}
+}
+
 class ArtMaster88Stream : RleStream
 {
 	int Escape = -1;
@@ -9882,7 +9904,18 @@ public class RECOIL
 
 	bool DecodeHle!(byte[] content, int contentLength) => contentLength == 32770 && DecodeC64HiresInterlace(content, 2, 0x2002, 0x6002, 0x4002);
 
-	bool DecodeVhi!(byte[] content, int contentLength) => contentLength == 17389 && DecodeC64HiresInterlace(content, 2, 0x4002, 0x2002, 0x4002);
+	bool DecodeVhi!(byte[] content, int contentLength)
+	{
+		if (contentLength == 17389)
+			return DecodeC64HiresInterlace(content, 2, 0x4002, 0x2002, 0x4002);
+		byte[17384] unpacked;
+		VhiStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = 2;
+		rle.ContentLength = contentLength;
+		return rle.Unpack(unpacked, 0, 1, unpacked.Length)
+			&& DecodeC64HiresInterlace(unpacked, 0, 0x4000, 0x2000, 0x4000);
+	}
 
 	bool DecodeMciLike!(byte[] content, int bitmap1Offset, int videoMatrix1Offset, int bitmap2Offset, int videoMatrix2Offset, int colorOffset, int backgroundOffset, int shift)
 	{
