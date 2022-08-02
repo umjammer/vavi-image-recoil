@@ -10218,9 +10218,37 @@ public class RECOIL
 		switch (content[7]) {
 		case 0:
 			return contentLength == 10022 && DecodeC64Multicolor(content, 0x7e6, 0x16, 0x3fe, 8);
-		case 1:
 		case 2:
-			return false; // TODO: compressed
+			byte[10000] unpacked;
+			XeKoalaStream() rle;
+			rle.Content = content;
+			rle.ContentOffset = 22;
+			rle.ContentLength = contentLength;
+			if (!rle.Unpack(unpacked, 0, 1, 10000))
+				return false;
+			SetSize(320, 200, RECOILResolution.C642x1);
+			for (int y = 0; y < 200; y++) {
+				for (int x = 0; x < 320; x++) {
+					int charOffset = (y & ~7) * 5 + (x >> 3);
+					int c;
+					switch (unpacked[2000 + y * 40 + (x >> 3)] >> (~x & 6) & 3) {
+					case 1:
+						c = unpacked[charOffset] >> 4;
+						break;
+					case 2:
+						c = unpacked[charOffset];
+						break;
+					case 3:
+						c = unpacked[1000 + charOffset];
+						break;
+					default:
+						c = content[8];
+						break;
+					}
+					Pixels[y * 320 + x] = C64Palette[c & 15];
+				}
+			}
+			return true;
 		default:
 			return false;
 		}
