@@ -640,6 +640,7 @@
 		<format name="Super-hires Editor II" width="192" height="168" colors="16"><ext>SH2</ext></format>
 		<format name="Super Hires Editor" width="96" height="88" colors="16"><ext>SHE</ext></format>
 		<format name="Super Hires Editor 2" width="192" height="168" colors="16"><ext>SHE</ext></format>
+		<format name="Super Hires Fli editor" width="208" height="168" colors="16"><ext>SHF</ext></format>
 		<format name="Super Hires Interlace Editor" width="96" height="200" frames="2"><ext>SHI</ext></format>
 		<format name="Super Hires Studio" width="320" height="200" colors="16"><ext>SHS</ext></format>
 		<format name="SpritePad"><ext>SPD</ext></format>

@@ -10710,6 +10710,44 @@ public class RECOIL
 		}
 	}
 
+	static int GetShfPixel(byte[] content, int x, int y)
+	{
+		int column = x >> 3;
+		int bit = ~x & 7;
+		if (column < 12 && y > 0) {
+			const byte[64] sprites = {
+				0x80, 0x84, 0x85, 0x89, 0x8a, 0x8e, 0x8f, 0x93,
+				0x94, 0x98, 0x99, 0x9d, 0x9e, 0xa2, 0xa3, 0xa7,
+				0xa8, 0xac, 0xad, 0xb1, 0xb2, 0xb6, 0xb7, 0xbb,
+				0xbc, 0xc0, 0xc1, 0xc5, 0xc6, 0xca, 0xcb, 0xcf,
+				0xd0, 0xd4, 0xd5, 0xd9, 0xda, 0xde, 0xdf, 0xe3,
+				0xe4, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee,
+				0xef, 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6,
+				0xf7, 0x1e, 0x2e, 0x3e, 0x4e, 0x5e, 0x6e, 0x7e
+			};
+			int spriteIndex = ((y - 1 & 7) << 3) + column / 3;
+			int spriteOffset = (y - 1) % 21 * 3 + column % 3;
+			if ((content[2 + (sprites[spriteIndex] << 6) + spriteOffset] >> bit & 1) != 0)
+				return content[0x3ea];
+			if ((content[2 + (sprites[spriteIndex + 4] << 6) + spriteOffset] >> bit & 1) != 0)
+				return content[0x3eb];
+		}
+		int offset = (y & ~7) * 5 + column;
+		return content[16 + ((y & 7) << 10) + offset] >> ((content[0x2072 + (offset << 3) + (y & 7)] >> bit & 1) << 2);
+	}
+
+	bool DecodeShf!(byte[] content, int contentLength)
+	{
+		if (contentLength != 15874)
+			return false;
+		SetSize(208, 168, RECOILResolution.C641x1);
+		for (int y = 0; y < 168; y++) {
+			for (int x = 0; x < 208; x++)
+				Pixels[y * 208 + x] = C64Palette[GetShfPixel(content, x, y) & 15];
+		}
+		return true;
+	}
+
 	void DecodeUflFrame!(byte[] content, int bitmapOffset, int videoMatrixOffset, int spritesOffset, int spriteColorsOffset, int pixelsOffset)
 	{
 		for (int y = 0; y < 200; y++) {
@@ -19476,6 +19514,7 @@ public class RECOIL
 		case PackExt("3200"):
 		case PackExt("SHC"):
 		case PackExt("SHE"):
+		case PackExt("SHF"):
 		case PackExt("SHI"):
 		case PackExt("SHP"):
 		case PackExt("SHR"):
@@ -20377,6 +20416,8 @@ public class RECOIL
 			return DecodeShc(content, contentLength);
 		case PackExt("SHE"):
 			return DecodeShe(content, contentLength);
+		case PackExt("SHF"):
+			return DecodeShf(content, contentLength);
 		case PackExt("SHI"):
 			return DecodeShi(content, contentLength);
 		case PackExt("SHP"):
