@@ -647,6 +647,7 @@
 		<format name="SpritePad"><ext>SPD</ext></format>
 		<format name="UFLI-editor" width="288" height="200" colors="16"><ext>UFL</ext></format>
 		<format name="UIFLI-editor" width="288" height="200" frames="2"><ext>UIF</ext></format>
+		<format name="Vertical Hires Interlace Editor" width="320" height="200" frames="2"><ext>VHI</ext></format>
 		<format maxWidth="320" height="200" colors="16"><ext>VIC</ext></format>
 		<format name="Vidcom 64Paint" width="160" height="200" colors="16"><ext>VID</ext></format>
 		<format name="Zoomatic" width="160" height="200" colors="16"><ext>ZOM</ext></format>

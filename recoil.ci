@@ -9882,6 +9882,8 @@ public class RECOIL
 
 	bool DecodeHle!(byte[] content, int contentLength) => contentLength == 32770 && DecodeC64HiresInterlace(content, 2, 0x2002, 0x6002, 0x4002);
 
+	bool DecodeVhi!(byte[] content, int contentLength) => contentLength == 17389 && DecodeC64HiresInterlace(content, 2, 0x4002, 0x2002, 0x4002);
+
 	bool DecodeMciLike!(byte[] content, int bitmap1Offset, int videoMatrix1Offset, int bitmap2Offset, int videoMatrix2Offset, int colorOffset, int backgroundOffset, int shift)
 	{
 		SetSize(320, 200, shift == 0 ? RECOILResolution.C642x1 : RECOILResolution.C641x1, 2);
@@ -19680,6 +19682,7 @@ public class RECOIL
 		case PackExt("UIF"):
 		case PackExt("VBM"):
 		case PackExt("BM"):
+		case PackExt("VHI"):
 		case PackExt("VIC"):
 		case PackExt("VSC"):
 		case PackExt("VZI"):
@@ -20631,6 +20634,8 @@ public class RECOIL
 		case PackExt("VBM"):
 		case PackExt("BM"):
 			return DecodeVbm(content, contentLength);
+		case PackExt("VHI"):
+			return DecodeVhi(content, contentLength);
 		case PackExt("VIC"):
 			return DecodeVic(content, contentLength);
 		case PackExt("VSC"):
