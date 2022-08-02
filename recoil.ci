@@ -10714,7 +10714,7 @@ public class RECOIL
 	{
 		int column = x >> 3;
 		int bit = ~x & 7;
-		if (column < 12 && y > 0) {
+		if (column < 12) {
 			const byte[64] sprites = {
 				0x80, 0x84, 0x85, 0x89, 0x8a, 0x8e, 0x8f, 0x93,
 				0x94, 0x98, 0x99, 0x9d, 0x9e, 0xa2, 0xa3, 0xa7,
@@ -10725,25 +10725,52 @@ public class RECOIL
 				0xef, 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6,
 				0xf7, 0x1e, 0x2e, 0x3e, 0x4e, 0x5e, 0x6e, 0x7e
 			};
-			int spriteIndex = ((y - 1 & 7) << 3) + column / 3;
-			int spriteOffset = (y - 1) % 21 * 3 + column % 3;
+			int spriteIndex = ((y & 7) << 3) + column / 3;
+			int spriteOffset = y % 21 * 3 + column % 3;
 			if ((content[2 + (sprites[spriteIndex] << 6) + spriteOffset] >> bit & 1) != 0)
 				return content[0x3ea];
 			if ((content[2 + (sprites[spriteIndex + 4] << 6) + spriteOffset] >> bit & 1) != 0)
 				return content[0x3eb];
 		}
+		y++;
 		int offset = (y & ~7) * 5 + column;
 		return content[16 + ((y & 7) << 10) + offset] >> ((content[0x2072 + (offset << 3) + (y & 7)] >> bit & 1) << 2);
 	}
 
 	bool DecodeShf!(byte[] content, int contentLength)
 	{
-		if (contentLength != 15874)
+		if (contentLength == 15874) {
+			SetSize(208, 167, RECOILResolution.C641x1);
+			for (int y = 0; y < 167; y++) {
+				for (int x = 0; x < 208; x++)
+					Pixels[y * 208 + x] = C64Palette[GetShfPixel(content, x, y) & 15];
+			}
+			return true;
+		}
+		if (contentLength < 6)
 			return false;
-		SetSize(208, 168, RECOILResolution.C641x1);
-		for (int y = 0; y < 168; y++) {
-			for (int x = 0; x < 208; x++)
-				Pixels[y * 208 + x] = C64Palette[GetShfPixel(content, x, y) & 15];
+		byte[8170] unpacked;
+		UflStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = 3;
+		rle.ContentLength = contentLength;
+		rle.Escape = content[2];
+		if (!rle.Unpack(unpacked, 0, 1, 8170))
+			return false;
+		SetSize(96, 167, RECOILResolution.C641x1);
+		for (int y = 0; y < 167; y++) {
+			for (int x = 0; x < 96; x++) {
+				int offset = y * 12 + (x >> 3);
+				int bit = ~x & 7;
+				int c;
+				if ((unpacked[offset] >> bit & 1) != 0)
+					c = unpacked[0x1fe8];
+				else if ((unpacked[0x800 + offset] >> bit & 1) != 0)
+					c = unpacked[0x1fe9];
+				else
+					c = unpacked[0x1800 + offset] >> ((unpacked[0x1000 + offset] >> bit & 1) << 2);
+				Pixels[y * 96 + x] = C64Palette[c & 15];
+			}
 		}
 		return true;
 	}
