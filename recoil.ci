@@ -10599,6 +10599,34 @@ public class RECOIL
 		return true;
 	}
 
+	void DecodeEshFrame!(byte[] content, int bitmapOffset, int spriteOffset, int pixelsOffset)
+	{
+		for (int y = 0; y < 200; y++) {
+			for (int x = 0; x < 192; x++) {
+				int bit = ~x & 7;
+				int column = x >> 3;
+				int c;
+				if ((content[spriteOffset + ((y / 21 << 3) + column / 3 << 6) + y % 21 * 3 + column % 3] >> bit & 1) != 0)
+					c = content[0x4fdb + column / 3];
+				else {
+					int offset = (y & ~7) * 3 + column;
+					c = content[0x4d83 + offset] >> ((content[bitmapOffset + (offset << 3) + (y & 7)] >> bit & 1) << 2);
+				}
+				Pixels[pixelsOffset + y * 192 + x] = C64Palette[c & 15];
+			}
+		}
+	}
+
+	bool DecodeEsh!(byte[] content, int contentLength)
+	{
+		if (contentLength != 20454)
+			return false;
+		SetSize(192, 200, RECOILResolution.C641x1, 2);
+		DecodeEshFrame(content, 3, 0x2583, 0);
+		DecodeEshFrame(content, 0x12c3, 0x3983, 192 * 200);
+		return ApplyBlend();
+	}
+
 	static int GetShsPixel(byte[] content, int x, int y)
 	{
 		int bit = ~x & 7;
@@ -19290,6 +19318,7 @@ public class RECOIL
 		case PackExt("ECP"):
 		case PackExt("EMC"):
 		case PackExt("EPA"):
+		case PackExt("ESH"):
 		case PackExt("ESM"):
 		case PackExt("EZA"):
 		case PackExt("F80"):
@@ -19917,6 +19946,8 @@ public class RECOIL
 			return DecodeEmc(content, contentLength);
 		case PackExt("EPA"):
 			return DecodeEpa(content, contentLength);
+		case PackExt("ESH"):
+			return DecodeEsh(content, contentLength);
 		case PackExt("ESM"):
 			return DecodeEsm(content, contentLength);
 		case PackExt("EZA"):
