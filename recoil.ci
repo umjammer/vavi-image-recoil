@@ -10211,6 +10211,21 @@ public class RECOIL
 		return true;
 	}
 
+	bool DecodeMil!(byte[] content, int contentLength)
+	{
+		if (contentLength < 21)
+			return false;
+		switch (content[7]) {
+		case 0:
+			return contentLength == 10022 && DecodeC64Multicolor(content, 0x7e6, 0x16, 0x3fe, 8);
+		case 1:
+		case 2:
+			return false; // TODO: compressed
+		default:
+			return false;
+		}
+	}
+
 	bool DecodeVic!(byte[] content, int contentLength)
 	{
 		switch (contentLength) {
@@ -20198,7 +20213,7 @@ public class RECOIL
 		case PackExt("MIG"):
 			return DecodeMig(content, contentLength);
 		case PackExt("MIL"):
-			return contentLength == 10022 && DecodeC64Multicolor(content, 0x7e6, 0x16, 0x3fe, -1);
+			return DecodeMil(content, contentLength);
 		case PackExt("MIS"):
 			return DecodeMis(content, contentLength);
 		case PackExt("ML1"):
