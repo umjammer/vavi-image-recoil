@@ -10617,14 +10617,27 @@ public class RECOIL
 		}
 	}
 
-	bool DecodeEsh!(byte[] content, int contentLength)
+	bool DecodeEshUnpacked!(byte[] content)
 	{
-		if (contentLength != 20454)
-			return false;
 		SetSize(192, 200, RECOILResolution.C641x1, 2);
 		DecodeEshFrame(content, 3, 0x2583, 0);
 		DecodeEshFrame(content, 0x12c3, 0x3983, 192 * 200);
 		return ApplyBlend();
+	}
+
+	bool DecodeEsh!(byte[] content, int contentLength)
+	{
+		if (contentLength < 5)
+			return false;
+		if (content[2] == 0)
+			return contentLength == 20454 && DecodeEshUnpacked(content);
+		byte[20452] unpacked;
+		PgcStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = 3;
+		rle.ContentLength = contentLength;
+		return rle.Unpack(unpacked, 3, 1, unpacked.Length)
+			&& DecodeEshUnpacked(unpacked);
 	}
 
 	static int GetShsPixel(byte[] content, int x, int y)
