@@ -960,15 +960,6 @@ abstract class RleStream : BitStream
 		return true;
 	}
 
-	/// Uncompresses after copying two literal bytes.
-	/// Returns `true` on success, `false` on error.
-	internal bool UnpackC64!(byte[]! unpacked, int unpackedLength)
-	{
-		unpacked[0] = Content[0];
-		unpacked[1] = Content[1];
-		return Unpack(unpacked, 2, 1, unpackedLength);
-	}
-
 	/// Uncompresses writing first byte to `unpacked[unpackedEnd]`, `unpacked[unpackedEnd - 1]`, ...
 	/// until `unpacked[unpackedOffset]`.
 	/// Returns `true` on success, `false` on error.
@@ -1127,9 +1118,7 @@ class DrpStream : RleStream
 			rle.ContentOffset = 16;
 			rle.ContentLength = contentLength;
 			rle.Escape = content[15];
-			if (!rle.UnpackC64(unpacked, unpackedLength))
-				return null;
-			return unpacked;
+			return rle.Unpack(unpacked, 2, 1, unpackedLength) ? unpacked : null;
 		}
 		if (contentLength != unpackedLength)
 			return null;
@@ -9730,13 +9719,13 @@ public class RECOIL
 	{
 		if (contentLength < 2)
 			return false;
-		byte[9026] unpacked;
+		byte[9024] unpacked;
 		C64KoalaStream() rle;
 		rle.Content = content;
 		rle.ContentOffset = 2;
 		rle.ContentLength = contentLength;
-		return rle.UnpackC64(unpacked, 9026)
-			&& DecodeDd(unpacked, 9026);
+		return rle.Unpack(unpacked, 0, 1, 9024)
+			&& DecodeC64Hires(unpacked, 0x400, 0);
 	}
 
 	int GetC64Multicolor(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int background, bool bottomBfli, int x, int y)
@@ -9860,13 +9849,13 @@ public class RECOIL
 	{
 		if (contentLength < 2)
 			return false;
-		byte[10003] unpacked;
+		byte[10001] unpacked;
 		C64KoalaStream() rle;
 		rle.Content = content;
 		rle.ContentOffset = 2;
 		rle.ContentLength = contentLength;
-		return rle.UnpackC64(unpacked, 10003)
-			&& DecodeKoa(unpacked, 10003);
+		return rle.Unpack(unpacked, 0, 1, 10001)
+			&& DecodeKoa(unpacked, 10001);
 	}
 
 	bool DecodeDol!(byte[] content, int contentLength)
@@ -9886,14 +9875,14 @@ public class RECOIL
 	{
 		if (contentLength < 2)
 			return false;
-		byte[10259] unpacked;
+		byte[10001] unpacked;
 		DrpStream() rle;
 		rle.Content = content;
 		rle.ContentOffset = 2;
 		rle.ContentLength = contentLength;
 		rle.Escape = 0xc2;
-		return rle.UnpackC64(unpacked, 10259)
-			&& DecodeKoa(unpacked, 10003);
+		return rle.Unpack(unpacked, 0, 1, 10001)
+			&& DecodeKoa(unpacked, 10001);
 	}
 
 	bool DecodeC64HiresInterlace!(byte[] content, int bitmap1Offset, int videoMatrix1Offset, int bitmap2Offset, int videoMatrix2Offset)
