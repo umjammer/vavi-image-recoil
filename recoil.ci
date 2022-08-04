@@ -10071,12 +10071,25 @@ public class RECOIL
 		switch (contentLength) {
 		case 17218: // FD2
 		case 17409: // FLI
-		case 17410: // VIC
+		case 17410: // FLM, VIC
 			break;
 		default:
 			return false;
 		}
 		return DecodeC64MulticolorFli(content, 0x2402, 0x402, 2, -1);
+	}
+
+	bool DecodeFbi!(byte[] content, int contentLength)
+	{
+		if (contentLength < 19)
+			return false;
+		byte[17216] unpacked;
+		UifStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = contentLength;
+		rle.Escape = content[2];
+		return rle.UnpackBackwards(unpacked, 0, 17215)
+			&& DecodeC64MulticolorFli(unpacked, 0x2400, 0x400, 0, -1);
 	}
 
 	bool DecodeBml!(byte[] content, int contentLength)
@@ -10107,18 +10120,7 @@ public class RECOIL
 		return true;
 	}
 
-	bool DecodeFbi!(byte[] content, int contentLength)
-	{
-		if (contentLength < 19)
-			return false;
-		byte[17216] unpacked;
-		UifStream() rle;
-		rle.Content = content;
-		rle.ContentOffset = contentLength;
-		rle.Escape = content[2];
-		return rle.UnpackBackwards(unpacked, 0, 17215)
-			&& DecodeC64MulticolorFli(unpacked, 0x2400, 0x400, 0, -1);
-	}
+	bool DecodeFlm!(byte[] content, int contentLength) => DecodeFli(content, contentLength);
 
 	bool DecodeFfli!(byte[] content, int contentLength)
 	{
@@ -19495,6 +19497,7 @@ public class RECOIL
 		case PackExt("FGE"):
 		case PackExt("FLF"):
 		case PackExt("FLI"):
+		case PackExt("FLM"):
 		case PackExt("FN2"):
 		case PackExt("FNT"):
 		case PackExt("FP"):
@@ -20138,6 +20141,8 @@ public class RECOIL
 		case PackExt("FLI"):
 			return DecodeFli(content, contentLength)
 				|| DecodeBml(content, contentLength);
+		case PackExt("FLM"):
+			return DecodeFlm(content, contentLength);
 		case PackExt("FN2"):
 			return DecodeFn2(content, contentLength);
 		case PackExt("FNT"):
