@@ -9808,10 +9808,17 @@ public class RECOIL
 	void DecodeC64MulticolorFliBarsFrame!(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int backgroundOffset, int pixelsOffset)
 	{
 		for (int y = 0; y < 200; y++)
-			DecodeC64MulticolorLine(content, bitmapOffset, videoMatrixOffset + ((y & 7) << 10), colorOffset, backgroundOffset < 0 ? 0 : content[backgroundOffset + y], false, y, pixelsOffset + y * FliWidth);
+			DecodeC64MulticolorLine(content, bitmapOffset, videoMatrixOffset + ((y & 7) << 10), colorOffset, content[backgroundOffset + y], false, y, pixelsOffset + y * FliWidth);
 	}
 
-	bool DecodeC64MulticolorFli!(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int backgroundOffset)
+	bool DecodeC64MulticolorFli!(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int background)
+	{
+		SetSize(FliWidth, 200, RECOILResolution.C642x1);
+		DecodeC64MulticolorFliFrame(content, bitmapOffset + FliBugCharacters * 8, videoMatrixOffset + FliBugCharacters, colorOffset + FliBugCharacters, background, false, 0);
+		return true;
+	}
+
+	bool DecodeC64MulticolorFliBars!(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int backgroundOffset)
 	{
 		SetSize(FliWidth, 200, RECOILResolution.C642x1);
 		DecodeC64MulticolorFliBarsFrame(content, bitmapOffset + FliBugCharacters * 8, videoMatrixOffset + FliBugCharacters, colorOffset + FliBugCharacters, backgroundOffset, 0);
@@ -10015,7 +10022,7 @@ public class RECOIL
 		return true;
 	}
 
-	bool DecodeFed!(byte[] content, int contentLength) => contentLength == 17665 && DecodeC64MulticolorFli(content, 0x2502, 0x502, 0x102, 8);
+	bool DecodeFed!(byte[] content, int contentLength) => contentLength == 17665 && DecodeC64MulticolorFliBars(content, 0x2502, 0x502, 0x102, 8);
 
 	bool DecodeHimUnpacked!(byte[] content)
 	{
@@ -10071,12 +10078,10 @@ public class RECOIL
 		switch (contentLength) {
 		case 17218: // FD2
 		case 17409: // FLI
-		case 17410: // FLM, VIC
-			break;
+			return DecodeC64MulticolorFli(content, 0x2402, 0x402, 2, 0);
 		default:
 			return false;
 		}
-		return DecodeC64MulticolorFli(content, 0x2402, 0x402, 2, -1);
 	}
 
 	bool DecodeFbi!(byte[] content, int contentLength)
@@ -10089,7 +10094,7 @@ public class RECOIL
 		rle.ContentOffset = contentLength;
 		rle.Escape = content[2];
 		return rle.UnpackBackwards(unpacked, 0, 17215)
-			&& DecodeC64MulticolorFli(unpacked, 0x2400, 0x400, 0, -1);
+			&& DecodeC64MulticolorFli(unpacked, 0x2400, 0x400, 0, 0);
 	}
 
 	bool DecodeBml!(byte[] content, int contentLength)
@@ -10098,15 +10103,15 @@ public class RECOIL
 		case 17474: // BML
 		case 17665: // VIC
 		case 17666: // VIC
-			return DecodeC64MulticolorFli(content, 0x2502, 0x502, 0x102, 2);
+			return DecodeC64MulticolorFliBars(content, 0x2502, 0x502, 0x102, 2);
 		default:
 			byte[17472] unpacked;
 			UifStream() rle;
 			rle.Content = content;
-			rle.ContentOffset = contentLength ;
+			rle.ContentOffset = contentLength;
 			rle.Escape = content[2];
 			return rle.UnpackBackwards(unpacked, 0, 17471)
-				&& DecodeC64MulticolorFli(unpacked, 0x2500, 0x500, 0x100, 0 /* bars */);
+				&& DecodeC64MulticolorFliBars(unpacked, 0x2500, 0x500, 0x100, 0);
 		}
 	}
 
@@ -10120,7 +10125,27 @@ public class RECOIL
 		return true;
 	}
 
-	bool DecodeFlm!(byte[] content, int contentLength) => DecodeFli(content, contentLength);
+	bool DecodeFlm!(byte[] content, int contentLength)
+	{
+		if (contentLength == 17410)
+			return DecodeC64MulticolorFli(content, 0x2402, 0x402, 2, content[0x4381]);
+		if (contentLength < 6)
+			return false;
+		byte[17280] unpacked;
+		UifStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = contentLength;
+		rle.Escape = rle.ReadValue();
+		if (!rle.UnpackBackwards(unpacked, 0, 17279))
+			return false;
+		for (int i = 0; i < 1000; i++) {
+			if (unpacked[i] != 0)
+				return DecodeC64MulticolorFli(unpacked, 0x2400, 0x400, 0, unpacked[0x437f]);
+		}
+		SetSize(FliWidth, 200, RECOILResolution.C641x1);
+		DecodeC64HiresFrame(unpacked, 0x2400 + FliBugCharacters * 8, 0x400 + FliBugCharacters, 0);
+		return true;
+	}
 
 	bool DecodeFfli!(byte[] content, int contentLength)
 	{
@@ -10314,8 +10339,9 @@ public class RECOIL
 			return DecodeDol(content, contentLength);
 		case 17218:
 		case 17409:
-		case 17410:
 			return DecodeFli(content, contentLength);
+		case 17410:
+			return DecodeFlm(content, contentLength);
 		case 17474:
 		case 17665:
 		case 17666:

@@ -547,7 +547,7 @@
 		</format>
 		<format name="Turbo Rascal Syntax Error" colors="16"><ext>FLF</ext></format>
 		<format name="FLI" width="148" height="200" colors="16"><ext>FLI</ext></format>
-		<format name="Flimatic" width="148" height="200" colors="16"><ext>FLM</ext></format>
+		<format name="Flimatic" maxWidth="296" height="200" colors="16"><ext>FLM</ext></format>
 		<format name="Fuckpaint" width="320" height="200" frames="2"><ext>FP</ext></format>
 		<format name="Funpaint" width="296" height="200" frames="2">
 			<ext>FUN</ext>
