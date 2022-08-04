@@ -1181,6 +1181,18 @@ class UifStream : UflStream
 			return -1;
 		return Content[--ContentOffset];
 	}
+
+	internal bool StartSifFrame!(int contentOffset)
+	{
+		if (contentOffset + 5 >= ContentLength)
+			return false;
+		int packedLength = Content[contentOffset] + (Content[contentOffset + 1] << 8) - 0x9402;
+		if (packedLength <= 0 || contentOffset + 2 + packedLength > ContentLength)
+			return false;
+		ContentOffset = contentOffset + 2 + packedLength;
+		Escape = Content[contentOffset + 2];
+		return true;
+	}
 }
 
 class PgcStream : RleStream
@@ -10955,6 +10967,24 @@ public class RECOIL
 		return content[16 + ((y & 7) << 10) + offset] >> ((content[0x2072 + (offset << 3) + (y & 7)] >> bit & 1) << 2);
 	}
 
+	void DecodeShfFrame!(byte[] content, int pixelsOffset)
+	{
+		for (int y = 0; y < 167; y++) {
+			for (int x = 0; x < 96; x++) {
+				int offset = y * 12 + (x >> 3);
+				int bit = ~x & 7;
+				int c;
+				if ((content[offset] >> bit & 1) != 0)
+					c = content[0x1fe8];
+				else if ((content[0x800 + offset] >> bit & 1) != 0)
+					c = content[0x1fe9];
+				else
+					c = content[0x1800 + offset] >> ((content[0x1000 + offset] >> bit & 1) << 2);
+				Pixels[pixelsOffset + y * 96 + x] = C64Palette[c & 15];
+			}
+		}
+	}
+
 	bool DecodeShf!(byte[] content, int contentLength)
 	{
 		if (contentLength == 15874) {
@@ -10976,21 +11006,33 @@ public class RECOIL
 		if (!rle.Unpack(unpacked, 0, 1, 8170))
 			return false;
 		SetSize(96, 167, RECOILResolution.C641x1);
-		for (int y = 0; y < 167; y++) {
-			for (int x = 0; x < 96; x++) {
-				int offset = y * 12 + (x >> 3);
-				int bit = ~x & 7;
-				int c;
-				if ((unpacked[offset] >> bit & 1) != 0)
-					c = unpacked[0x1fe8];
-				else if ((unpacked[0x800 + offset] >> bit & 1) != 0)
-					c = unpacked[0x1fe9];
-				else
-					c = unpacked[0x1800 + offset] >> ((unpacked[0x1000 + offset] >> bit & 1) << 2);
-				Pixels[y * 96 + x] = C64Palette[c & 15];
-			}
-		}
+		DecodeShfFrame(unpacked, 0);
 		return true;
+	}
+
+	bool DecodeC64Sif!(byte[] content, int contentLength)
+	{
+		UifStream() rle;
+		rle.Content = content;
+		rle.ContentLength = contentLength;
+		if (!rle.StartSifFrame(0))
+			return false;
+		int frame2Offset = rle.ContentOffset;
+		byte[8176] unpacked;
+		if (!rle.UnpackBackwards(unpacked, 0, 8175)
+		 || !rle.StartSifFrame(frame2Offset))
+			return false;
+		SetSize(96, 167, RECOILResolution.C641x1, 2);
+		int spriteColorsOffset = rle.ContentOffset;
+		unpacked[0x1fe8] = content[spriteColorsOffset];
+		unpacked[0x1fe9] = content[spriteColorsOffset + 1];
+		DecodeShfFrame(unpacked, 0);
+		if (!rle.UnpackBackwards(unpacked, 0, 8175))
+			return false;
+		unpacked[0x1fe8] = content[spriteColorsOffset + 2];
+		unpacked[0x1fe9] = content[spriteColorsOffset + 3];
+		DecodeShfFrame(unpacked, 96 * 167);
+		return ApplyBlend();
 	}
 
 	void DecodeUflFrame!(byte[] content, int bitmapOffset, int videoMatrixOffset, int spritesOffset, int spriteColorsOffset, int pixelsOffset)
@@ -16804,7 +16846,7 @@ public class RECOIL
 		return ApplyAtari8Palette(frame);
 	}
 
-	bool DecodeSif!(byte[] content, int contentLength)
+	bool DecodeAtari8Sif!(byte[] content, int contentLength)
 	{
 		if (contentLength != 2048)
 			return false;
@@ -20682,7 +20724,8 @@ public class RECOIL
 		case PackExt("SHX"):
 			return DecodeShx(content, contentLength);
 		case PackExt("SIF"):
-			return DecodeSif(content, contentLength);
+			return DecodeAtari8Sif(content, contentLength)
+				|| DecodeC64Sif(content, contentLength);
 		case PackExt("SKP"):
 			return DecodeSkp(content, contentLength);
 		case PackExt("SPC"):
