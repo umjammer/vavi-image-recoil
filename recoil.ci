@@ -9702,6 +9702,17 @@ public class RECOIL
 
 	bool DecodeHed!(byte[] content) => DecodeC64Hires(content, 2, 0x02002);
 
+	bool DecodeJj!(byte[] content, int contentLength)
+	{
+		byte[9024] unpacked;
+		C64KoalaStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = 2;
+		rle.ContentLength = contentLength;
+		return rle.Unpack(unpacked, 0, 1, 9024)
+			&& DecodeC64Hires(unpacked, 0x400, 0);
+	}
+
 	bool DecodeDd!(byte[] content, int contentLength)
 	{
 		switch (contentLength) {
@@ -9711,21 +9722,8 @@ public class RECOIL
 		case 9346:
 			return DecodeC64Hires(content, 0x402, 2);
 		default:
-			return false;
+			return DecodeJj(content, contentLength);
 		}
-	}
-
-	bool DecodeJj!(byte[] content, int contentLength)
-	{
-		if (contentLength < 2)
-			return false;
-		byte[9024] unpacked;
-		C64KoalaStream() rle;
-		rle.Content = content;
-		rle.ContentOffset = 2;
-		rle.ContentLength = contentLength;
-		return rle.Unpack(unpacked, 0, 1, 9024)
-			&& DecodeC64Hires(unpacked, 0x400, 0);
 	}
 
 	int GetC64Multicolor(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int background, bool bottomBfli, int x, int y)
