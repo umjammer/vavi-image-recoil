@@ -10967,7 +10967,7 @@ public class RECOIL
 		return content[16 + ((y & 7) << 10) + offset] >> ((content[0x2072 + (offset << 3) + (y & 7)] >> bit & 1) << 2);
 	}
 
-	void DecodeShfFrame!(byte[] content, int pixelsOffset)
+	void DecodeShfFrame!(byte[] content, int foreColor, int backColor, int pixelsOffset)
 	{
 		for (int y = 0; y < 167; y++) {
 			for (int x = 0; x < 96; x++) {
@@ -10975,9 +10975,9 @@ public class RECOIL
 				int bit = ~x & 7;
 				int c;
 				if ((content[offset] >> bit & 1) != 0)
-					c = content[0x1fe8];
+					c = foreColor;
 				else if ((content[0x800 + offset] >> bit & 1) != 0)
-					c = content[0x1fe9];
+					c = backColor;
 				else
 					c = content[0x1800 + offset] >> ((content[0x1000 + offset] >> bit & 1) << 2);
 				Pixels[pixelsOffset + y * 96 + x] = C64Palette[c & 15];
@@ -11006,7 +11006,7 @@ public class RECOIL
 		if (!rle.Unpack(unpacked, 0, 1, 8170))
 			return false;
 		SetSize(96, 167, RECOILResolution.C641x1);
-		DecodeShfFrame(unpacked, 0);
+		DecodeShfFrame(unpacked, unpacked[0x1fe8], unpacked[0x1fe8], 0);
 		return true;
 	}
 
@@ -11020,18 +11020,14 @@ public class RECOIL
 		int frame2Offset = rle.ContentOffset;
 		byte[8176] unpacked;
 		if (!rle.UnpackBackwards(unpacked, 0, 8175)
-		 || !rle.StartSifFrame(frame2Offset))
+		 || !rle.StartSifFrame(frame2Offset)
+		 || contentLength != rle.ContentOffset + 4)
 			return false;
 		SetSize(96, 167, RECOILResolution.C641x1, 2);
-		int spriteColorsOffset = rle.ContentOffset;
-		unpacked[0x1fe8] = content[spriteColorsOffset];
-		unpacked[0x1fe9] = content[spriteColorsOffset + 1];
-		DecodeShfFrame(unpacked, 0);
+		DecodeShfFrame(unpacked, content[contentLength - 4], content[contentLength - 3], 0);
 		if (!rle.UnpackBackwards(unpacked, 0, 8175))
 			return false;
-		unpacked[0x1fe8] = content[spriteColorsOffset + 2];
-		unpacked[0x1fe9] = content[spriteColorsOffset + 3];
-		DecodeShfFrame(unpacked, 96 * 167);
+		DecodeShfFrame(unpacked, content[contentLength - 2], content[contentLength - 1], 96 * 167);
 		return ApplyBlend();
 	}
 
