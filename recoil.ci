@@ -10109,29 +10109,15 @@ public class RECOIL
 
 	bool DecodeFbi!(byte[] content, int contentLength)
 	{
-		byte[17216] unpacked;
-		int unpackedOffset = unpacked.Length;
-		for (int contentOffset = contentLength; contentOffset > 18; ) {
-			int count = 1;
-			int b = content[--contentOffset];
-			if (b == content[2]) {
-				if (contentOffset <= 19)
-					return false;
-				count = content[--contentOffset];
-				if (count == 0)
-					count = 256;
-				b = content[--contentOffset];
-			}
-			if (unpackedOffset < count)
-				return false;
-			do
-				unpacked[--unpackedOffset] = b;
-			while (--count > 0);
-		}
-		if (unpackedOffset != 0)
+		if (contentLength < 19)
 			return false;
-		DecodeC64MulticolorFli(unpacked, 0x2400, 0x400, 0, -1);
-		return true;
+		byte[17216] unpacked;
+		UifStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = contentLength;
+		rle.Escape = content[2];
+		return rle.UnpackBackwards(unpacked, 0, 17215)
+			&& DecodeC64MulticolorFli(unpacked, 0x2400, 0x400, 0, -1);
 	}
 
 	bool DecodeFfli!(byte[] content, int contentLength)
