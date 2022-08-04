@@ -9679,6 +9679,66 @@ public class RECOIL
 		}
 	}
 
+	bool DecodeC64Hires!(byte[] content, int bitmapOffset, int videoMatrixOffset)
+	{
+		SetSize(320, 200, RECOILResolution.C641x1);
+		DecodeC64HiresFrame(content, bitmapOffset, videoMatrixOffset, 0);
+		return true;
+	}
+
+	bool DecodeRpo!(byte[] content, int contentLength) => contentLength == 8002 && DecodeC64Hires(content, 2, -0x01);
+
+	bool DecodeC64Hir!(byte[] content, int contentLength)
+	{
+		switch (contentLength) {
+		case 8002: // FGS, HBM, HIR, HPI
+		case 8194: // GCD, MON
+			return DecodeC64Hires(content, 2, -0x10);
+		default:
+			return false;
+		}
+	}
+
+	bool DecodeIph!(byte[] content, int contentLength)
+	{
+		switch (contentLength) {
+		case 9002: // IPH, GIG, HPI
+		case 9003: // HPC
+		case 9009: // AAS, ART
+			return DecodeC64Hires(content, 2, 0x1f42);
+		default:
+			return false;
+		}
+	}
+
+	bool DecodeHed!(byte[] content) => DecodeC64Hires(content, 2, 0x02002);
+
+	bool DecodeDd!(byte[] content, int contentLength)
+	{
+		switch (contentLength) {
+		case 9026: // Run paint
+		case 9217: // Hires-Editor
+		case 9218:
+		case 9346:
+			return DecodeC64Hires(content, 0x402, 2);
+		default:
+			return false;
+		}
+	}
+
+	bool DecodeJj!(byte[] content, int contentLength)
+	{
+		if (contentLength < 2)
+			return false;
+		byte[9026] unpacked;
+		C64KoalaStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = 2;
+		rle.ContentLength = contentLength;
+		return rle.UnpackC64(unpacked, 9026)
+			&& DecodeDd(unpacked, 9026);
+	}
+
 	int GetC64Multicolor(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int background, bool bottomBfli, int x, int y)
 	{
 		x += LeftSkip;
@@ -9719,85 +9779,9 @@ public class RECOIL
 		return true;
 	}
 
-	bool DecodeOcp!(byte[] content, int contentLength)
-		=> contentLength == 10018 && DecodeC64Multicolor(content, 2, 0x1f42, 0x233a, 0x232b);
+	bool DecodeOcp!(byte[] content, int contentLength) => contentLength == 10018 && DecodeC64Multicolor(content, 2, 0x1f42, 0x233a, 0x232b);
 
-	bool DecodeBpl!(byte[] content, int contentLength)
-		=> contentLength == 10242 && DecodeC64Multicolor(content, 2, 0x2002, 0x2402, 0x1f82);
-
-	bool DecodeRpo!(byte[] content, int contentLength)
-	{
-		if (contentLength != 8002)
-			return false;
-		SetSize(320, 200, RECOILResolution.C641x1);
-		DecodeC64HiresFrame(content, 2, -0x01, 0);
-		return true;
-	}
-
-	bool DecodeC64Hir!(byte[] content, int contentLength)
-	{
-		switch (contentLength) {
-		case 8002: // FGS, HBM, HIR, HPI
-		case 8194: // GCD, MON
-			break;
-		default:
-			return false;
-		}
-		SetSize(320, 200, RECOILResolution.C641x1);
-		DecodeC64HiresFrame(content, 2, -0x10, 0);
-		return true;
-	}
-
-	bool DecodeIph!(byte[] content, int contentLength)
-	{
-		switch (contentLength) {
-		case 9002: // IPH, GIG, HPI
-		case 9003: // HPC
-		case 9009: // AAS, ART
-			break;
-		default:
-			return false;
-		}
-		SetSize(320, 200, RECOILResolution.C641x1);
-		DecodeC64HiresFrame(content, 2, 0x1f42, 0);
-		return true;
-	}
-
-	bool DecodeHed!(byte[] content)
-	{
-		SetSize(320, 200, RECOILResolution.C641x1);
-		DecodeC64HiresFrame(content, 2, 0x2002, 0);
-		return true;
-	}
-
-	bool DecodeDd!(byte[] content, int contentLength)
-	{
-		switch (contentLength) {
-		case 9026: // Run paint
-		case 9217: // Hires-Editor
-		case 9218:
-		case 9346:
-			break;
-		default:
-			return false;
-		}
-		SetSize(320, 200, RECOILResolution.C641x1);
-		DecodeC64HiresFrame(content, 0x402, 2, 0);
-		return true;
-	}
-
-	bool DecodeJj!(byte[] content, int contentLength)
-	{
-		if (contentLength < 2)
-			return false;
-		byte[9026] unpacked;
-		C64KoalaStream() rle;
-		rle.Content = content;
-		rle.ContentOffset = 2;
-		rle.ContentLength = contentLength;
-		return rle.UnpackC64(unpacked, 9026)
-			&& DecodeDd(unpacked, 9026);
-	}
+	bool DecodeBpl!(byte[] content, int contentLength) => contentLength == 10242 && DecodeC64Multicolor(content, 2, 0x2002, 0x2402, 0x1f82);
 
 	void DecodeC64MulticolorFliFrame!(byte[] content, int bitmapOffset, int videoMatrixOffset, int colorOffset, int background, bool bottomBfli, int pixelsOffset)
 	{
