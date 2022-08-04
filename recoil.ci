@@ -9883,6 +9883,50 @@ public class RECOIL
 			&& DecodeKoa(unpacked, 10001);
 	}
 
+	bool DecodeMwi!(byte[] content, int contentLength)
+	{
+		if (contentLength < 7)
+			return false;
+		int width = content[3] << 1;
+		int height = content[4];
+		if (!SetSize(width, height, RECOILResolution.C642x1))
+			return false;
+		int charactersPerRow = width + 7 >> 3;
+		int left = (content[1] & 3) << 1;
+		if (left != 0)
+			charactersPerRow++;
+		int rows = height + 7 >> 3;
+		int top = content[2] & 7;
+		if (top != 0)
+			rows++;
+		if (contentLength != 5 + rows * charactersPerRow * 10)
+			return false;
+		for (int y = 0; y < height; y++) {
+			int screenY = top + y;
+			for (int x = 0; x < width; x++) {
+				int screenX = left + x;
+				int offset = 5 + ((screenY >> 3) * charactersPerRow + (screenX >> 3)) * 10;
+				int c;
+				switch (content[offset + 2 + (screenY & 7)] >> (~screenX & 6) & 3) {
+				case 1:
+					c = content[offset] >> 4;
+					break;
+				case 2:
+					c = content[offset];
+					break;
+				case 3:
+					c = content[offset + 1];
+					break;
+				default:
+					c = 0;
+					break;
+				}
+				Pixels[y * width + x] = C64Palette[c & 15];
+			}
+		}
+		return true;
+	}
+
 	bool DecodeC64HiresInterlace!(byte[] content, int bitmap1Offset, int videoMatrix1Offset, int bitmap2Offset, int videoMatrix2Offset)
 	{
 		SetSize(320, 200, RECOILResolution.C641x1, 2);
@@ -19668,6 +19712,7 @@ public class RECOIL
 		case PackExt("MSL"):
 		case PackExt("MSP"):
 		case PackExt("MUR"):
+		case PackExt("MWI"):
 		case PackExt("MX1"):
 		case PackExt("NEO"):
 		case PackExt("NL3"):
@@ -20466,6 +20511,8 @@ public class RECOIL
 			return DecodeMsp(content, contentLength);
 		case PackExt("MUR"):
 			return DecodeMur(filename, content, contentLength);
+		case PackExt("MWI"):
+			return DecodeMwi(content, contentLength);
 		case PackExt("MX1"):
 			return DecodeMx1(content, contentLength);
 		case PackExt("NEO"):
