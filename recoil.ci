@@ -27,9 +27,9 @@
 // precedes the more complicated.
 // Each format is decoded by a method with a signature like:
 // bool DecodeXxx!(byte[] content, int contentLength)
-// where `Xxx` is the filename extension and `true` is returned
-// on successful decoding.  `content` is read-only.
-// In rare occassions there are extra parameters such as the filename.
+// where `Xxx` is the filename extension.  `content` is read-only.
+// `true` is returned on successful decoding.
+// Occasionally there are extra parameters such as the filename.
 // Decoding methods are grouped by the platform.
 // The order of platforms is such that simple code comes first.
 // New formats must be added in `IsOurFile`, `Decode` and `formats.xml`.
@@ -45,12 +45,12 @@
 // Minimize the scope of variables. Use `byte` only for arrays.
 // Braces on new line for enums, classes and methods, inline for code blocks.
 // Avoid unneeded parentheses.
-// Use tabs, but only for indentation (i.e. at line beginnings).
-// Align long `if` conditions like this:
+// Use tabs, but only for indentation (that is, at line beginnings).
+// Align long `if` conditions this way:
 // if (foo
 //  || bar
 //  || quux)
-// (this is the only exception to tab indentation).
+// This is the only exception to tab indentation.
 
 /// Platform and pixel ratio.
 enum RECOILResolution
@@ -11116,6 +11116,63 @@ public class RECOIL
 		return ApplyBlend();
 	}
 
+	bool DecodeXfl!(byte[] content, int contentLength)
+	{
+		byte[16192] unpacked;
+		UifStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = contentLength;
+		rle.Escape = content[2];
+		if (!rle.UnpackBackwards(unpacked, 0, 16191))
+			return false;
+		byte[16] spriteColors;
+		unpacked.CopyTo(0x1fee, spriteColors, 1, 10);
+		SetSize(192, 167, RECOILResolution.C641x1);
+		for (int y = 0; y < 167; y++) {
+			if (y >= 3 && (y & 1) != 0) {
+				int offset = y - 3 >> 1;
+				offset = (offset / 28 << 10) + offset % 28;
+				spriteColors[unpacked[0x3dc + offset] & 0xf] = unpacked[0x3c0 + offset];
+			}
+			for (int x = 0; x < 192; x++) {
+				int column = x >> 3;
+				int offset = (1 + y & ~7) * 5 + 16 + column;
+				int c;
+				if ((unpacked[0x2000 + (offset << 3) + (1 + y & 7)] >> (~x & 7) & 1) != 0)
+					c = unpacked[((y - 1 & 7) << 10) + offset] >> 4;
+				else {
+					int spriteInLine = column / 3;
+					const byte[64] sprites = {
+						0xe4, 0xe5, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee,
+						0xef, 0xf0, 0xf1, 0xf2, 0xf3, 0xf6, 0xf7, 0xf8,
+						0x0e, 0x1e, 0x2e, 0x3e, 0x4e, 0x5e, 0x6e, 0x7e,
+						0x80, 0x81, 0x85, 0x86, 0x8a, 0x8b, 0x8f, 0x90,
+						0x94, 0x95, 0x99, 0x9a, 0x9e, 0x9f, 0xa3, 0xa4,
+						0xa8, 0xa9, 0xad, 0xae, 0xb2, 0xb3, 0xb7, 0xb8,
+						0xbc, 0xbd, 0xc1, 0xc2, 0xc6, 0xc7, 0xcb, 0xcc,
+						0xd0, 0xd1, 0xd5, 0xd6, 0xda, 0xdb, 0xdf, 0xe0
+					};
+					switch (unpacked[(sprites[((y & 7) << 3) + spriteInLine] << 6) + (y >> 1) % 21 * 3 + column % 3] >> (~x & 6) & 3) {
+					case 1:
+						c = spriteColors[1];
+						break;
+					case 2:
+						c = spriteColors[3 + spriteInLine];
+						break;
+					case 3:
+						c = spriteColors[2];
+						break;
+					default:
+						c = unpacked[((y - 1 & 7) << 10) + offset];
+						break;
+					}
+				}
+				Pixels[y * 192 + x] = C64Palette[c & 15];
+			}
+		}
+		return true;
+	}
+
 	// Atari ST formats.
 
 	bool DecodeDoo!(byte[] content, int contentLength)
@@ -19882,6 +19939,7 @@ public class RECOIL
 		case PackExt("VZI"):
 		case PackExt("WIN"):
 		case PackExt("WND"):
+		case PackExt("XFL"):
 		case PackExt("XGA"):
 		case PackExt("XLP"):
 		case PackExt("ZIM"):
@@ -20847,6 +20905,8 @@ public class RECOIL
 			return DecodeWin(filename, content, contentLength);
 		case PackExt("WND"):
 			return DecodeWnd(content, contentLength);
+		case PackExt("XFL"):
+			return DecodeXfl(content, contentLength);
 		case PackExt("XGA"):
 			return DecodeXga(content, contentLength);
 		case PackExt("XLP"):

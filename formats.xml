@@ -655,6 +655,7 @@
 		<format name="Vertical Hires Interlace Editor" width="320" height="200" frames="2"><ext>VHI</ext></format>
 		<format maxWidth="320" height="200" colors="16"><ext>VIC</ext></format>
 		<format name="Vidcom 64Paint" width="160" height="200" colors="16"><ext>VID</ext></format>
+		<format name="X-FLI Editor" width="192" height="168" colors="16"><ext>XFL</ext></format>
 		<format name="Zoomatic" width="160" height="200" colors="16"><ext>ZOM</ext></format>
 	</platform>
 	<platform name="Commodore 16/116/Plus4" href="https://en.wikipedia.org/wiki/Commodore_16">
