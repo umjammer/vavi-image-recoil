@@ -11223,6 +11223,19 @@ public class RECOIL
 		return true;
 	}
 
+	bool DecodeMup!(byte[] content, int contentLength)
+	{
+		if (contentLength < 6)
+			return false;
+		byte[21762] unpacked;
+		UifStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = contentLength;
+		rle.Escape = content[2];
+		return rle.UnpackBackwards(unpacked, 2, 21761)
+			&& DecodeMuf(unpacked, 21826);
+	}
+
 	// Atari ST formats.
 
 	bool DecodeDoo!(byte[] content, int contentLength)
@@ -19819,6 +19832,7 @@ public class RECOIL
 		case PackExt("MSL"):
 		case PackExt("MSP"):
 		case PackExt("MUF"):
+		case PackExt("MUP"):
 		case PackExt("MUR"):
 		case PackExt("MWI"):
 		case PackExt("MX1"):
@@ -20620,6 +20634,8 @@ public class RECOIL
 			return DecodeMsp(content, contentLength);
 		case PackExt("MUF"):
 			return DecodeMuf(content, contentLength);
+		case PackExt("MUP"):
+			return DecodeMup(content, contentLength);
 		case PackExt("MUR"):
 			return DecodeMur(filename, content, contentLength);
 		case PackExt("MWI"):
