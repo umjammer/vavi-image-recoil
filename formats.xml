@@ -496,13 +496,13 @@
 			<ext>AAS</ext>
 			<ext>ART</ext>
 		</format>
-		<format name="AFLI-editor v2.0 by Topaz Beerlin" width="296" height="200" colors="16"><ext>AFL</ext></format>
+		<format name="AFLI-editor" width="296" height="200" colors="16"><ext>AFL</ext></format>
 		<format name="Amica Paint" width="160" height="200" colors="16"><ext>AMI</ext></format>
 		<format name="Big FLI" width="148" height="400" colors="16">
 			<ext>BFL</ext>
 			<ext>BFLI</ext>
 		</format>
-		<format name="FLI Graph 2.2 by Blackmail" width="148" height="200" colors="16">
+		<format name="FLI Graph" width="148" height="200" colors="16">
 			<ext>BML</ext>
 			<ext>FLI</ext>
 			<ext>FLG</ext>
@@ -573,13 +573,13 @@
 		<format name="HCB-editor" width="148" height="200" colors="16"><ext>HCB</ext></format>
 		<format name="Hi-Eddi" width="320" height="200" colors="16"><ext>HED</ext></format>
 		<format name="Hires-Editor" width="320" height="200" colors="16"><ext>HET</ext></format>
-		<format name="Hires FLI by Crest" width="296" height="112" colors="16">
+		<format name="Hires FLI" width="296" height="112" colors="16">
 			<ext>HFC</ext>
 			<ext name="Hires FLI Designer">HFD</ext>
 		</format>
-		<format name="Hires Manager by Cosmos" width="296" height="192" colors="16"><ext>HIM</ext></format>
+		<format name="Hires Manager" width="296" height="192" colors="16"><ext>HIM</ext></format>
 		<format name="Hireslace Editor" width="320" height="200" frames="2"><ext>HLE</ext></format>
-		<format name="Hires Interlace by Feniks" width="320" height="200" frames="2">
+		<format name="Hires Interlace" width="320" height="200" frames="2">
 			<ext>HLF</ext>
 			<ext>HIE</ext>
 		</format>
