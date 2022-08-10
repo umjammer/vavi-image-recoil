@@ -609,6 +609,7 @@
 		<format name="True Paint" width="320" height="200" frames="2"><ext>MCI</ext></format>
 		<format name="Micro Illustrator" width="160" height="200" colors="16"><ext>MIL</ext></format>
 		<format name="Multi-Lace Editor" width="320" height="56" colors="10" frames="2"><ext>MLE</ext></format>
+		<format name="MUFLI Editor" width="320" height="200" colors="16"><ext>MUF</ext></format>
 		<format name="Art Studio window" maxWidth="160" maxHeight="200" colors="16"><ext>MWI</ext></format>
 		<format name="Advanced Art Studio" width="160" height="200" colors="16">
 			<ext>OCP</ext>
@@ -655,7 +656,7 @@
 		<format name="Vertical Hires Interlace Editor" width="320" height="200" frames="2"><ext>VHI</ext></format>
 		<format maxWidth="320" height="200" colors="16"><ext>VIC</ext></format>
 		<format name="Vidcom 64Paint" width="160" height="200" colors="16"><ext>VID</ext></format>
-		<format name="X-FLI Editor" width="192" height="168" colors="16"><ext>XFL</ext></format>
+		<format name="X-FLI Editor" width="192" height="167" colors="16"><ext>XFL</ext></format>
 		<format name="Zoomatic" width="160" height="200" colors="16"><ext>ZOM</ext></format>
 	</platform>
 	<platform name="Commodore 16/116/Plus4" href="https://en.wikipedia.org/wiki/Commodore_16">
