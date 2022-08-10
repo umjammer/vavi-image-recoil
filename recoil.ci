@@ -11173,32 +11173,28 @@ public class RECOIL
 		return true;
 	}
 
-	bool DecodeMuf!(byte[] content, int contentLength)
+	void DecodeMufFrame!(byte[] content, int pixelsOffset)
 	{
-		if (contentLength != 21826)
-			return false;
-		SetSize(320, 200, RECOILResolution.C641x1);
 		for (int y = 0; y < 200; y++) {
 			int videoMatrixOffset;
 			if (y < 128)
 				videoMatrixOffset = 0x1f02 + (((~y >> 1) & 7) << 10);
 			else
 				videoMatrixOffset = (((y >> 1) + (y >= 168 ? 1 : 0) & 3) << 10) - (0x100 - 2);
-			for (int x = 0; x < 320; x++) {
+			for (int x = 0; x < FliWidth; x++) {
 				int column = x >> 3;
-				int offset = (y & ~7) * 5 + column;
-				int bitmapOffset = 0x3f02 - ((y & 128) << 7) + (offset << 3) + (y & 7);
+				int offset = (y & ~7) * 5 + FliBugCharacters + column;
 				int c = content[videoMatrixOffset + offset];
-				if ((content[bitmapOffset] >> (~x & 7) & 1) != 0)
+				if ((content[0x3f02 - ((y & 128) << 7) + (offset << 3) + (y & 7)] >> (~x & 7) & 1) != 0)
 					c >>= 4;
-				else if (column >= 3 && column < 39) {
-					int spriteInLine = (column - 3) / 6;
+				else if (column < 36) {
+					int spriteInLine = column / 6;
 					offset = 124 - ((y & 128) << 1) + content[videoMatrixOffset + 0x3f9 + spriteInLine];
 					if (offset >= 0) {
-						int b = content[2 + (offset << 6) + ((y + 47 >> 1) * 3 + (column - 3 >> 1) % 3 + (y < 123 ? 0 : y < 165 ? 1 : 2) & 63)];
+						int b = content[2 + (offset << 6) + ((y + 47 >> 1) * 3 + (column >> 1) % 3 + (y < 123 ? 0 : y < 165 ? 1 : 2) & 63)];
 						offset = y + 1 >> 1;
 						if ((content[0x1202 + offset] >> spriteInLine & 2) != 0) {
-							switch (b >> ((x >> 1 ^ 3) & 6) & 3) {
+							switch (b >> (~x >> 1 & 6) & 3) {
 							case 1:
 								c = content[0x1ef3];
 								break;
@@ -11212,14 +11208,22 @@ public class RECOIL
 								break;
 							}
 						}
-						else if ((b >> ((x >> 1 ^ 3) & 7) & 1) != 0) {
+						else if ((b >> (~x >> 1 & 7) & 1) != 0) {
 							c = content[0x302 + ((spriteInLine & 6) << 9) + ((spriteInLine & 1) << 7) + offset];
 						}
 					}
 				}
-				Pixels[y * 320 + x] = C64Palette[c & 15];
+				Pixels[pixelsOffset + y * FliWidth + x] = C64Palette[c & 15];
 			}
 		}
+	}
+
+	bool DecodeMuf!(byte[] content, int contentLength)
+	{
+		if (contentLength != 21826)
+			return false;
+		SetSize(FliWidth, 200, RECOILResolution.C641x1);
+		DecodeMufFrame(content, 0);
 		return true;
 	}
 
@@ -11234,6 +11238,19 @@ public class RECOIL
 		rle.Escape = content[2];
 		return rle.UnpackBackwards(unpacked, 2, 21761)
 			&& DecodeMuf(unpacked, 21826);
+	}
+
+	bool DecodeMui!(byte[] content, int contentLength)
+	{
+		if (contentLength != 44034)
+			return false;
+		SetSize(FliWidth, 200, RECOILResolution.C641x1, 2);
+		DecodeMufFrame(content, 0);
+		byte[21762] second;
+		content.CopyTo(0x8002, second, 2, 0x2c00);
+		content.CopyTo(0x5602, second, 0x2c02, 0x2900);
+		DecodeMufFrame(second, FliWidth * 200);
+		return ApplyBlend();
 	}
 
 	// Atari ST formats.
@@ -19832,6 +19849,7 @@ public class RECOIL
 		case PackExt("MSL"):
 		case PackExt("MSP"):
 		case PackExt("MUF"):
+		case PackExt("MUI"):
 		case PackExt("MUP"):
 		case PackExt("MUR"):
 		case PackExt("MWI"):
@@ -20634,6 +20652,8 @@ public class RECOIL
 			return DecodeMsp(content, contentLength);
 		case PackExt("MUF"):
 			return DecodeMuf(content, contentLength);
+		case PackExt("MUI"):
+			return DecodeMui(content, contentLength);
 		case PackExt("MUP"):
 			return DecodeMup(content, contentLength);
 		case PackExt("MUR"):

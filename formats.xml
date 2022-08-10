@@ -609,8 +609,9 @@
 		<format name="True Paint" width="320" height="200" frames="2"><ext>MCI</ext></format>
 		<format name="Micro Illustrator" width="160" height="200" colors="16"><ext>MIL</ext></format>
 		<format name="Multi-Lace Editor" width="320" height="56" colors="10" frames="2"><ext>MLE</ext></format>
-		<format name="MUFLI Editor" width="320" height="200" colors="16"><ext>MUF</ext></format>
-		<format name="MUFLI Editor (compressed)" width="320" height="200" colors="16"><ext>MUP</ext></format>
+		<format name="MUFLI Editor" width="296" height="200" colors="16"><ext>MUF</ext></format>
+		<format name="MUIFLI Editor" width="296" height="200" frames="2"><ext>MUI</ext></format>
+		<format name="MUFLI Editor (compressed)" width="296" height="200" colors="16"><ext>MUP</ext></format>
 		<format name="Art Studio window" maxWidth="160" maxHeight="200" colors="16"><ext>MWI</ext></format>
 		<format name="Advanced Art Studio" width="160" height="200" colors="16">
 			<ext>OCP</ext>
