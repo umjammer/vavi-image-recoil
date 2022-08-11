@@ -512,7 +512,7 @@
 		<format name="CFLI Designer" width="296" height="200" colors="16"><ext>CFLI</ext></format>
 		<format name="Cheese" width="160" height="200" colors="16"><ext>CHE</ext></format>
 		<format name="Centauri Logo-Editor" width="160" height="200" colors="4"><ext>CLE</ext></format>
-		<format name="GoDot Clip" maxWidth="320" maxHeight="200" colors="16"><ext>CLP</ext></format>
+		<format name="GoDot clip" maxWidth="320" maxHeight="200" colors="16"><ext>CLP</ext></format>
 		<format name="CharPad" colors="16"><ext>CTM</ext></format>
 		<format name="Create with Garfield" width="160" height="200" colors="16"><ext>CWG</ext></format>
 		<format name="Doodle" width="320" height="200" colors="16">
@@ -521,7 +521,7 @@
 		</format>
 		<format name="Dolphin Ed" width="160" height="200" colors="16">
 			<ext>DOL</ext>
-			<ext>BED</ext>
+			<ext name="Bitmap Editor">BED</ext>
 		</format>
 		<format name="Drazlace" maxWidth="320" height="200" frames="2">
 			<ext>DRL</ext>
@@ -574,9 +574,9 @@
 		<format name="HCB-editor" width="148" height="200" colors="16"><ext>HCB</ext></format>
 		<format name="Hi-Eddi" width="320" height="200" colors="16"><ext>HED</ext></format>
 		<format name="Hires-Editor" width="320" height="200" colors="16"><ext>HET</ext></format>
-		<format name="Hires FLI" width="296" height="112" colors="16">
+		<format name="Hires FLI Designer" width="296" height="112" colors="16">
 			<ext>HFC</ext>
-			<ext name="Hires FLI Designer">HFD</ext>
+			<ext>HFD</ext>
 		</format>
 		<format name="Hires Manager" width="296" height="192" colors="16"><ext>HIM</ext></format>
 		<format name="Hireslace Editor" width="320" height="200" frames="2"><ext>HLE</ext></format>
@@ -660,7 +660,7 @@
 		<format name="UIFLI-editor" width="288" height="200" frames="2"><ext>UIF</ext></format>
 		<format name="Vertical Hires Interlace Editor" width="320" height="200" frames="2"><ext>VHI</ext></format>
 		<format maxWidth="320" height="200" colors="16"><ext>VIC</ext></format>
-		<format name="Vidcom 64Paint" width="160" height="200" colors="16"><ext>VID</ext></format>
+		<format name="Vidcom 64" width="160" height="200" colors="16"><ext>VID</ext></format>
 		<format name="X-FLI Editor" width="192" height="167" colors="16"><ext>XFL</ext></format>
 		<format name="Zoomatic" width="160" height="200" colors="16"><ext>ZOM</ext></format>
 	</platform>
