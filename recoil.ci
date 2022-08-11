@@ -11406,6 +11406,19 @@ public class RECOIL
 		return true;
 	}
 
+	bool DecodeNup!(byte[] content, int contentLength)
+	{
+		if (contentLength < 7 || content[2] != 0xfd)
+			return false;
+		byte[23042] unpacked;
+		UifStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = contentLength;
+		rle.Escape = content[3];
+		return rle.UnpackBackwards(unpacked, 2, 23041)
+			&& DecodeNuf(unpacked, 23042);
+	}
+
 	// Atari ST formats.
 
 	bool DecodeDoo!(byte[] content, int contentLength)
@@ -20012,6 +20025,7 @@ public class RECOIL
 		case PackExt("NL3"):
 		case PackExt("NLQ"):
 		case PackExt("NUF"):
+		case PackExt("NUP"):
 		case PackExt("NXI"):
 		case PackExt("OBJ"):
 		case PackExt("OCP"):
@@ -20828,6 +20842,8 @@ public class RECOIL
 			return DecodeNlq(content, contentLength);
 		case PackExt("NUF"):
 			return DecodeNuf(content, contentLength);
+		case PackExt("NUP"):
+			return DecodeNup(content, contentLength);
 		case PackExt("NXI"):
 			return DecodeNxi(content, contentLength);
 		case PackExt("OBJ"):

@@ -615,6 +615,7 @@
 		<format name="MUFLI Editor (compressed)" width="296" height="200" colors="16"><ext>MUP</ext></format>
 		<format name="Art Studio window" maxWidth="160" maxHeight="200" colors="16"><ext>MWI</ext></format>
 		<format name="NUFLI Editor" width="320" height="200" colors="16"><ext>NUF</ext></format>
+		<format name="NUFLI Editor (compressed)" width="320" height="200" colors="16"><ext>NUP</ext></format>
 		<format name="Advanced Art Studio" width="160" height="200" colors="16">
 			<ext>OCP</ext>
 			<ext>MPI</ext>
