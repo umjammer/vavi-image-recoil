@@ -11247,14 +11247,20 @@ public class RECOIL
 		return true;
 	}
 
+	static int GetNufVideoMatrixOffset(int y)
+	{
+		if (y < 128)
+			return 0x2002 + ((~y >> 1 & 7) << 10);
+		else
+			return 2 + (((y >> 1) + (y >= 168 ? 1 : 0) & 3) << 10);
+	}
+
+	static int GetMufTableOffset(int spriteInLine) => ((spriteInLine & 6) << 9) + ((spriteInLine & 1) << 7);
+
 	bool DecodeMufFrame!(byte[] content, int pixelsOffset)
 	{
 		for (int y = 0; y < 200; y++) {
-			int videoMatrixOffset;
-			if (y < 128)
-				videoMatrixOffset = 0x1f02 + ((~y >> 1 & 7) << 10);
-			else
-				videoMatrixOffset = (((y >> 1) + (y >= 168 ? 1 : 0) & 3) << 10) - (0x100 - 2);
+			int videoMatrixOffset = GetNufVideoMatrixOffset(y) - 0x100;
 			for (int x = 0; x < FliWidth; x++) {
 				int column = x >> 3;
 				int offset = (y & ~7) * 5 + FliBugCharacters + column;
@@ -11274,7 +11280,7 @@ public class RECOIL
 							c = content[0x1ef3];
 							break;
 						case 2:
-							c = content[0x302 + ((spriteInLine & 6) << 9) + ((spriteInLine & 1) << 7) + offset];
+							c = content[0x302 + GetMufTableOffset(spriteInLine) + offset];
 							break;
 						case 3:
 							c = content[0x1ef2];
@@ -11284,7 +11290,7 @@ public class RECOIL
 						}
 					}
 					else if ((b >> (~x >> 1 & 7) & 1) != 0)
-						c = content[0x302 + ((spriteInLine & 6) << 9) + ((spriteInLine & 1) << 7) + offset];
+						c = content[0x302 + GetMufTableOffset(spriteInLine) + offset];
 				}
 				Pixels[pixelsOffset + y * FliWidth + x] = C64Palette[c & 15];
 			}
@@ -11325,6 +11331,79 @@ public class RECOIL
 		content.CopyTo(0x5602, second, 0x2c02, 0x2900);
 		return DecodeMufFrame(second, FliWidth * 200)
 			&& ApplyBlend();
+	}
+
+	bool DecodeNuf!(byte[] content, int contentLength)
+	{
+		if (contentLength != 23042)
+			return false;
+		SetSize(320, 200, RECOILResolution.C641x1);
+		byte[10] spriteColors;
+		spriteColors[0] = content[0x1ff9];
+		for (int i = 0; i < 6; i++)
+			spriteColors[1 + i] = content[0x402 + GetMufTableOffset(i)];
+		spriteColors[7] = content[0x1ff3];
+		spriteColors[8] = content[0x1ff8];
+		spriteColors[9] = content[0x1ff2];
+		for (int y = 0; y < 200; y++) {
+			if (y > 0) {
+				for (int i = 0; i < 6; i++) {
+					int b = content[0x402 + GetMufTableOffset(i) + (y + 1 >> 1)];
+					switch (b >> 4) {
+					case 0:
+						if ((y & 1) != 0)
+							spriteColors[1 + i] = b;
+						break;
+					case 5:
+						if ((y & 1) == (i == 0 ? 1 : 0))
+							spriteColors[7] = b;
+						break;
+					case 6:
+						if ((y & 1) == (i == 0 ? 1 : 0))
+							spriteColors[9] = b;
+						break;
+					case 7:
+						if ((y & 1) == (i == 0 ? 1 : 0))
+							spriteColors[0] = b;
+						break;
+					case 14:
+						if ((y & 1) == (i == 0 ? 1 : 0))
+							spriteColors[8] = b;
+						break;
+					default:
+						break;
+					}
+				}
+			}
+			int videoMatrixOffset = GetNufVideoMatrixOffset(y);
+			for (int x = 0; x < 320; x++) {
+				int column = x >> 3;
+				int offset = (y & ~7) * 5 + column;
+				int c = column >= 3 || (y & 6) == 0 ? content[videoMatrixOffset + offset] : 0xff;
+				if ((content[(y < 128 ? 0x4002 : 2) + (offset << 3) + (y & 7)] >> (~x & 7) & 1) != 0)
+					c >>= 4;
+				else if (column < 39) {
+					int spriteInLine = (3 + column) / 6;
+					offset = 128 - ((y & 128) << 1) + content[videoMatrixOffset + 0x3f8 + spriteInLine];
+					if (offset < 0 || offset >= 360)
+						return false;
+					int spriteX = column < 3 ? x : (x - 24 >> 1) % 24;
+					int b = content[2 + (offset << 6) + ((y + 47 >> 1) * 3 + (spriteX >> 3) + (y < 123 ? 0 : y < 165 ? 1 : 2) & 63)];
+					if ((b >> (~spriteX & 7) & 1) != 0)
+						c = spriteColors[spriteInLine];
+					else if (column < 3) {
+						offset = 128 - ((y & 128) << 1) + content[videoMatrixOffset + 0x3ff];
+						if (offset < 0 || offset >= 360)
+							return false;
+						b = content[2 + (offset << 6) + ((y + 47 >> 1) * 3 + column + (y < 123 ? 0 : y < 165 ? 1 : 2) & 63)] >> (~x & 6) & 3;
+						if (b != 0)
+							c = spriteColors[6 + b];
+					}
+				}
+				Pixels[y * 320 + x] = C64Palette[c & 15];
+			}
+		}
+		return true;
 	}
 
 	// Atari ST formats.
@@ -19932,6 +20011,7 @@ public class RECOIL
 		case PackExt("NEO"):
 		case PackExt("NL3"):
 		case PackExt("NLQ"):
+		case PackExt("NUF"):
 		case PackExt("NXI"):
 		case PackExt("OBJ"):
 		case PackExt("OCP"):
@@ -20746,6 +20826,8 @@ public class RECOIL
 			return DecodeNl3(content, contentLength);
 		case PackExt("NLQ"):
 			return DecodeNlq(content, contentLength);
+		case PackExt("NUF"):
+			return DecodeNuf(content, contentLength);
 		case PackExt("NXI"):
 			return DecodeNxi(content, contentLength);
 		case PackExt("OBJ"):
