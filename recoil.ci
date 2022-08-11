@@ -20020,6 +20020,7 @@ public class RECOIL
 		case PackExt("MUP"):
 		case PackExt("MUR"):
 		case PackExt("MWI"):
+		case PackExt("MWIN"):
 		case PackExt("MX1"):
 		case PackExt("NEO"):
 		case PackExt("NL3"):
@@ -20830,6 +20831,7 @@ public class RECOIL
 		case PackExt("MUR"):
 			return DecodeMur(filename, content, contentLength);
 		case PackExt("MWI"):
+		case PackExt("MWIN"):
 			return DecodeMwi(content, contentLength);
 		case PackExt("MX1"):
 			return DecodeMx1(content, contentLength);
