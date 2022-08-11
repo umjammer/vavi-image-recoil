@@ -1501,6 +1501,51 @@ class PacStream : RleStream
 	}
 }
 
+class Bdp4Stream : RleStream
+{
+	protected override bool ReadCommand!()
+	{
+		switch (ReadByte()) {
+		case 0xff:
+			RepeatCount = ReadByte();
+			if (RepeatCount == 0)
+				RepeatCount = 256;
+			RepeatValue = ReadByte();
+			return RepeatValue >= 0;
+		case 0xfe:
+			int lo = ReadByte();
+			int hi = ReadByte();
+			if (hi < 0)
+				return false;
+			RepeatCount = lo | hi << 8;
+			RepeatValue = -1;
+			return true;
+		default:
+			return false;
+		}
+	}
+}
+
+class Bdp5Stream : RleStream
+{
+	protected override bool ReadCommand!()
+	{
+		int b = ReadByte();
+		if (b == Content[10] || b == Content[11]) {
+			RepeatCount = ReadByte();
+			if (b == Content[11])
+				RepeatCount |= ReadByte() << 8;
+			else if (RepeatCount == 0)
+				RepeatCount = 256;
+			b = ReadByte();
+		}
+		else
+			RepeatCount = 1;
+		RepeatValue = b;
+		return b >= 0;
+	}
+}
+
 class XlpStream : RleStream
 {
 	protected override bool ReadCommand!()
@@ -9862,11 +9907,10 @@ public class RECOIL
 		case 10241: // BED, VIC
 		case 10242: // DOL
 		case 10050: // VID
-			break;
+			return DecodeC64Multicolor(content, 0x802, 0x402, 2, 0x7ea);
 		default:
 			return false;
 		}
-		return DecodeC64Multicolor(content, 0x802, 0x402, 2, 0x7ea);
 	}
 
 	bool DecodeAmi!(byte[] content, int contentLength)
@@ -9881,6 +9925,38 @@ public class RECOIL
 		rle.Escape = 0xc2;
 		return rle.Unpack(unpacked, 0, 1, 10001)
 			&& DecodeKoa(unpacked, 10001);
+	}
+
+	bool DecodeBdp!(byte[] content, int contentLength)
+	{
+		if (contentLength < 13)
+			return false;
+		byte[10001] unpacked;
+		bool ok;
+		if (content[2] == 2 && content[3] == 4 && content[4] == 0x10
+		 && content[5] == 0x36 && content[6] == 0x30 && content[7] == 0x30) {
+			UflStream() rle;
+			rle.Content = content;
+			rle.ContentOffset = 10;
+			rle.ContentLength = contentLength;
+			rle.Escape = content[8];
+			ok = rle.Unpack(unpacked, 0, 1, 10001);
+		}
+		else if (IsStringAt(content, 2, "BDP 5.00")) {
+			Bdp5Stream() rle;
+			rle.Content = content;
+			rle.ContentOffset = 12;
+			rle.ContentLength = contentLength;
+			ok = rle.Unpack(unpacked, 0, 1, 10001);
+		}
+		else {
+			Bdp4Stream() rle;
+			rle.Content = content;
+			rle.ContentOffset = 2;
+			rle.ContentLength = contentLength;
+			ok = rle.Unpack(unpacked, 0, 1, 10001);
+		}
+		return ok && DecodeKoa(unpacked, 10001);
 	}
 
 	bool DecodeMwi!(byte[] content, int contentLength)
@@ -11178,7 +11254,7 @@ public class RECOIL
 		for (int y = 0; y < 200; y++) {
 			int videoMatrixOffset;
 			if (y < 128)
-				videoMatrixOffset = 0x1f02 + (((~y >> 1) & 7) << 10);
+				videoMatrixOffset = 0x1f02 + ((~y >> 1 & 7) << 10);
 			else
 				videoMatrixOffset = (((y >> 1) + (y >= 168 ? 1 : 0) & 3) << 10) - (0x100 - 2);
 			for (int x = 0; x < FliWidth; x++) {
@@ -19575,6 +19651,7 @@ public class RECOIL
 		case PackExt("BB4"):
 		case PackExt("BB5"):
 		case PackExt("BBG"):
+		case PackExt("BDP"):
 		case PackExt("BFL"):
 		case PackExt("BFLI"):
 		case PackExt("BG9"):
@@ -20144,6 +20221,8 @@ public class RECOIL
 			return DecodeBb5(content, contentLength, BbcPalette2Bit);
 		case PackExt("BBG"):
 			return DecodeBbg(content, contentLength);
+		case PackExt("BDP"):
+			return DecodeBdp(content, contentLength);
 		case PackExt("BFL"):
 		case PackExt("BFLI"):
 			return DecodeBfli(content, contentLength);

@@ -498,6 +498,7 @@
 		</format>
 		<format name="AFLI-editor" width="296" height="200" colors="16"><ext>AFL</ext></format>
 		<format name="Amica Paint" width="160" height="200" colors="16"><ext>AMI</ext></format>
+		<format name="Boogie Down Paint" width="160" height="200" colors="16"><ext>BDP</ext></format>
 		<format name="Big FLI" width="148" height="400" colors="16">
 			<ext>BFL</ext>
 			<ext>BFLI</ext>
