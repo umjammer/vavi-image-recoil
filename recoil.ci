@@ -9888,17 +9888,22 @@ public class RECOIL
 			&& DecodeKoa(unpacked, 10001);
 	}
 
+	bool DecodeKoaPacked!(RleStream! rle)
+	{
+		byte[10001] unpacked;
+		return rle.Unpack(unpacked, 0, 1, 10001)
+			&& DecodeKoa(unpacked, 10001);
+	}
+
 	bool DecodeGg!(byte[] content, int contentLength)
 	{
 		if (contentLength < 2)
 			return false;
-		byte[10001] unpacked;
 		C64KoalaStream() rle;
 		rle.Content = content;
 		rle.ContentOffset = 2;
 		rle.ContentLength = contentLength;
-		return rle.Unpack(unpacked, 0, 1, 10001)
-			&& DecodeKoa(unpacked, 10001);
+		return DecodeKoaPacked(rle);
 	}
 
 	bool DecodeDol!(byte[] content, int contentLength)
@@ -9917,22 +9922,18 @@ public class RECOIL
 	{
 		if (contentLength < 2)
 			return false;
-		byte[10001] unpacked;
 		DrpStream() rle;
 		rle.Content = content;
 		rle.ContentOffset = 2;
 		rle.ContentLength = contentLength;
 		rle.Escape = 0xc2;
-		return rle.Unpack(unpacked, 0, 1, 10001)
-			&& DecodeKoa(unpacked, 10001);
+		return DecodeKoaPacked(rle);
 	}
 
 	bool DecodeBdp!(byte[] content, int contentLength)
 	{
 		if (contentLength < 13)
 			return false;
-		byte[10001] unpacked;
-		bool ok;
 		if (content[2] == 2 && content[3] == 4 && content[4] == 0x10
 		 && content[5] == 0x36 && content[6] == 0x30 && content[7] == 0x30) {
 			UflStream() rle;
@@ -9940,23 +9941,20 @@ public class RECOIL
 			rle.ContentOffset = 10;
 			rle.ContentLength = contentLength;
 			rle.Escape = content[8];
-			ok = rle.Unpack(unpacked, 0, 1, 10001);
+			return DecodeKoaPacked(rle);
 		}
-		else if (IsStringAt(content, 2, "BDP 5.00")) {
+		if (IsStringAt(content, 2, "BDP 5.00")) {
 			Bdp5Stream() rle;
 			rle.Content = content;
 			rle.ContentOffset = 12;
 			rle.ContentLength = contentLength;
-			ok = rle.Unpack(unpacked, 0, 1, 10001);
+			return DecodeKoaPacked(rle);
 		}
-		else {
-			Bdp4Stream() rle;
-			rle.Content = content;
-			rle.ContentOffset = 2;
-			rle.ContentLength = contentLength;
-			ok = rle.Unpack(unpacked, 0, 1, 10001);
-		}
-		return ok && DecodeKoa(unpacked, 10001);
+		Bdp4Stream() rle;
+		rle.Content = content;
+		rle.ContentOffset = 2;
+		rle.ContentLength = contentLength;
+		return DecodeKoaPacked(rle);
 	}
 
 	bool DecodeMwi!(byte[] content, int contentLength)
