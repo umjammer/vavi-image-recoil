@@ -1,4 +1,4 @@
-VERSION = 6.2.0
+VERSION = 6.3.0
 
 CFLAGS_MIN = -O2 -Wall
 CFLAGS = $(CFLAGS_MIN) -mmacosx-version-min=10.6 -arch x86_64 -arch arm64

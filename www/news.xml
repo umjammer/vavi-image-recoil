@@ -1,4 +1,24 @@
 ﻿<page title="News">
+	<release project="RECOIL" version="6.3.0" date="2022-08-26">
+		<ul title="New formats">
+			<li>Dozens of Commodore 64 formats, thanks Soci for sample files and reference implementation in <a href="http://view64.sourceforge.net">view64</a></li>
+			<li>Atari 8-bit: Graph2Font vertical scroll (VSC+G2F)</li>
+			<li>Elektronika BK: BKS</li>
+			<li>Elektronika MC 0515: SCR</li>
+			<li>Vector-06C: SPR</li>
+			<li>ZX Spectrum: big font (CHX), SevenuP (SEV), SpecSCII (ZXS)</li>
+		</ul>
+		<ul title="Improved formats">
+			<li>Commodore 64: 4BT, DD, ECI, GIG, HLF, HPI, ILE, KLA, MCI, MIL</li>
+			<li>Commodore 128: VBM</li>
+			<li>ZX Spectrum: ZX-Paintbrush (ZXP)</li>
+			<li>Alias extensions: BED, BFL, BPL, FFL, FLG, HIE, MPI, MPIC, MWIN</li>
+		</ul>
+		<ul title="Android">
+			<li>Save as PNG, Share as PNG</li>
+		</ul>
+	</release>
+
 	<release project="RECOIL" version="6.2.0" date="2022-07-12">
 		<ul title="New formats">
 			<li>Atari 8-bit: ASCII Maker (ASC), OD Font Editor (ODF), RastaConverter (MIC+PMG+RP+RP.INI), Visualizer (PIC)</li>
