@@ -9950,11 +9950,13 @@ public class RECOIL
 			rle.ContentLength = contentLength;
 			return DecodeKoaPacked(rle);
 		}
-		Bdp4Stream() rle;
-		rle.Content = content;
-		rle.ContentOffset = 2;
-		rle.ContentLength = contentLength;
-		return DecodeKoaPacked(rle);
+		else {
+			Bdp4Stream() rle;
+			rle.Content = content;
+			rle.ContentOffset = 2;
+			rle.ContentLength = contentLength;
+			return DecodeKoaPacked(rle);
+		}
 	}
 
 	bool DecodeMwi!(byte[] content, int contentLength)
