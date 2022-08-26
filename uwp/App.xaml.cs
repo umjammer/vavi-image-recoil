@@ -1,7 +1,7 @@
 ﻿/*
  * App.xaml.cs - Universal Windows application
  *
- * Copyright (C) 2014-2018  Piotr Fusik
+ * Copyright (C) 2014-2022  Piotr Fusik
  *
  * This file is part of RECOIL (Retro Computer Image Library),
  * see http://recoil.sourceforge.net
@@ -42,17 +42,13 @@ namespace RECOIL
 			Window.Current.Activate();
 		}
 
-		protected override void OnLaunched(LaunchActivatedEventArgs e)
-		{
-			Launch();
-		}
+		protected override void OnLaunched(LaunchActivatedEventArgs e) => Launch();
 
 		protected override async void OnFileActivated(FileActivatedEventArgs args)
 		{
 			base.OnFileActivated(args);
 			Launch();
-			MainPage page = Window.Current.Content as MainPage;
-			if (page != null)
+			if (Window.Current.Content is MainPage page)
 				await page.ShowFiles(args.Files.OfType<StorageFile>().ToList());
 		}
 	}
