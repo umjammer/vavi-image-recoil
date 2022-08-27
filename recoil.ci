@@ -9930,44 +9930,6 @@ public class RECOIL
 		return DecodeKoaPacked(rle);
 	}
 
-	static bool UnpackShpBitmapAndVideoMatrix(UflStream! rle, byte[]! unpacked)
-	{
-		if (!rle.Unpack(unpacked, 0, 1, 8000))
-			return false;
-		rle.Escape = 0;
-		return rle.Unpack(unpacked, 8000, 1, 9000);
-	}
-
-	bool DecodeC64Shp!(byte[] content, int contentLength)
-	{
-		if (contentLength < 8)
-			return false;
-		byte[10001] unpacked;
-		UflStream() rle;
-		rle.Content = content;
-		rle.ContentLength = contentLength;
-		rle.Escape = content[3];
-		switch (content[2]) {
-		case 0:
-			rle.ContentOffset = 5;
-			if (!UnpackShpBitmapAndVideoMatrix(rle, unpacked))
-				return false;
-			rle.Escape = 0xff;
-			if (!rle.Unpack(unpacked, 9000, 1, 10000)
-			 || rle.ContentOffset != contentLength)
-				return false;
-			unpacked[10000] = content[4];
-			return DecodeKoa(unpacked, 10001);
-		case 0x80:
-			rle.ContentOffset = 4;
-			return UnpackShpBitmapAndVideoMatrix(rle, unpacked)
-				&& rle.ContentOffset == contentLength
-				&& DecodeC64Hires(unpacked, 0, 8000);
-		default:
-			return false;
-		}
-	}
-
 	bool DecodeBdp!(byte[] content, int contentLength)
 	{
 		if (contentLength < 13)
@@ -10039,6 +10001,56 @@ public class RECOIL
 			}
 		}
 		return true;
+	}
+
+	bool DecodeC64Shp!(byte[] content, int contentLength)
+	{
+		if (contentLength < 8)
+			return false;
+		UflStream() rle;
+		switch (content[2]) {
+		case 0:
+			rle.Escape = content[3];
+			rle.ContentOffset = 5;
+			break;
+		case 0x80:
+			rle.Escape = content[3];
+			rle.ContentOffset = 4;
+			break;
+		case 0xe8:
+			if (content[3] != 0x19)
+				return false;
+			rle.Escape = content[5];
+			rle.ContentOffset = 6;
+			break;
+		default:
+			return false;
+		}
+		rle.Content = content;
+		rle.ContentLength = contentLength;
+		byte[10001] unpacked;
+		if (!rle.Unpack(unpacked, 0, 1, 8000))
+			return false;
+		rle.Escape = 0;
+		if (!rle.Unpack(unpacked, 8000, 1, 9000))
+			return false;
+		switch (content[2]) {
+		case 0:
+			rle.Escape = 0xff;
+			break;
+		case 0x80:
+			return rle.ContentOffset == contentLength
+				&& DecodeC64Hires(unpacked, 0, 8000);
+		case 0xe8:
+			if (rle.ReadByte() != 0xff)
+				return false;
+			rle.Escape = 0xd8;
+			break;
+		}
+		unpacked[10000] = content[4];
+		return rle.Unpack(unpacked, 9000, 1, 10000)
+			&& rle.ContentOffset == contentLength
+			&& DecodeKoa(unpacked, 10001);
 	}
 
 	bool DecodeC64HiresInterlace!(byte[] content, int bitmap1Offset, int videoMatrix1Offset, int bitmap2Offset, int videoMatrix2Offset)
