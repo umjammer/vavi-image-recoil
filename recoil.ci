@@ -10007,6 +10007,7 @@ public class RECOIL
 	{
 		if (contentLength < 8)
 			return false;
+		int height = 200;
 		UflStream() rle;
 		switch (content[2]) {
 		case 0:
@@ -10018,7 +10019,8 @@ public class RECOIL
 			rle.ContentOffset = 4;
 			break;
 		case 0xa8:
-			if (content[3] != 0x19)
+			height = content[3] << 3;
+			if (height == 0 || height > 200)
 				return false;
 			rle.Escape = content[4];
 			rle.ContentOffset = 5;
@@ -10035,10 +10037,10 @@ public class RECOIL
 		rle.Content = content;
 		rle.ContentLength = contentLength;
 		byte[10001] unpacked;
-		if (!rle.Unpack(unpacked, 0, 1, 8000))
+		if (!rle.Unpack(unpacked, 0, 1, height * 40))
 			return false;
 		rle.Escape = 0;
-		if (!rle.Unpack(unpacked, 8000, 1, 9000))
+		if (!rle.Unpack(unpacked, height * 40, 1, height * 45))
 			return false;
 		switch (content[2]) {
 		case 0:
@@ -10050,8 +10052,11 @@ public class RECOIL
 			rle.Escape = 0xd8;
 			break;
 		default:
-			return rle.ContentOffset == contentLength
-				&& DecodeC64Hires(unpacked, 0, 8000);
+			if (rle.ContentOffset != contentLength)
+				return false;
+			SetSize(320, height, RECOILResolution.C641x1);
+			DecodeC64HiresFrame(unpacked, 0, height * 40, 0);
+			return true;
 		}
 		unpacked[10000] = content[4];
 		return rle.Unpack(unpacked, 9000, 1, 10000)

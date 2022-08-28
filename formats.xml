@@ -655,7 +655,7 @@
 		<format name="Super Hires Editor 2" width="192" height="168" colors="16"><ext>SHE</ext></format>
 		<format name="Super Hires FLI Editor" maxWidth="208" height="167" colors="16"><ext>SHF</ext></format>
 		<format name="Super Hires Interlace Editor" width="96" height="200" frames="2"><ext>SHI</ext></format>
-		<format name="Loadstar" maxWidth="320" height="200" colors="16"><ext>SHP</ext></format>
+		<format name="Loadstar" maxWidth="320" maxHeight="200" colors="16"><ext>SHP</ext></format>
 		<format name="Super Hires Studio" width="320" height="200" colors="16"><ext>SHS</ext></format>
 		<format name="SHF-XL Edit" width="144" height="168" colors="16"><ext>SHX</ext></format>
 		<format name="Super Hires Interlace FLI Editor" width="96" height="167" frames="2"><ext>SIF</ext></format>
