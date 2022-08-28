@@ -10017,6 +10017,12 @@ public class RECOIL
 			rle.Escape = content[3];
 			rle.ContentOffset = 4;
 			break;
+		case 0xa8:
+			if (content[3] != 0x19)
+				return false;
+			rle.Escape = content[4];
+			rle.ContentOffset = 5;
+			break;
 		case 0xe8:
 			if (content[3] != 0x19)
 				return false;
@@ -10038,14 +10044,14 @@ public class RECOIL
 		case 0:
 			rle.Escape = 0xff;
 			break;
-		case 0x80:
-			return rle.ContentOffset == contentLength
-				&& DecodeC64Hires(unpacked, 0, 8000);
 		case 0xe8:
 			if (rle.ReadByte() != 0xff)
 				return false;
 			rle.Escape = 0xd8;
 			break;
+		default:
+			return rle.ContentOffset == contentLength
+				&& DecodeC64Hires(unpacked, 0, 8000);
 		}
 		unpacked[10000] = content[4];
 		return rle.Unpack(unpacked, 9000, 1, 10000)
