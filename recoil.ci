@@ -18396,6 +18396,8 @@ public class RECOIL
 			return DecodeBlazingPaddlesVectors(content, contentLength, 0x7c00);
 		case 4384:
 			return DecodeGr7(content, 0x210, 3844);
+		case 10018:
+			return DecodeOcp(content, contentLength);
 		default:
 			return false;
 		}
