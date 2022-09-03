@@ -10044,11 +10044,12 @@ public class RECOIL
 		}
 		rle.Content = content;
 		rle.ContentLength = contentLength;
+		int bitmapLength = height * columns;
 		byte[10001] unpacked;
-		if (!rle.Unpack(unpacked, 0, 1, height * columns))
+		if (!rle.Unpack(unpacked, 0, 1, bitmapLength))
 			return false;
 		rle.Escape = 0;
-		if (!rle.Unpack(unpacked, height * columns, 1, (height >> 3) * columns * 9))
+		if (!rle.Unpack(unpacked, bitmapLength, 1, (bitmapLength >> 3) * 9))
 			return false;
 		switch (content[2]) {
 		case 0:
@@ -10063,7 +10064,7 @@ public class RECOIL
 			if (rle.ContentOffset != contentLength)
 				return false;
 			SetSize(columns << 3, height, RECOILResolution.C641x1);
-			DecodeC64HiresFrame(unpacked, 0, height * columns, columns, 0);
+			DecodeC64HiresFrame(unpacked, 0, bitmapLength, columns, 0);
 			return true;
 		}
 		unpacked[10000] = content[4];
