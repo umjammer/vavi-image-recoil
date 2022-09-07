@@ -1,7 +1,7 @@
 /*
  * thumbrecoil.cpp - Windows thumbnail provider for RECOIL
  *
- * Copyright (C) 2011-2021  Piotr Fusik
+ * Copyright (C) 2011-2022  Piotr Fusik
  *
  * This file is part of RECOIL (Retro Computer Image Library),
  * see http://recoil.sourceforge.net
@@ -45,12 +45,12 @@ static const char extensions[][6] = { THUMBRECOIL_EXTS };
 static HINSTANCE g_hDll;
 static LONG g_cRef = 0;
 
-static void DllAddRef(void)
+static void DllAddRef()
 {
 	InterlockedIncrement(&g_cRef);
 }
 
-static void DllRelease(void)
+static void DllRelease()
 {
 	InterlockedDecrement(&g_cRef);
 }
@@ -68,7 +68,7 @@ class CRECOILThumbProvider : IPersistFile, IExtractImage
 #if THUMBRECOIL_VISTA
 	IStream *m_pstream = nullptr;
 #endif
-	RECOIL *m_pRecoil;
+	RECOIL * const m_pRecoil;
 	LPWSTR m_filename = nullptr;
 	bool m_loaded = false;
 
@@ -89,8 +89,8 @@ class CRECOILThumbProvider : IPersistFile, IExtractImage
 		HBITMAP hbmp = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, reinterpret_cast<void **>(&pBits), nullptr, 0);
 		if (hbmp == nullptr)
 			return E_OUTOFMEMORY;
-		int pixels_count = width * height;
-		for (int i = 0; i < pixels_count; i++)
+		int pixelsLen = width * height;
+		for (int i = 0; i < pixelsLen; i++)
 			pBits[i] = pixels[i] | 0xff000000;
 		*phBitmap = hbmp;
 		return S_OK;
@@ -98,10 +98,9 @@ class CRECOILThumbProvider : IPersistFile, IExtractImage
 
 public:
 
-	CRECOILThumbProvider()
+	CRECOILThumbProvider() : m_pRecoil(RECOIL_New())
 	{
 		DllAddRef();
-		m_pRecoil = RECOIL_New();
 	}
 
 	virtual ~CRECOILThumbProvider()
@@ -117,6 +116,8 @@ public:
 
 	STDMETHODIMP QueryInterface(REFIID riid, void **ppv)
 	{
+		if (ppv == nullptr)
+			return E_POINTER;
 		if (riid == __uuidof(IUnknown) || riid == __uuidof(IPersistFile)) {
 			*ppv = static_cast<IPersistFile *>(this);
 			AddRef();
@@ -288,6 +289,8 @@ public:
 
 	STDMETHODIMP QueryInterface(REFIID riid, void **ppv)
 	{
+		if (ppv == nullptr)
+			return E_POINTER;
 		if (riid == __uuidof(IUnknown) || riid == __uuidof(IClassFactory)) {
 			*ppv = static_cast<IClassFactory *>(this);
 			DllAddRef();
@@ -359,7 +362,7 @@ static bool RegisterCLSID(HKEY hk1, LPCSTR subkey)
 	return ok;
 }
 
-STDAPI __declspec(dllexport) DllRegisterServer(void)
+STDAPI __declspec(dllexport) DllRegisterServer()
 {
 	char szModulePath[MAX_PATH];
 	if (GetModuleFileName(g_hDll, szModulePath, MAX_PATH) == 0)
@@ -401,7 +404,7 @@ STDAPI __declspec(dllexport) DllRegisterServer(void)
 	return S_OK;
 }
 
-STDAPI __declspec(dllexport) DllUnregisterServer(void)
+STDAPI __declspec(dllexport) DllUnregisterServer()
 {
 	HKEY hk1;
 	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved", 0, KEY_SET_VALUE, &hk1) == ERROR_SUCCESS) {
@@ -423,7 +426,7 @@ STDAPI __declspec(dllexport) DllUnregisterServer(void)
 	return S_OK;
 }
 
-STDAPI __declspec(dllexport) DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
+STDAPI __declspec(dllexport) DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
 	if (ppv == nullptr)
 		return E_INVALIDARG;
@@ -435,7 +438,7 @@ STDAPI __declspec(dllexport) DllGetClassObject(REFCLSID rclsid, REFIID riid, LPV
 	return CLASS_E_CLASSNOTAVAILABLE;
 }
 
-STDAPI __declspec(dllexport) DllCanUnloadNow(void)
+STDAPI __declspec(dllexport) DllCanUnloadNow()
 {
 	return g_cRef == 0 ? S_OK : S_FALSE;
 }
