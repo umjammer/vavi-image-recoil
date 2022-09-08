@@ -1,7 +1,7 @@
 /*
  * qlrecoil.c - RECOIL plugin for OS X QuickLook
  *
- * Copyright (C) 2014-2015  Petri Pyy and Piotr Fusik
+ * Copyright (C) 2014-2022  Petri Pyy and Piotr Fusik
  *
  * This file is part of RECOIL (Retro Computer Image Library),
  * see http://recoil.sourceforge.net
@@ -44,12 +44,12 @@ static CGImageRef CreateImage(CFURLRef url)
 		CFRelease(data);
 		return NULL;
 	}
-	bool ok = RECOIL_Decode(recoil, filename, CFDataGetBytePtr(data), CFDataGetLength(data));
-	CFRelease(data);
-	if (!ok) {
+	if (!RECOIL_Decode(recoil, filename, CFDataGetBytePtr(data), CFDataGetLength(data))) {
 		RECOIL_Delete(recoil);
+		CFRelease(data);
 		return NULL;
 	}
+	CFRelease(data);
 
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	if (colorSpace == NULL) {
@@ -79,8 +79,8 @@ typedef struct
 
 static ULONG AddRef(void *thisInstance)
 {
-	Plugin *self = (Plugin *) thisInstance;
-	return OSAtomicIncrement32(&self->refCount);
+	Plugin *plugin = (Plugin *) thisInstance;
+	return OSAtomicIncrement32(&plugin->refCount);
 }
 
 static HRESULT QueryInterface(void *thisInstance, REFIID iid, LPVOID *ppv)
@@ -97,20 +97,20 @@ static HRESULT QueryInterface(void *thisInstance, REFIID iid, LPVOID *ppv)
 	return E_NOINTERFACE;
 }
 
-static void Dealloc(Plugin *self)
+static void Dealloc(Plugin *plugin)
 {
-	CFUUIDRef factoryID = self->factoryID;
+	CFUUIDRef factoryID = plugin->factoryID;
 	CFPlugInRemoveInstanceForFactory(factoryID);
 	CFRelease(factoryID);
-	free(self);
+	free(plugin);
 }
 
 static ULONG Release(void *thisInstance)
 {
-	Plugin *self = (Plugin *) thisInstance;
-	ULONG r = OSAtomicDecrement32(&self->refCount);
+	Plugin *plugin = (Plugin *) thisInstance;
+	ULONG r = OSAtomicDecrement32(&plugin->refCount);
 	if (r == 0)
-		Dealloc(self);
+		Dealloc(plugin);
 	return r;
 }
 
@@ -152,33 +152,25 @@ static void CancelPreviewGeneration(void *thisInstance, QLPreviewRequestRef prev
 {
 }
 
-static Plugin *Alloc(CFUUIDRef factoryID)
-{
-	static const QLGeneratorInterfaceStruct pluginVtbl = {
-		NULL,
-		QueryInterface,
-		AddRef,
-		Release,
-		GenerateThumbnailForURL,
-		CancelThumbnailGeneration,
-		GeneratePreviewForURL,
-		CancelPreviewGeneration
-	};
-	Plugin *self = (Plugin *) malloc(sizeof(Plugin));
-	self->vtbl = &pluginVtbl;
-	self->refCount = 1;
-	self->factoryID = CFRetain(factoryID);
-	CFPlugInAddInstanceForFactory(factoryID);
-	return self;
-}
-
 void *QuickLookGeneratorPluginFactory(CFAllocatorRef allocator, CFUUIDRef typeID)
 {
 	if (CFEqual(typeID, kQLGeneratorTypeID)) {
-		CFUUIDRef uuid = CFUUIDCreateFromString(kCFAllocatorDefault, CFSTR("B4EBAF99-E681-49A5-91CA-78459C948EEA"));
-		Plugin *result = Alloc(uuid);
-		CFRelease(uuid);
-		return result;
+		static const QLGeneratorInterfaceStruct pluginVtbl = {
+			NULL,
+			QueryInterface,
+			AddRef,
+			Release,
+			GenerateThumbnailForURL,
+			CancelThumbnailGeneration,
+			GeneratePreviewForURL,
+			CancelPreviewGeneration
+		};
+		Plugin *plugin = (Plugin *) malloc(sizeof(Plugin));
+		plugin->vtbl = &pluginVtbl;
+		plugin->refCount = 1;
+		plugin->factoryID = CFUUIDCreateFromString(kCFAllocatorDefault, CFSTR("B4EBAF99-E681-49A5-91CA-78459C948EEA"));
+		CFPlugInAddInstanceForFactory(plugin->factoryID);
+		return plugin;
 	}
 	return NULL;
 }
