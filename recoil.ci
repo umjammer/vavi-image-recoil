@@ -8048,16 +8048,32 @@ public class RECOIL
 			Pixels[y * 320 + x] = ContentPalette[GetNibble(content, y * 160, x)];
 	}
 
-	bool DecodeAppleIIShr!(byte[] content, int contentLength)
+	bool DecodeAppleIIShrUnpacked!(byte[] content)
 	{
-		if (contentLength != 32768)
-			return false;
 		SetSize(320, 200, RECOILResolution.AppleIIGS1x1);
 		for (int y = 0; y < 200; y++) {
 			SetAppleIIGSPalette(content, 0x7e00 + ((content[0x7d00 + y] & 0xf) << 5), 0);
 			DecodeShrLine(content, y);
 		}
 		return true;
+	}
+
+	bool DecodeAppleIIShr!(byte[] content, int contentLength)
+	{
+		if (contentLength == 32768)
+			return DecodeAppleIIShrUnpacked(content);
+		byte[32768] unpacked;
+		PackBytesStream() stream;
+		stream.Content = content;
+		stream.ContentOffset = 0;
+		stream.ContentLength = contentLength;
+		for (int unpackedOffset = 0; unpackedOffset < 32768; unpackedOffset++) {
+			int b = stream.ReadUnpacked();
+			if (b < 0)
+				return false;
+			unpacked[unpackedOffset] = b;
+		}
+		return stream.ReadUnpacked() < 0 && DecodeAppleIIShrUnpacked(unpacked);
 	}
 
 	bool DecodeSh3!(byte[] content, int contentLength)
