@@ -1,5 +1,5 @@
 /*
- * qlrecoil.c - RECOIL plugin for OS X QuickLook
+ * qlrecoil.c - RECOIL plugin for macOS QuickLook
  *
  * Copyright (C) 2014-2022  Petri Pyy and Piotr Fusik
  *
@@ -155,6 +155,9 @@ static void CancelPreviewGeneration(void *thisInstance, QLPreviewRequestRef prev
 void *QuickLookGeneratorPluginFactory(CFAllocatorRef allocator, CFUUIDRef typeID)
 {
 	if (CFEqual(typeID, kQLGeneratorTypeID)) {
+		Plugin *plugin = (Plugin *) malloc(sizeof(Plugin));
+		if (plugin == NULL)
+			return NULL;
 		static const QLGeneratorInterfaceStruct pluginVtbl = {
 			NULL,
 			QueryInterface,
@@ -165,7 +168,6 @@ void *QuickLookGeneratorPluginFactory(CFAllocatorRef allocator, CFUUIDRef typeID
 			GeneratePreviewForURL,
 			CancelPreviewGeneration
 		};
-		Plugin *plugin = (Plugin *) malloc(sizeof(Plugin));
 		plugin->vtbl = &pluginVtbl;
 		plugin->refCount = 1;
 		plugin->factoryID = CFUUIDCreateFromString(kCFAllocatorDefault, CFSTR("B4EBAF99-E681-49A5-91CA-78459C948EEA"));
