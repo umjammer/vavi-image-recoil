@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="net.sf.recoil" android:versionCode="630" android:versionName="6.3.0" android:installLocation="auto">
+	package="net.sf.recoil" android:versionCode="631" android:versionName="6.3.1" android:installLocation="auto">
 	<supports-screens android:largeScreens="true" android:xlargeScreens="true" />
 	<application android:label="@string/app_name" android:icon="@drawable/ic_launcher" android:description="@string/app_description">
 		<activity android:name=".Viewer" android:label="@string/app_name" android:exported="true"

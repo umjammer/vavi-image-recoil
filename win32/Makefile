@@ -1,4 +1,4 @@
-VERSION = 6.3.0
+VERSION = 6.3.1
 
 CITO = cito
 XSLTPROC = xsltproc -o $@ $^
