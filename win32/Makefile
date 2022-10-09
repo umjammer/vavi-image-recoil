@@ -73,6 +73,12 @@ paint.net/RECOIL.cs: ../recoil.ci ../altirrantsc.pal ../altirrapal.pal ../atari8
 %/by-platform.exe: by-platform.c recoil-win32.c recoil-win32.h ../recoil.c ../recoil.h
 	$(DO)$(DO_CC) -static
 
+bounds-examples: BoundsCheck.exe
+	./$< ../../examples
+
+BoundsCheck.exe: BoundsCheck.cs paint.net/RECOIL.cs
+	$(DO)$(CSC) -debug $^
+
 ../formats.h: ../formats.h.xsl ../formats.xml
 	$(DO)$(XSLTPROC)
 
@@ -162,10 +168,10 @@ mac:
 	scp mac:recoil-$(VERSION)/osx/recoil-$(VERSION)-macos.dmg ../../
 
 clean:
-	$(RM) i686/recoil2png.exe i686/recoilwin.exe $(WINBOTH_BIN) i686/recoilwin-res.o x86_64/recoilwin-res.o recoil.ico COPYING.txt \
+	$(RM) i686/recoil2png.exe i686/recoilwin.exe $(WINBOTH_BIN) i686/recoilwin-res.o x86_64/recoilwin-res.o BoundsCheck.exe BoundsCheck.pdb recoil.ico COPYING.txt \
 		i686/recoil.wixobj x86_64/recoil.wixobj setup/formats.wxi setup/dialog.jpg setup/banner.jpg signed-msi signed \
 		paint.net/RecoilFileTypeFactory.cs paint.net/RECOIL.cs ../formats.h
 
-.PHONY: all clean install-gimp install-magick install-xnview install-paint.net ../MANIFEST srcdist dist deb64 rpm64 mac ../../recoil-$(VERSION).tar.gz
+.PHONY: all clean bounds-examples install-gimp install-magick install-xnview install-paint.net ../MANIFEST srcdist dist deb64 rpm64 mac ../../recoil-$(VERSION).tar.gz
 
 .DELETE_ON_ERROR:

@@ -203,7 +203,7 @@ class Stream
 		}
 	}
 
-	protected bool Expect!(string s)
+	internal bool Expect!(string s)
 	{
 		int length = s.Length;
 		for (int i = 0; i < length; i++)
@@ -6651,19 +6651,14 @@ public class RECOIL
 	{
 		if (contentLength < 25 || !IsStringAt(content, 0, "ZX-Paintbrush "))
 			return false;
-		int contentOffset = 14;
-		if (IsStringAt(content, 14, "extended "))
-			contentOffset = 23;
-		if (!IsStringAt(content, contentOffset, "image"))
-			return false;
 		ZxpStream() s;
 		s.Content = content;
-		s.ContentOffset = contentOffset + 5;
+		s.ContentOffset = IsStringAt(content, 14, "extended ") ? 23 : 14;
 		s.ContentLength = contentLength;
-		if (s.ReadChar() != '\n' || s.ReadChar() != '\n')
+		if (!s.Expect("image") || s.ReadChar() != '\n' || s.ReadChar() != '\n')
 			return false;
-		contentOffset = s.ContentOffset;
 
+		int bitmapOffset = s.ContentOffset;
 		int width = 0;
 		int height = 0;
 		for (int x = 0;;) {
@@ -6740,11 +6735,11 @@ public class RECOIL
 						return false;
 					a = s.ReadHexByte();
 				}
-				Pixels[y * width + x] = ContentPalette[(a >> 2 & 0x30) | (content[contentOffset++] != '1' ? 8 | (a >> 3 & 7) : a & 7)];
+				Pixels[y * width + x] = ContentPalette[(a >> 2 & 0x30) | (content[bitmapOffset++] != '1' ? 8 | (a >> 3 & 7) : a & 7)];
 			}
-			if (content[contentOffset] == '\r')
-				contentOffset++;
-			if (content[contentOffset++] != '\n' || s.ReadChar() != '\n')
+			if (content[bitmapOffset] == '\r')
+				bitmapOffset++;
+			if (content[bitmapOffset++] != '\n' || s.ReadChar() != '\n')
 				return false;
 		}
 		return true;
@@ -6971,7 +6966,7 @@ public class RECOIL
 		int paletteOffset = 14 + content[12] + (content[13] << 8);
 		int bitmapOffset = 16 + content[14] + (content[15] << 8);
 		int paletteLength = bitmapOffset - paletteOffset;
-		if ((paletteLength & 1) != 0 || paletteLength > 256 * 2)
+		if ((paletteLength & 1) != 0 || paletteLength > 256 * 2 || contentLength < paletteOffset + paletteLength)
 			return false;
 		ContentPalette.Fill(0);
 		int colors = paletteLength >> 1;
@@ -10295,6 +10290,8 @@ public class RECOIL
 		case 17666: // VIC
 			return DecodeC64MulticolorFliBars(content, 0x2502, 0x502, 0x102, 2);
 		default:
+			if (contentLength < 5)
+				return false;
 			byte[17472] unpacked;
 			UifStream() rle;
 			rle.Content = content;
@@ -12518,7 +12515,8 @@ public class RECOIL
 		palette.Content = content;
 		palette.ContentLength = contentLength;
 		return palette.Init()
-			&& content[palette.ContentOffset + 608 + 33] <= 1
+			&& palette.ContentOffset + (608 + 33) < contentLength
+			&& content[palette.ContentOffset + (608 + 33)] <= 1
 			&& DecodeCptFul(content, palette.ContentOffset + 608, contentLength, palette);
 	}
 
@@ -17343,7 +17341,7 @@ public class RECOIL
 			return false;
 		int columns = content[0] + 1;
 		int rows = content[1] + 1;
-		if (columns > 40 || rows > 24)
+		if (columns > 40 || rows > 24 || contentLength != 2 + columns * rows)
 			return false;
 		SetSize(columns << 3, rows << 3, RECOILResolution.Xe1x1);
 		byte[320 * 192] frame;
@@ -17367,7 +17365,7 @@ public class RECOIL
 		else {
 			columns = content[0] + 1;
 			rows = content[1] + 1;
-			if (columns > 40 || rows << doubleHeight > 24)
+			if (columns > 40 || rows << doubleHeight > 24 || contentLength != 7 + columns * rows)
 				return false;
 			SetBakPF0123(content, 2);
 			charactersOffset = 7;
@@ -17391,7 +17389,7 @@ public class RECOIL
 		const int maxRows = 5;
 		int columns = content[0];
 		int rows = content[1];
-		if (columns == 0 || columns > maxColumns || rows == 0 || rows > maxRows)
+		if (columns == 0 || columns > maxColumns || rows == 0 || rows > maxRows || contentLength != 2 + columns * rows * 9)
 			return false;
 		SetSize(columns << 3, rows << 3, RECOILResolution.Xe2x1);
 		byte[maxColumns * 8 * maxRows * 8] frame;
@@ -19778,7 +19776,7 @@ public class RECOIL
 			SetSize(320, 200, RECOILResolution.Pc1x1);
 			return DecodeFlfBytes(content, contentLength);
 		case 0x1c:
-			if (content[12] != 0x0e)
+			if (content[12] != 0x0e || contentLength < 49165)
 				return false;
 			SetZx(RECOILResolution.Spectrum1x1);
 			DecodeBytes(content, 13);
