@@ -9645,7 +9645,10 @@ public class RECOIL
 			return false;
 		int columns;
 		int rows;
-		int contentOffset = 1;
+		PrintfoxStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = 1;
+		rle.ContentLength = contentLength;
 		switch (content[0]) {
 		case 'B':
 			columns = 40;
@@ -9658,19 +9661,12 @@ public class RECOIL
 		case 'P':
 			columns = content[2];
 			rows = content[1];
-			contentOffset = 3;
-			do {
-				if (contentOffset >= contentLength)
-					return false;
-			} while (content[contentOffset++] != 0);
+			if (!rle.SkipUntilByte(0))
+				return false;
 			break;
 		default:
 			return false;
 		}
-		PrintfoxStream() rle;
-		rle.Content = content;
-		rle.ContentOffset = contentOffset;
-		rle.ContentLength = contentLength;
 		if (!SetSize(columns << 3, rows << 3, RECOILResolution.C641x1))
 			return false;
 		for (int row = 0; row < rows; row++) {
