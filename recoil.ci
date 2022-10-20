@@ -9636,23 +9636,37 @@ public class RECOIL
 		return true;
 	}
 
-	bool DecodeBs!(byte[] content, int contentLength)
+	bool DecodePrintfox!(byte[] content, int contentLength)
 	{
-		if (contentLength < 4 || content[0] != 'B')
+		if (contentLength < 4)
 			return false;
+		int columns;
+		int rows;
+		switch (content[0]) {
+		case 'B':
+			columns = 40;
+			rows = 25;
+			break;
+		case 'G':
+			columns = 80;
+			rows = 50;
+			break;
+		default:
+			return false;
+		}
 		PrintfoxStream() rle;
 		rle.Content = content;
 		rle.ContentOffset = 1;
 		rle.ContentLength = contentLength;
-		SetSize(320, 200, RECOILResolution.C641x1);
-		for (int row = 0; row < 25; row++) {
-			for (int column = 0; column < 40; column++) {
+		SetSize(columns << 3, rows << 3, RECOILResolution.C641x1);
+		for (int row = 0; row < rows; row++) {
+			for (int column = 0; column < columns; column++) {
 				for (int y = 0; y < 8; y++) {
 					int b = rle.ReadRle();
 					if (b < 0)
 						return false;
 					for (int x = 0; x < 8; x++)
-						Pixels[((((row << 3) + y) * 40 + column) << 3) + x] = (b >> (7 - x) & 1) == 0 ? 0xffffff : 0;
+						Pixels[((((row << 3) + y) * columns + column) << 3) + x] = (b >> (7 - x) & 1) == 0 ? 0xffffff : 0;
 				}
 			}
 		}
@@ -19906,6 +19920,7 @@ public class RECOIL
 		case PackExt("BPL"):
 		case PackExt("BRU"):
 		case PackExt("BS"):
+		case PackExt("GB"):
 		case PackExt("BSC"):
 		case PackExt("BMC4"):
 		case PackExt("BSP"):
@@ -20494,7 +20509,8 @@ public class RECOIL
 		case PackExt("BRU"):
 			return DecodeBru(content, contentLength);
 		case PackExt("BS"):
-			return DecodeBs(content, contentLength);
+		case PackExt("GB"):
+			return DecodePrintfox(content, contentLength);
 		case PackExt("BSC"):
 		case PackExt("BMC4"):
 			return DecodeBsc(content, contentLength);
