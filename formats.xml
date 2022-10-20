@@ -632,6 +632,7 @@
 		</format>
 		<format name="PetDraw64" width="40" height="25" unit="characters" colors="16"><ext>PDR</ext></format>
 		<format name="PETSCII Editor" width="40" height="25" unit="characters" colors="16"><ext>PET</ext></format>
+		<format name="Pagefox" maxWidth="640" maxHeight="800" colors="2"><ext>PG</ext></format>
 		<format name="Blazing Paddles" width="160" height="200" colors="16">
 			<ext>PI</ext>
 			<ext>BPL</ext>

@@ -1390,8 +1390,11 @@ class PrintfoxStream : RleStream
 	{
 		int b = ReadByte();
 		if (b == 0x9b) {
-			b = ReadByte();
-			RepeatCount = b | ReadByte() << 8;
+			RepeatCount = ReadByte();
+			if (Content[0] != 'P')
+				RepeatCount += ReadByte() << 8;
+			else if (RepeatCount == 0)
+				RepeatCount = 256;
 			b = ReadByte();
 		}
 		else
@@ -9642,6 +9645,7 @@ public class RECOIL
 			return false;
 		int columns;
 		int rows;
+		int contentOffset = 1;
 		switch (content[0]) {
 		case 'B':
 			columns = 40;
@@ -9651,14 +9655,24 @@ public class RECOIL
 			columns = 80;
 			rows = 50;
 			break;
+		case 'P':
+			columns = content[2];
+			rows = content[1];
+			contentOffset = 3;
+			do {
+				if (contentOffset >= contentLength)
+					return false;
+			} while (content[contentOffset++] != 0);
+			break;
 		default:
 			return false;
 		}
 		PrintfoxStream() rle;
 		rle.Content = content;
-		rle.ContentOffset = 1;
+		rle.ContentOffset = contentOffset;
 		rle.ContentLength = contentLength;
-		SetSize(columns << 3, rows << 3, RECOILResolution.C641x1);
+		if (!SetSize(columns << 3, rows << 3, RECOILResolution.C641x1))
+			return false;
 		for (int row = 0; row < rows; row++) {
 			for (int column = 0; column < columns; column++) {
 				for (int y = 0; y < 8; y++) {
@@ -19921,6 +19935,7 @@ public class RECOIL
 		case PackExt("BRU"):
 		case PackExt("BS"):
 		case PackExt("GB"):
+		case PackExt("PG"):
 		case PackExt("BSC"):
 		case PackExt("BMC4"):
 		case PackExt("BSP"):
@@ -20510,6 +20525,7 @@ public class RECOIL
 			return DecodeBru(content, contentLength);
 		case PackExt("BS"):
 		case PackExt("GB"):
+		case PackExt("PG"):
 			return DecodePrintfox(content, contentLength);
 		case PackExt("BSC"):
 		case PackExt("BMC4"):

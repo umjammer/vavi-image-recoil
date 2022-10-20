@@ -52,9 +52,9 @@
 									<!-- OBJ is likely an object file. -->
 									<!-- ODF is likely an Open Document Formula. -->
 									<!-- RPM is likely RPM Package Manager. -->
-									<!-- DDP, MPIC, MWIN arbitrarily removed to workaround store submission error:
+									<!-- DDP, MPIC, MWIN, PNTG arbitrarily removed to workaround store submission error:
 									"Package acceptance validation error: The package RECOIL_6.3.0.0_x86.appx declares support for 501 file type extensions. Packages can't have more than 500." -->
-									<xsl:for-each select="platform/format/ext[not(. = following::ext) and . != 'MSP' and . != 'SCR' and . != 'ATR' and . != 'CPT' and . != 'OBJ' and . != 'ODF' and . != 'RPM' and . != 'DDP' and . != 'MPIC' and . != 'MWIN']">
+									<xsl:for-each select="platform/format/ext[not(. = following::ext) and . != 'MSP' and . != 'SCR' and . != 'ATR' and . != 'CPT' and . != 'OBJ' and . != 'ODF' and . != 'RPM' and . != 'DDP' and . != 'MPIC' and . != 'MWIN' and . != 'PNTG']">
 										<xsl:sort />
 										<uap:FileType>.<xsl:value-of select="translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')" /></uap:FileType>
 									</xsl:for-each>
