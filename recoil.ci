@@ -1384,6 +1384,23 @@ class VhiStream : RleStream
 	}
 }
 
+class PrintfoxStream : RleStream
+{
+	protected override bool ReadCommand!()
+	{
+		int b = ReadByte();
+		if (b == 0x9b) {
+			b = ReadByte();
+			RepeatCount = b | ReadByte() << 8;
+			b = ReadByte();
+		}
+		else
+			RepeatCount = 1;
+		RepeatValue = b;
+		return b >= 0;
+	}
+}
+
 class ArtMaster88Stream : RleStream
 {
 	int Escape = -1;
@@ -9616,6 +9633,29 @@ public class RECOIL
 			return false;
 		SetSize(256, 16, RECOILResolution.C641x1);
 		DecodeBlackAndWhiteFont(content, 2, 514, 8);
+		return true;
+	}
+
+	bool DecodeBs!(byte[] content, int contentLength)
+	{
+		if (contentLength < 4 || content[0] != 'B')
+			return false;
+		PrintfoxStream() rle;
+		rle.Content = content;
+		rle.ContentOffset = 1;
+		rle.ContentLength = contentLength;
+		SetSize(320, 200, RECOILResolution.C641x1);
+		for (int row = 0; row < 25; row++) {
+			for (int column = 0; column < 40; column++) {
+				for (int y = 0; y < 8; y++) {
+					int b = rle.ReadRle();
+					if (b < 0)
+						return false;
+					for (int x = 0; x < 8; x++)
+						Pixels[((((row << 3) + y) * 40 + column) << 3) + x] = (b >> (7 - x) & 1) == 0 ? 0xffffff : 0;
+				}
+			}
+		}
 		return true;
 	}
 
@@ -19865,6 +19905,7 @@ public class RECOIL
 		case PackExt("BP"):
 		case PackExt("BPL"):
 		case PackExt("BRU"):
+		case PackExt("BS"):
 		case PackExt("BSC"):
 		case PackExt("BMC4"):
 		case PackExt("BSP"):
@@ -20452,6 +20493,8 @@ public class RECOIL
 			return DecodeBpl(content, contentLength);
 		case PackExt("BRU"):
 			return DecodeBru(content, contentLength);
+		case PackExt("BS"):
+			return DecodeBs(content, contentLength);
 		case PackExt("BSC"):
 		case PackExt("BMC4"):
 			return DecodeBsc(content, contentLength);

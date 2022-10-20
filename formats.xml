@@ -508,6 +508,7 @@
 			<ext>FLI</ext>
 			<ext>FLG</ext>
 		</format>
+		<format name="Printfox" width="320" height="200" colors="2"><ext>BS</ext></format>
 		<format name="CDU-Paint" width="160" height="200" colors="16"><ext>CDU</ext></format>
 		<format name="CFLI Designer" width="296" height="200" colors="16"><ext>CFLI</ext></format>
 		<format name="Cheese" width="160" height="200" colors="16"><ext>CHE</ext></format>
