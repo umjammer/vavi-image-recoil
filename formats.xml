@@ -563,6 +563,7 @@
 			<ext name="Mono Magic">MON</ext>
 		</format>
 		<format name="Koala Painter (compressed)" width="320" height="200" colors="16"><ext>GG</ext></format>
+		<format name="Star Painter" colors="2"><ext>GR</ext></format>
 		<format name="Gunpaint" width="296" height="200" frames="2">
 			<ext>GUN</ext>
 			<ext>IFL</ext>

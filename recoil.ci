@@ -9660,6 +9660,21 @@ public class RECOIL
 		return true;
 	}
 
+	bool DecodeGr!(byte[] content, int contentLength)
+	{
+		if (contentLength < 10)
+			return false;
+		int width = content[0] << 3;
+		int height = content[1] << 3;
+		if (!SetSize(width, height, RECOILResolution.C641x1))
+			return false;
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++)
+				Pixels[y * width + x] = (content[2 + (y >> 3) * width + (x & ~7) + (y & 7)] >> (~x & 7) & 1) == 0 ? 0xffffff : 0;
+		}
+		return true;
+	}
+
 	bool DecodePrintfox!(byte[] content, int contentLength)
 	{
 		if (contentLength < 4)
@@ -20063,6 +20078,7 @@ public class RECOIL
 		case PackExt("GLC"):
 		case PackExt("GLS"):
 		case PackExt("GOD"):
+		case PackExt("GR"):
 		case PackExt("GR0"):
 		case PackExt("ASC"):
 		case PackExt("GR1"):
@@ -20757,6 +20773,8 @@ public class RECOIL
 			return DecodeGlYjk(null, content, contentLength);
 		case PackExt("GOD"):
 			return DecodeGod(content, contentLength);
+		case PackExt("GR"):
+			return DecodeGr(content, contentLength);
 		case PackExt("GR0"):
 		case PackExt("ASC"):
 			return DecodeGr0(content, contentLength);
