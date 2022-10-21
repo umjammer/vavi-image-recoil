@@ -20076,6 +20076,7 @@ public class RECOIL
 		case PackExt("GLS"):
 		case PackExt("GOD"):
 		case PackExt("GR"):
+		case PackExt("CS"):
 		case PackExt("GR0"):
 		case PackExt("ASC"):
 		case PackExt("GR1"):
@@ -20771,6 +20772,7 @@ public class RECOIL
 		case PackExt("GOD"):
 			return DecodeGod(content, contentLength);
 		case PackExt("GR"):
+		case PackExt("CS"):
 			return DecodeGr(content, contentLength);
 		case PackExt("GR0"):
 		case PackExt("ASC"):

@@ -49,12 +49,13 @@
 									<!-- MSP and SCR file type associations are reserved for system use. -->
 									<!-- ATR is likely an Atari 8-bit disk image and not a ZX Spectrum picture. RECOIL only supports the latter. -->
 									<!-- CPT is likely a Corel Photo Paint image. -->
+									<!-- CS is likely C# source code. -->
 									<!-- OBJ is likely an object file. -->
 									<!-- ODF is likely an Open Document Formula. -->
 									<!-- RPM is likely RPM Package Manager. -->
 									<!-- DDP, MPIC, MWIN, PNTG, TN5, TN6 arbitrarily removed to workaround store submission error:
 									"Package acceptance validation error: The package RECOIL_6.3.0.0_x86.appx declares support for 501 file type extensions. Packages can't have more than 500." -->
-									<xsl:for-each select="platform/format/ext[not(. = following::ext) and . != 'MSP' and . != 'SCR' and . != 'ATR' and . != 'CPT' and . != 'OBJ' and . != 'ODF' and . != 'RPM' and . != 'DDP' and . != 'MPIC' and . != 'MWIN' and . != 'PNTG' and . != 'TN5' and . != 'TN6']">
+									<xsl:for-each select="platform/format/ext[not(. = following::ext) and . != 'MSP' and . != 'SCR' and . != 'ATR' and . != 'CPT' and . != 'CS' and . != 'OBJ' and . != 'ODF' and . != 'RPM' and . != 'DDP' and . != 'MPIC' and . != 'MWIN' and . != 'PNTG' and . != 'TN5' and . != 'TN6']">
 										<xsl:sort />
 										<uap:FileType>.<xsl:value-of select="translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')" /></uap:FileType>
 									</xsl:for-each>

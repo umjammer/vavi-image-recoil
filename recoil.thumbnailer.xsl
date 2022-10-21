@@ -4,7 +4,7 @@
 		<xsl:text>[Thumbnailer Entry]
 Exec=recoil2png -o %o %i
 MimeType=</xsl:text>
-		<xsl:for-each select="platform/format/ext[not(. = following::ext) and . != 'RPM']">
+		<xsl:for-each select="platform/format/ext[not(. = following::ext) and . != 'CS' and . != 'RPM']">
 			<xsl:sort />
 			<xsl:if test="position() != 1">;</xsl:if>
 			<xsl:text>image/x-</xsl:text>
