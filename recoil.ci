@@ -9621,12 +9621,24 @@ public class RECOIL
 
 	// Commodore 64 formats.
 
-	bool Decode64c!(byte[] content, int contentLength)
+	bool DecodeZs!(byte[] content, int contentLength)
 	{
-		if (contentLength < 10 || contentLength > 2050 || content[0] != 0)
+		if (contentLength != 1026 || content[0] != 0xb0 || content[1] != 0xf0)
 			return false;
-		SetSize(256, contentLength + 253 >> 8 << 3, RECOILResolution.C641x1);
-		DecodeBlackAndWhiteFont(content, 2, contentLength, 8);
+		SetSize(256, 32, RECOILResolution.C641x1);
+		for (int y = 0; y < 32; y++) {
+			for (int x = 0; x < 256; x++) {
+				int c = y >> 3 << 5 | x >> 3;
+				if (c < 113) {
+					c = content[3 + c * 9 + (y & 7)] >> (~x & 7) & 1;
+					if (c != 0)
+						c = 0xffffff;
+				}
+				else
+					c = 0;
+				Pixels[(y << 8) + x] = c;
+			}
+		}
 		return true;
 	}
 
@@ -9636,6 +9648,15 @@ public class RECOIL
 			return false;
 		SetSize(256, 16, RECOILResolution.C641x1);
 		DecodeBlackAndWhiteFont(content, 2, 514, 8);
+		return true;
+	}
+
+	bool Decode64c!(byte[] content, int contentLength)
+	{
+		if (contentLength < 10 || contentLength > 2050 || content[0] != 0)
+			return false;
+		SetSize(256, contentLength + 253 >> 8 << 3, RECOILResolution.C641x1);
+		DecodeBlackAndWhiteFont(content, 2, contentLength, 8);
 		return true;
 	}
 
@@ -20369,6 +20390,7 @@ public class RECOIL
 		case PackExt("ZM4"):
 		case PackExt("ZOM"):
 		case PackExt("ZP1"):
+		case PackExt("ZS"):
 		case PackExt("ZXP"):
 		case PackExt("ZXS"):
 			return true;
@@ -21359,6 +21381,8 @@ public class RECOIL
 			return DecodeZom(content, contentLength);
 		case PackExt("ZP1"):
 			return DecodeZp1(content, contentLength);
+		case PackExt("ZS"):
+			return DecodeZs(content, contentLength);
 		case PackExt("ZXP"):
 			return DecodeZxp(content, contentLength);
 		case PackExt("ZXS"):
