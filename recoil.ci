@@ -9660,21 +9660,6 @@ public class RECOIL
 		return true;
 	}
 
-	bool DecodeGr!(byte[] content, int contentLength)
-	{
-		if (contentLength < 10)
-			return false;
-		int width = content[0] << 3;
-		int height = content[1] << 3;
-		if (!SetSize(width, height, RECOILResolution.C641x1))
-			return false;
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++)
-				Pixels[y * width + x] = (content[2 + (y >> 3) * width + (x & ~7) + (y & 7)] >> (~x & 7) & 1) == 0 ? 0xffffff : 0;
-		}
-		return true;
-	}
-
 	bool DecodePrintfox!(byte[] content, int contentLength)
 	{
 		if (contentLength < 4)
@@ -9815,9 +9800,8 @@ public class RECOIL
 			&& DecodeGodot(content[6] << 3, content[7] << 3, content, 8, contentLength - 1, true);
 	}
 
-	void DecodeC64HiresFrame!(byte[] content, int bitmapOffset, int videoMatrixOffset, int stride, int pixelsOffset)
+	void DecodeC64HiresFrame!(byte[] content, int bitmapOffset, int videoMatrixOffset, bool afli, int stride, int pixelsOffset)
 	{
-		bool afli = Width == FliWidth;
 		for (int y = 0; y < Height; y++) {
 			for (int x = 0; x < Width; x++) {
 				int offset = (y & ~7) * stride + (x & ~7) + (y & 7);
@@ -9840,11 +9824,24 @@ public class RECOIL
 	bool DecodeC64Hires!(byte[] content, int bitmapOffset, int videoMatrixOffset)
 	{
 		SetSize(320, 200, RECOILResolution.C641x1);
-		DecodeC64HiresFrame(content, bitmapOffset, videoMatrixOffset, 40, 0);
+		DecodeC64HiresFrame(content, bitmapOffset, videoMatrixOffset, false, 40, 0);
 		return true;
 	}
 
 	bool DecodeRpo!(byte[] content, int contentLength) => contentLength == 8002 && DecodeC64Hires(content, 2, -0x01);
+
+	bool DecodeGr!(byte[] content, int contentLength)
+	{
+		if (contentLength < 10)
+			return false;
+		int columns = content[0];
+		int height = content[1] << 3;
+		if (contentLength != 2 + columns * height
+		 || !SetSize(columns << 3, height, RECOILResolution.C641x1))
+			return false;
+		DecodeC64HiresFrame(content, 2, -0x01, false, columns, 0);
+		return true;
+	}
 
 	bool DecodeC64Hir!(byte[] content, int contentLength)
 	{
@@ -9970,7 +9967,7 @@ public class RECOIL
 		if (contentLength != 16386)
 			return false;
 		SetSize(FliWidth, 112, RECOILResolution.C641x1);
-		DecodeC64HiresFrame(content, 2 + FliBugCharacters * 8, 0x2002 + FliBugCharacters, 40, 0);
+		DecodeC64HiresFrame(content, 2 + FliBugCharacters * 8, 0x2002 + FliBugCharacters, true, 40, 0);
 		return true;
 	}
 
@@ -9979,7 +9976,7 @@ public class RECOIL
 		if (contentLength != 16385)
 			return false;
 		SetSize(FliWidth, 200, RECOILResolution.C641x1);
-		DecodeC64HiresFrame(content, 0x2002 + FliBugCharacters * 8, 2 + FliBugCharacters, 40, 0);
+		DecodeC64HiresFrame(content, 0x2002 + FliBugCharacters * 8, 2 + FliBugCharacters, true, 40, 0);
 		return true;
 	}
 
@@ -10188,7 +10185,7 @@ public class RECOIL
 			if (rle.ContentOffset != contentLength)
 				return false;
 			SetSize(columns << 3, height, RECOILResolution.C641x1);
-			DecodeC64HiresFrame(unpacked, 0, bitmapLength, columns, 0);
+			DecodeC64HiresFrame(unpacked, 0, bitmapLength, false, columns, 0);
 			return true;
 		}
 		unpacked[10000] = content[4];
@@ -10200,8 +10197,8 @@ public class RECOIL
 	bool DecodeC64HiresInterlace!(byte[] content, int bitmap1Offset, int videoMatrix1Offset, int bitmap2Offset, int videoMatrix2Offset)
 	{
 		SetSize(320, 200, RECOILResolution.C641x1, 2);
-		DecodeC64HiresFrame(content, bitmap1Offset, videoMatrix1Offset, 40, 0);
-		DecodeC64HiresFrame(content, bitmap2Offset, videoMatrix2Offset, 40, 320 * 200);
+		DecodeC64HiresFrame(content, bitmap1Offset, videoMatrix1Offset, false, 40, 0);
+		DecodeC64HiresFrame(content, bitmap2Offset, videoMatrix2Offset, false, 40, 320 * 200);
 		return ApplyBlend();
 	}
 
@@ -10312,7 +10309,7 @@ public class RECOIL
 	bool DecodeHimUnpacked!(byte[] content)
 	{
 		SetSize(FliWidth, 192, RECOILResolution.C641x1);
-		DecodeC64HiresFrame(content, 2 + 40 * 8 + FliBugCharacters * 8, 0x2002 + 40 + FliBugCharacters, 40, 0);
+		DecodeC64HiresFrame(content, 2 + 40 * 8 + FliBugCharacters * 8, 0x2002 + 40 + FliBugCharacters, true, 40, 0);
 		return true;
 	}
 
@@ -10339,8 +10336,8 @@ public class RECOIL
 		if (contentLength != 32770)
 			return DecodeEcp(content, contentLength);
 		SetSize(FliWidth, 200, RECOILResolution.C641x1, 2);
-		DecodeC64HiresFrame(content, 2 + FliBugCharacters * 8, 0x2002 + FliBugCharacters, 40, 0);
-		DecodeC64HiresFrame(content, 0x4002 + FliBugCharacters * 8, 0x6002 + FliBugCharacters, 40, FliWidth * 200);
+		DecodeC64HiresFrame(content, 2 + FliBugCharacters * 8, 0x2002 + FliBugCharacters, true, 40, 0);
+		DecodeC64HiresFrame(content, 0x4002 + FliBugCharacters * 8, 0x6002 + FliBugCharacters, true, 40, FliWidth * 200);
 		return ApplyBlend();
 	}
 
@@ -10430,7 +10427,7 @@ public class RECOIL
 				return DecodeC64MulticolorFli(unpacked, 0x2400, 0x400, 0, unpacked[0x437f]);
 		}
 		SetSize(FliWidth, 200, RECOILResolution.C641x1);
-		DecodeC64HiresFrame(unpacked, 0x2400 + FliBugCharacters * 8, 0x400 + FliBugCharacters, 40, 0);
+		DecodeC64HiresFrame(unpacked, 0x2400 + FliBugCharacters * 8, 0x400 + FliBugCharacters, true, 40, 0);
 		return true;
 	}
 
