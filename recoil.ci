@@ -16214,17 +16214,17 @@ public class RECOIL
 
 	static bool GetSprEdPixel(int grafp, int x) => x >= 0 && x < 8 && (grafp >> (7 - x) & 1) != 0;
 
-	static int GetSprEdPair(byte[] content, int bitmapOffset, int bitmapStride, int colorsOffset, int frames, int x, int gap01)
+	static int GetSprEdPair(byte[] content, int bitmapOffset, int bitmapStride, int colorOffset, int colorStride, int x, int gap01)
 	{
 		bool p1 = GetSprEdPixel(content[bitmapOffset + bitmapStride], x - gap01);
 		if (GetSprEdPixel(content[bitmapOffset], x)) {
-			int c = content[colorsOffset];
+			int c = content[colorOffset];
 			if (p1)
-				c |= content[colorsOffset + frames];
+				c |= content[colorOffset + colorStride];
 			return c;
 		}
 		if (p1)
-			return content[colorsOffset + frames];
+			return content[colorOffset + colorStride];
 		return -1;
 	}
 
@@ -16237,6 +16237,7 @@ public class RECOIL
 		int gap01;
 		int gap23 = content[0x0c];
 		int gap02 = content[0x0d];
+		bool dli = (content[0x0e] & 1) != 0;
 		int frames = content[0x10];
 		int height;
 		if (frames == 0) {
@@ -16249,11 +16250,12 @@ public class RECOIL
 			gap01 = content[0x12];
 		}
 		int players = (mergeMode & 4) != 0 ? 4 : 2;
+		int dliOffset = 0x13 + players * frames * (1 + height);
+		int bitmapStride = frames * height;
 		if (doubleLine > 1
 		 || (mergeMode & 1) != 0 // TODO: missiles
-		 || (content[0x0e] & 1) != 0 // TODO: dliOn
 		 || gap01 > 8 || gap23 > 8 || gap02 > 16
-		 || contentLength < 0x13 + players * frames * (1 + height))
+		 || contentLength < (dli ? dliOffset + 5 * bitmapStride : dliOffset))
 			return false;
 		int width01 = 8 + gap01;
 		int width23 = gap02 + 8 + gap23;
@@ -16262,17 +16264,22 @@ public class RECOIL
 		int width = frames * frameWidth - frameGap;
 		if (!SetSize(width << 1, height << doubleLine, doubleLine == 0 ? RECOILResolution.Xe2x1 : RECOILResolution.Xe2x2))
 			return false;
-		int bitmapStride = frames * height;
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
 				int frame = x / frameWidth;
 				int h = x % frameWidth;
+				int colorOffset = 0x13 + frame;
+				int colorStride = frames;
+				if (dli) {
+					colorStride = bitmapStride;
+					colorOffset = dliOffset + bitmapStride + frame * height + y;
+				}
 				int bitmapOffset = 0x13 + players * frames + frame * height + y;
-				int c = GetSprEdPair(content, bitmapOffset, bitmapStride, 0x13 + frame, frames, h, gap01);
+				int c = GetSprEdPair(content, bitmapOffset, bitmapStride, colorOffset, colorStride, h, gap01);
 				if (c < 0 && players == 4)
-					c = GetSprEdPair(content, bitmapOffset + 2 * bitmapStride, bitmapStride, 0x13 + 2 * frames + frame, frames, h - gap02, gap23);
+					c = GetSprEdPair(content, bitmapOffset + 2 * bitmapStride, bitmapStride, colorOffset + 2 * colorStride, colorStride, h - gap02, gap23);
 				if (c < 0)
-					c = content[6];
+					c = content[dli ? dliOffset + frame * height + y : 6];
 				c = Atari8Palette[c & 0xfe];
 				int pixelsOffset = (y * width << doubleLine) + x << 1;
 				Pixels[pixelsOffset + 1] = Pixels[pixelsOffset] = c;
