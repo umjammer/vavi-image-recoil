@@ -268,6 +268,7 @@
 		<format name="Sketch-PadDles" width="160" height="192" colors="2"><ext>SKP</ext></format>
 		<format name="The Graphics Magician Picture Painter" width="160" height="192" colors="128"><ext>SPC</ext></format>
 		<format name="Mad Studio sprite" width="8" maxHeight="40" colors="2"><ext>SPR</ext></format>
+		<format name="SprEd" colors="128"><ext>SPR</ext></format>
 		<format name="16x16 font" colors="2"><ext>SXS</ext></format>
 		<format name="Taquart Interlace Picture" maxWidth="160" maxHeight="119" frames="2"><ext>TIP</ext></format>
 		<format name="Mad Studio ANTIC 4 tile" maxWidth="16" maxHeight="40" colors="5"><ext>TL4</ext></format>

@@ -16212,6 +16212,77 @@ public class RECOIL
 		return ApplyAtari8Palette(frame);
 	}
 
+	static bool GetSprEdPixel(int grafp, int x) => x >= 0 && x < 8 && (grafp >> (7 - x) & 1) != 0;
+
+	static int GetSprEdPair(byte[] content, int bitmapOffset, int bitmapStride, int colorsOffset, int frames, int x, int gap01)
+	{
+		bool p1 = GetSprEdPixel(content[bitmapOffset + bitmapStride], x - gap01);
+		if (GetSprEdPixel(content[bitmapOffset], x)) {
+			int c = content[colorsOffset];
+			if (p1)
+				c |= content[colorsOffset + frames];
+			return c;
+		}
+		if (p1)
+			return content[colorsOffset + frames];
+		return -1;
+	}
+
+	bool DecodeSprEd!(byte[] content, int contentLength)
+	{
+		if (contentLength < 23 || !IsStringAt(content, 0, "Spr!"))
+			return false;
+		int doubleLine = content[9];
+		int mergeMode = content[0x0a];
+		int gap01;
+		int gap23 = content[0x0c];
+		int gap02 = content[0x0d];
+		int frames = content[0x10];
+		int height;
+		if (frames == 0) {
+			gap01 = content[0x0b];
+			frames = content[0x11];
+			height = content[0x12];
+		}
+		else { // legacy format
+			height = content[0x11];
+			gap01 = content[0x12];
+		}
+		int players = (mergeMode & 4) != 0 ? 4 : 2;
+		if (doubleLine > 1
+		 || (mergeMode & 1) != 0 // TODO: missiles
+		 || (content[0x0e] & 1) != 0 // TODO: dliOn
+		 || gap01 > 8 || gap23 > 8 || gap02 > 16
+		 || contentLength < 0x13 + players * frames * (1 + height))
+			return false;
+		int width01 = 8 + gap01;
+		int width23 = gap02 + 8 + gap23;
+		const int frameGap = 2;
+		int frameWidth = (players == 2 || width01 >= width23 ? width01 : width23) + frameGap;
+		int width = frames * frameWidth - frameGap;
+		if (!SetSize(width << 1, height << doubleLine, doubleLine == 0 ? RECOILResolution.Xe2x1 : RECOILResolution.Xe2x2))
+			return false;
+		int bitmapStride = frames * height;
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				int frame = x / frameWidth;
+				int h = x % frameWidth;
+				int bitmapOffset = 0x13 + players * frames + frame * height + y;
+				int c = GetSprEdPair(content, bitmapOffset, bitmapStride, 0x13 + frame, frames, h, gap01);
+				if (c < 0 && players == 4)
+					c = GetSprEdPair(content, bitmapOffset + 2 * bitmapStride, bitmapStride, 0x13 + 2 * frames + frame, frames, h - gap02, gap23);
+				if (c < 0)
+					c = content[6];
+				c = Atari8Palette[c & 0xfe];
+				int pixelsOffset = (y * width << doubleLine) + x << 1;
+				Pixels[pixelsOffset + 1] = Pixels[pixelsOffset] = c;
+				if (doubleLine != 0)
+					Pixels[pixelsOffset + (width << 1) + 1] = Pixels[pixelsOffset + (width << 1)] = c;
+			}
+		}
+		return true;
+	}
+
 	bool DecodeAtari8Hr!(byte[] content, int contentLength)
 	{
 		if (contentLength != 16384)
@@ -21302,7 +21373,8 @@ public class RECOIL
 		case PackExt("SPD"):
 			return DecodeSpd(content, contentLength);
 		case PackExt("SPR"):
-			return DecodeAppleSpr(content, contentLength)
+			return DecodeSprEd(content, contentLength)
+				|| DecodeAppleSpr(content, contentLength)
 				|| DecodeAtari8Spr(content, contentLength)
 				|| DecodeVectorSpr(content, contentLength);
 		case PackExt("SPS"):
