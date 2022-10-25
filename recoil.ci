@@ -205,9 +205,8 @@ class Stream
 
 	internal bool Expect!(string s)
 	{
-		int length = s.Length;
-		for (int i = 0; i < length; i++)
-			if (ReadByte() != s[i])
+		foreach (int c in s)
+			if (ReadByte() != c)
 				return false;
 		return true;
 	}
@@ -4956,9 +4955,8 @@ public class RECOIL
 
 	internal static bool IsStringAt(byte[] content, int contentOffset, string s)
 	{
-		int length = s.Length;
-		for (int i = 0; i < length; i++)
-			if (content[contentOffset + i] != s[i])
+		foreach (int c in s)
+			if (content[contentOffset++] != c)
 				return false;
 		return true;
 	}
