@@ -3,6 +3,9 @@ package net.sf.recoil;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
+import vavi.util.Debug;
+
+
 /**
  * Decoder of images in formats native to vintage computers.
  * Decodes file contents passed as a byte array
@@ -148,9 +151,11 @@ public class RECOIL
 		int ext = 0;
 		for (int i = filename.length(); --i >= 0;) {
 			int c = filename.charAt(i);
-			if (c == '.')
-				return ext | 538976288;
-			if (c <= ' ' || c > 'z' || ext >= 16777216)
+			if (c == '.') {
+Debug.printf("%08x", ext | 0x20202020);
+				return ext | 0x20202020;
+			}
+			if (c <= ' ' || c > 'z' || ext >= 0x1000000)
 				return 0;
 			ext = (ext << 8) + c;
 		}
@@ -4060,10 +4065,11 @@ public class RECOIL
 		int pixelsLength = width * height;
 		for (int pixelsOffset = 0; pixelsOffset < pixelsLength; pixelsOffset++)
 			this.pixels[pixelsOffset] = this.contentPalette[0];
-		final byte[] flags3 = new byte[64];
-		final byte[] data = new byte[512];
-		final ZimStream stream = new ZimStream();
+		byte[] flags3 = new byte[64];
+		byte[] data = new byte[512];
+		ZimStream stream = new ZimStream();
 		stream.content = content;
+Debug.printf("pos: %1$d, %1$08x", contentOffset);
 		stream.contentOffset = contentOffset;
 		stream.contentLength = contentLength;
 		int skip = stream.readWord();
@@ -15809,7 +15815,7 @@ public class RECOIL
 			return decodeXga(content, contentLength);
 		case 544238712:
 			return decodeXlp(content, contentLength);
-		case 544041338:
+		case 0x206D697A: // " miz"
 			return decodeZim(content, contentLength);
 		case 540306810:
 			return decodeZm4(content, contentLength);
