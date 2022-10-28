@@ -1,0 +1,95 @@
+// Generated automatically with "cito". Do not edit.
+package net.sf.recoil;
+
+/**
+ * Platform and pixel ratio.
+ */
+interface RECOILResolution
+{
+	int AMIGA1X1 = 0;
+	int AMIGA2X1 = 1;
+	int AMIGA4X1 = 2;
+	int AMIGA8X1 = 3;
+	int AMIGA1X2 = 4;
+	int AMIGA1X4 = 5;
+	int AMIGA_DCTV1X1 = 6;
+	int AMIGA_DCTV1X2 = 7;
+	int AMIGA_HAME1X1 = 8;
+	int AMIGA_HAME2X1 = 9;
+	int AMSTRAD1X1 = 10;
+	int AMSTRAD2X1 = 11;
+	int AMSTRAD1X2 = 12;
+	int APPLE_I_I1X1 = 13;
+	int APPLE_I_IE1X2 = 14;
+	int APPLE_I_I_G_S1X1 = 15;
+	int APPLE_I_I_G_S1X2 = 16;
+	int MACINTOSH1X1 = 17;
+	int XE1X1 = 18;
+	int XE2X1 = 19;
+	int XE4X1 = 20;
+	int XE2X2 = 21;
+	int XE4X2 = 22;
+	int XE4X4 = 23;
+	int XE8X8 = 24;
+	int VBXE1X1 = 25;
+	int VBXE2X1 = 26;
+	int PORTFOLIO1X1 = 27;
+	int ST1X1 = 28;
+	int ST1X2 = 29;
+	int STE1X1 = 30;
+	int STE1X2 = 31;
+	int TT1X1 = 32;
+	int TT2X1 = 33;
+	int FALCON1X1 = 34;
+	int FALCON2X1 = 35;
+	int BBC1X1 = 36;
+	int BBC2X1 = 37;
+	int BBC1X2 = 38;
+	int VIC201X1 = 39;
+	int VIC202X1 = 40;
+	int C161X1 = 41;
+	int C162X1 = 42;
+	int C641X1 = 43;
+	int C642X1 = 44;
+	int C1281X1 = 45;
+	int BK1X1 = 46;
+	int BK1X2 = 47;
+	int MC05151X2 = 48;
+	int FM_TOWNS1X1 = 49;
+	int HP481X1 = 50;
+	int MSX11X1 = 51;
+	int MSX14X4 = 52;
+	int MSX21X1 = 53;
+	int MSX21X2 = 54;
+	int MSX21X1I = 55;
+	int MSX22X1I = 56;
+	int MSX2_PLUS1X1 = 57;
+	int MSX2_PLUS2X1I = 58;
+	int MSX_V99901X1 = 59;
+	int ORIC1X1 = 60;
+	int PC1X1 = 61;
+	int PC801X2 = 62;
+	int PC881X2 = 63;
+	int PC88_VA1X1 = 64;
+	int PC981X1 = 65;
+	int PLAY_STATION1X1 = 66;
+	int PSION31X1 = 67;
+	int SAM_COUPE1X1 = 68;
+	int SAM_COUPE1X2 = 69;
+	int X68_K1X1 = 70;
+	int TANDY1X1 = 71;
+	int VECTOR1X1 = 72;
+	int ZX811X1 = 73;
+	int SPECTRUM1X1 = 74;
+	int SPECTRUM4X4 = 75;
+	int SPECTRUM_PROFI1X2 = 76;
+	int SPECTRUM_ULA_PLUS1X1 = 77;
+	int ZX_EVOLUTION1X1 = 78;
+	int SPECTRUM_NEXT1X1 = 79;
+	int TIMEX1X1 = 80;
+	int TIMEX1X2 = 81;
+	int TRS1X1 = 82;
+	int TRS1X2 = 83;
+	int COCO1X1 = 84;
+	int COCO2X2 = 85;
+}
