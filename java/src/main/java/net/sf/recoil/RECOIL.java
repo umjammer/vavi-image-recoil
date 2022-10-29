@@ -2,6 +2,7 @@
 package net.sf.recoil;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.logging.Level;
 
 import vavi.util.Debug;
 
@@ -150,9 +151,9 @@ public class RECOIL
 	{
 		int ext = 0;
 		for (int i = filename.length(); --i >= 0;) {
-			int c = filename.charAt(i);
+			int c = Character.toLowerCase(filename.charAt(i));
 			if (c == '.') {
-Debug.printf("%08x", ext | 0x20202020);
+Debug.printf(Level.FINER, "%08x", ext | 0x20202020);
 				return ext | 0x20202020;
 			}
 			if (c <= ' ' || c > 'z' || ext >= 0x1000000)
@@ -3707,6 +3708,7 @@ Debug.printf("%08x", ext | 0x20202020);
 
 	private boolean decodeDaVinci(byte[] content, int contentLength)
 	{
+Debug.println("decodeDaVinci: here");
 		if ((contentLength & 255) != 0)
 			return false;
 		setSize(640, 400, RECOILResolution.PC881X2);
@@ -4069,11 +4071,12 @@ Debug.printf("%08x", ext | 0x20202020);
 		byte[] data = new byte[512];
 		ZimStream stream = new ZimStream();
 		stream.content = content;
-Debug.printf("pos: %1$d, %1$08x", contentOffset);
+Debug.printf(Level.FINER, "pos: %1$d, %1$08x", stream.contentOffset);
 		stream.contentOffset = contentOffset;
 		stream.contentLength = contentLength;
 		int skip = stream.readWord();
 		stream.contentOffset += skip << 1;
+Debug.printf(Level.FINER, "pos: %1$d, %1$08x", stream.contentOffset);
 		for (;;) {
 			int dot = stream.readWord();
 			switch (dot) {
@@ -4088,6 +4091,7 @@ Debug.printf("pos: %1$d, %1$08x", contentOffset);
 			if (x < 0 || x >= width)
 				return false;
 			int y = stream.readWord();
+//Debug.println("y: " + y);
 			if (y < 0 || y >= height)
 				return false;
 			int len = stream.readWord();
@@ -4113,7 +4117,10 @@ Debug.printf("pos: %1$d, %1$08x", contentOffset);
 			size >>= 2;
 			for (int i = 0; i < dot; i++) {
 				int bit = ~i & 7;
-				int c = ((data[i >> 3] & 0xff) >> bit & 1) << 3 | ((data[size + (i >> 3)] & 0xff) >> bit & 1) << 2 | ((data[2 * size + (i >> 3)] & 0xff) >> bit & 1) << 1 | ((data[3 * size + (i >> 3)] & 0xff) >> bit & 1);
+				int c = ((data[i >> 3] & 0xff) >> bit & 1) << 3
+						| ((data[size + (i >> 3)] & 0xff) >> bit & 1) << 2
+						| ((data[2 * size + (i >> 3)] & 0xff) >> bit & 1) << 1
+						| ((data[3 * size + (i >> 3)] & 0xff) >> bit & 1);
 				this.pixels[pixelsOffset + i] = this.contentPalette[c];
 			}
 		}
@@ -15369,7 +15376,7 @@ Debug.printf("pos: %1$d, %1$08x", contentOffset);
 			return decodeIle(content, contentLength);
 		case 544435305:
 			return decodeIls(content, contentLength);
-		case 543649129:
+		case 0x20676D69: // ' gmi'
 			return decodeStImg(content, contentLength) || decodeZxImg(content, contentLength) || decodeArtMaster88(content, contentLength) || decodeDaVinci(content, contentLength);
 		case 1735223668:
 		case 1735223672:

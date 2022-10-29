@@ -10,16 +10,26 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
 import java.awt.image.IndexColorModel;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 
 import net.sf.recoil.RECOIL;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import vavi.util.Debug;
+import vavi.util.properties.annotation.Property;
+import vavi.util.properties.annotation.PropsEntity;
 
 
 /**
@@ -28,13 +38,29 @@ import vavi.util.Debug;
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 2022-10-28 nsano initial version <br>
  */
+@PropsEntity(url = "file:local.properties")
 class Test1 {
+
+    static boolean localPropertiesExists() {
+        return Files.exists(Paths.get("local.properties"));
+    }
+
+    @Property
+    String image = "src/test/resources/test.img";
+
+    @BeforeEach
+    void setup() throws IOException {
+        if (localPropertiesExists()) {
+            PropsEntity.Util.bind(this);
+        }
+    }
 
     @Test
     void test1() throws Exception {
         RECOIL recoil = new RECOIL();
-        Path in = Paths.get("/Users/nsano/src/vavi/vavi-image/src/test/resources/test.zim");
-        boolean r = recoil.decode(in.getFileName().toString(), Files.readAllBytes(in), (int) Files.size(in));
+        Path in = Paths.get(image);
+        String format = "ZIM";
+        boolean r = recoil.decode("." + format, Files.readAllBytes(in), (int) Files.size(in));
 Debug.println("done: " + r);
         int w = recoil.getWidth();
         int h = recoil.getHeight();
@@ -62,12 +88,12 @@ Debug.println("pixels: " + pixels.length + ", " + w * h);
         for (int p : pixels) {
             b[i++] = 0xff000000 | p & 0xff0000 | p & 0xff00 | p & 0xff;
         }
-        show(image);
-        while (true) Thread.yield();
+        show(image, format);
     }
 
-    void show(BufferedImage image) {
-        JFrame frame = new JFrame("ZIM");
+    /** */
+    void show(BufferedImage image, String format) {
+        JFrame frame = new JFrame(format);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         JComponent panel = new JComponent() {
             @Override public void paintComponent(Graphics g) {
@@ -78,5 +104,27 @@ Debug.println("pixels: " + pixels.length + ", " + w * h);
         frame.getContentPane().add(panel);
         frame.pack();
         frame.setVisible(true);
+        while (true) Thread.yield();
+    }
+
+    @Test
+    @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
+    void test2() throws Exception {
+
+        ImageReader ir = ImageIO.getImageReadersByFormatName("recoil").next();
+        ImageInputStream iis = ImageIO.createImageInputStream(Files.newInputStream(Paths.get(this.image)));
+        ir.setInput(iis);
+        BufferedImage image = ir.read(0);
+
+        show(image, "ZIM");
+    }
+
+    @Test
+    @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
+    void test3() throws Exception {
+
+        BufferedImage image = ImageIO.read(new File(this.image));
+
+        show(image, "ZIM");
     }
 }
