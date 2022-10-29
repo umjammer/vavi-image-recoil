@@ -5,8 +5,14 @@
 
 # vavi-image-recoil
 
-based on https://sourceforge.net/projects/recoil/
+Java ImageIO SPI for retro images powered by [recoil](https://sourceforge.net/projects/recoil/)
+
+recoil supports [over 500 image formats](https://recoil.sourceforge.net/formats.html)!
+
+## TODO
+
+ * ~~ImageIO SPI~~
 
 ## References
 
- * 
+ * https://github.com/pfusik/cito (.ci to .java (or many) compiler)
