@@ -11,13 +11,10 @@ import java.awt.image.DataBufferInt;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteOrder;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Level;
 import javax.imageio.IIOException;
-import javax.imageio.ImageIO;
 import javax.imageio.ImageReadParam;
 import javax.imageio.ImageReader;
 import javax.imageio.ImageTypeSpecifier;
@@ -82,8 +79,7 @@ public class RecoilImageReader extends ImageReader {
 Debug.println(Level.FINE, "size: " + l);
 
             RECOIL recoil = new RECOIL();
-            String format = "ZIM"; // TODO how to deal???
-            boolean r = recoil.decode("." + format, baos.toByteArray(), baos.size());
+            boolean r = recoil.decode("." + ((RecoilImageReadParam) param).getType(), baos.toByteArray(), baos.size());
             int w = recoil.getWidth();
             int h = recoil.getHeight();
 Debug.println("size: " + w + "x" + h);
@@ -118,6 +114,11 @@ Debug.println(Level.FINE, "here");
         java.util.List<ImageTypeSpecifier> l = new ArrayList<>();
         l.add(specifier);
         return l.iterator();
+    }
+
+    @Override
+    public ImageReadParam getDefaultReadParam() {
+        return new RecoilImageReadParam();
     }
 }
 

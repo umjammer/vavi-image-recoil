@@ -41,12 +41,19 @@ import vavi.util.properties.annotation.PropsEntity;
 @PropsEntity(url = "file:local.properties")
 class Test1 {
 
+    static {
+        System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", "ZIM");
+    }
+
     static boolean localPropertiesExists() {
         return Files.exists(Paths.get("local.properties"));
     }
 
     @Property
     String image = "src/test/resources/test.img";
+
+    @Property
+    String unknownImage = "src/test/resources/test.img";
 
     @BeforeEach
     void setup() throws IOException {
@@ -56,6 +63,7 @@ class Test1 {
     }
 
     @Test
+    @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
     void test1() throws Exception {
         RECOIL recoil = new RECOIL();
         Path in = Paths.get(image);
