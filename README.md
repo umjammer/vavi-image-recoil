@@ -7,7 +7,7 @@
 
 <img src="https://sourceforge.net/p/recoil/code/ci/master/tree/recoil-512x512.png?format=raw" width="100" /><sub>© recoil</sub>
 
-Java ImageIO SPI for retro images powered by [recoil](https://sourceforge.net/projects/recoil/) based on 0eaca83
+Java ImageIO SPI for retro images powered by [recoil](https://sourceforge.net/projects/recoil/) based on 0eaca83b836e84bdf7843f08c3579341e8c819f6
 
 recoil supports [over 500 image formats](https://recoil.sourceforge.net/formats.html)!
 
