@@ -5,9 +5,22 @@
 
 # vavi-image-recoil
 
-Java ImageIO SPI for retro images powered by [recoil](https://sourceforge.net/projects/recoil/)
+<img src="https://sourceforge.net/p/recoil/code/ci/master/tree/recoil-512x512.png?format=raw" width="100" /><sub>© recoil</sub>
+
+Java ImageIO SPI for retro images powered by [recoil](https://sourceforge.net/projects/recoil/) based on 0eaca83
 
 recoil supports [over 500 image formats](https://recoil.sourceforge.net/formats.html)!
+
+## Install
+
+https://jitpack.io/#umjammer/vavi-image-recoil
+
+## Usage
+
+```java
+    BufferedImage image = ImageIO.read(Paths.get("/foo/bar.zim").toFile());
+```
+
 
 ## TODO
 
