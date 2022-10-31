@@ -41,10 +41,6 @@ import vavi.util.properties.annotation.PropsEntity;
 @PropsEntity(url = "file:local.properties")
 class Test1 {
 
-    static {
-        System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", "ZIM");
-    }
-
     static boolean localPropertiesExists() {
         return Files.exists(Paths.get("local.properties"));
     }
@@ -130,10 +126,11 @@ Debug.println("pixels: " + pixels.length + ", " + w * h);
     @Test
     @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
     void test3() throws Exception {
-
+        String type = "ZIM";
+        System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", type);
         BufferedImage image = ImageIO.read(new File(this.image));
 
-        show(image, "ZIM");
+        show(image, type);
     }
 
     @Test

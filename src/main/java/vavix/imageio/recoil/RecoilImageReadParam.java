@@ -27,14 +27,14 @@ public class RecoilImageReadParam extends ImageReadParam {
     /** */
     private String type;
 
-    {
-        type = System.getProperty("vavix.imageio.recoil.RecoilImageReadParam.type", "ZIM");
-Debug.println(Level.INFO, "wrong syntax: " + type);
-    }
-
     /** */
     public String getType() {
-        return type;
+        String type = System.getProperty("vavix.imageio.recoil.RecoilImageReadParam.type");
+        if (type != null) {
+            this.type = type;
+Debug.println(Level.FINE, "image type: " + type);
+        }
+        return this.type;
     }
 }
 
