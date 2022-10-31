@@ -127,4 +127,27 @@ Debug.println("pixels: " + pixels.length + ", " + w * h);
 
         show(image, "ZIM");
     }
+
+    @Test
+    @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
+    void test4() throws Exception {
+        RECOIL recoil = new RECOIL();
+        Path in = Paths.get(unknownImage);
+        String type = recoil.trialDecode(Files.readAllBytes(in), (int) Files.size(in));
+Debug.println("done: " + type);
+        if (type == null) throw new IllegalStateException("cannot decode");
+        int w = recoil.getWidth();
+        int h = recoil.getHeight();
+Debug.println("size: " + w + "x" + h);
+        int[] pixels = recoil.getPixels();
+Debug.println("pixels: " + pixels.length + ", " + w * h);
+        int[] palette = recoil.toPalette();
+        BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        int[] b = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
+        int i = 0;
+        for (int p : pixels) {
+            b[i++] = 0xff000000 | p & 0xff0000 | p & 0xff00 | p & 0xff;
+        }
+        show(image, type);
+    }
 }
