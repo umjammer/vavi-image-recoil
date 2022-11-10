@@ -25,15 +25,15 @@ import vavi.util.Debug;
 public class RecoilImageReadParam extends ImageReadParam {
 
     /** */
-    private String type;
+    private String type = "ZIM";
 
     /** */
     public String getType() {
         String type = System.getProperty("vavix.imageio.recoil.RecoilImageReadParam.type");
         if (type != null) {
             this.type = type;
-Debug.println(Level.FINE, "image type: " + type);
         }
+Debug.println(Level.FINE, "image type: " + this.type);
         return this.type;
     }
 }

@@ -65,6 +65,10 @@ public class RecoilImageReader extends ImageReader {
     public BufferedImage read(int imageIndex, ImageReadParam param)
         throws IIOException {
 
+        if (param == null) {
+            param = getDefaultReadParam();
+        }
+
         InputStream stream = new WrappedImageInputStream((ImageInputStream) input);
 
         try {

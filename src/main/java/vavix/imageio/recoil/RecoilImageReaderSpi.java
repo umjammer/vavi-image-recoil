@@ -37,7 +37,7 @@ public class RecoilImageReaderSpi extends ImageReaderSpi {
         "RECOIL", "recoil"
     };
     private static final String[] Suffixes = {
-        "zim", "ZIM", "img"
+        "zim", "ZIM", "img", "IMG"
     };
     private static final String[] mimeTypes = {
         "image/x-zim"
@@ -86,7 +86,6 @@ public class RecoilImageReaderSpi extends ImageReaderSpi {
 
     @Override
     public boolean canDecodeInput(Object obj) throws IOException {
-
         if (obj instanceof ImageInputStream) {
             ImageInputStream stream = (ImageInputStream) obj;
             stream.mark();
@@ -100,8 +99,11 @@ public class RecoilImageReaderSpi extends ImageReaderSpi {
             int l = baos.size();
 Debug.println(Level.FINE, "size: " + l);
             RECOIL recoil = new RECOIL();
-            String format = "ZIM"; // TODO how to deal???
-            return recoil.decode("." + format, baos.toByteArray(), baos.size());
+            String format = new RecoilImageReadParam().getType();
+Debug.println(Level.FINE, "format: " + format);
+            boolean r = recoil.decode("." + format, baos.toByteArray(), baos.size());
+Debug.println(Level.FINE, "can decode: " + r);
+            return r;
         } else {
 Debug.println(Level.FINE, obj);
             return false;

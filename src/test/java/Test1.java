@@ -146,13 +146,23 @@ Debug.println("done: " + type);
 Debug.println("size: " + w + "x" + h);
         int[] pixels = recoil.getPixels();
 Debug.println("pixels: " + pixels.length + ", " + w * h);
-        int[] palette = recoil.toPalette();
         BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
         int[] b = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
         int i = 0;
         for (int p : pixels) {
             b[i++] = 0xff000000 | p & 0xff0000 | p & 0xff00 | p & 0xff;
+if (i >= b.length) break;
         }
+        show(image, type);
+    }
+
+    @Test
+    @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
+    void test5() throws Exception {
+        String type = "PIC";
+        System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", type);
+        BufferedImage image = ImageIO.read(new File(this.unknownImage));
+
         show(image, type);
     }
 }

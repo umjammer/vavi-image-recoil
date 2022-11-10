@@ -3708,9 +3708,9 @@ Debug.printf(Level.FINER, "%08x", ext | 0x20202020);
 
 	private boolean decodeDaVinci(byte[] content, int contentLength)
 	{
-Debug.println("decodeDaVinci: here");
-		if ((contentLength & 255) != 0)
-			return false;
+// too strict for my image
+//		if ((contentLength & 255) != 0)
+//			return false;
 		setSize(640, 400, RECOILResolution.PC881X2);
 		final DaVinciStream rle = new DaVinciStream();
 		rle.content = content;
@@ -3724,7 +3724,9 @@ Debug.println("decodeDaVinci: here");
 				setPc88EightPixels(column, y, b);
 			}
 		}
-		return rle.repeatCount == 0 && contentLength - rle.contentOffset < 256;
+        boolean r = rle.repeatCount == 0 && contentLength - rle.contentOffset < 256;
+Debug.println("(rle.repeatCount: " + rle.repeatCount + ", contentLength - rle.contentOffset: " + (contentLength - rle.contentOffset) + ", result: " + r);
+		return r;
 	}
 
 	private boolean decodeArtMaster88(byte[] content, int contentLength)
