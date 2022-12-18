@@ -17,11 +17,40 @@ https://jitpack.io/#umjammer/vavi-image-recoil
 
 ## Usage
 
+[Z's staff KID](https://ja.wikipedia.org/wiki/%E3%83%84%E3%82%A1%E3%82%A4%E3%83%88#Z's_STAFF)
+
 ```java
     System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", "ZIM");
     BufferedImage image = ImageIO.read(Paths.get("/foo/bar.zim").toFile());
 ```
 
+[MAKI](https://mooncore.eu/bunny/txt/makichan.htm)
+
+```java
+    System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", "MKI");
+    BufferedImage image = ImageIO.read(Paths.get("/foo/bar.mki").toFile());
+```
+
+[MAG](https://ja.wikipedia.org/wiki/MAG%E3%83%95%E3%82%A9%E3%83%BC%E3%83%9E%E3%83%83%E3%83%88)
+
+```java
+    System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", "MAG");
+    BufferedImage image = ImageIO.read(Paths.get("/foo/bar.zim").toFile());
+```
+
+[PIC (X68k)](https://ja.wikipedia.org/wiki/PIC_(%E7%94%BB%E5%83%8F%E5%9C%A7%E7%B8%AE))
+
+```java
+    System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", "PIC");
+    BufferedImage image = ImageIO.read(Paths.get("/foo/bar.pic").toFile());
+```
+
+[Pi](http://justsolve.archiveteam.org/wiki/Pi_(image_format))
+
+```java
+    System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", "pi");
+    BufferedImage image = ImageIO.read(Paths.get("/foo/bar.pi").toFile());
+```
 
 ## TODO
 

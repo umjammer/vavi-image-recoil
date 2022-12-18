@@ -3627,6 +3627,7 @@ Debug.printf(Level.FINER, "%08x", ext | 0x20202020);
 		if (contentLength < 14 || content[0] != 80 || content[1] != 73 || content[2] != 67)
 			return false;
 		int resolution = isStringAt(content, 3, "/MM/") ? RECOILResolution.MSX21X1 : RECOILResolution.X68_K1X1;
+Debug.println(Level.FINE, "decodeX68KPic: " + resolution);
 		final X68KPicStream stream = new X68KPicStream();
 		stream.content = content;
 		stream.contentOffset = 3;
@@ -4201,8 +4202,10 @@ Debug.printf(Level.FINER, "pos: %1$d, %1$08x", stream.contentOffset);
 
 	private boolean decodePi(byte[] content, int contentLength)
 	{
+		// magic "Pi"
 		if (contentLength < 18 || content[0] != 80 || content[1] != 105)
 			return false;
+Debug.println(Level.FINE, "decodePi: " + contentLength);
 		final PiStream s = new PiStream();
 		s.content = content;
 		s.contentOffset = 2;
@@ -4216,6 +4219,7 @@ Debug.printf(Level.FINER, "pos: %1$d, %1$08x", stream.contentOffset);
 		if (depth != 4 && depth != 8)
 			return false;
 		int resolution = getPiPlatform(content, contentOffset + 4, content[contentOffset + 1] == 2 && content[contentOffset + 2] == 1);
+Debug.println(Level.FINE, "resolution: " + resolution);
 		contentOffset += 8 + ((content[contentOffset + 8] & 0xff) << 8) + (content[contentOffset + 9] & 0xff);
 		if (contentOffset + 6 >= contentLength)
 			return false;
@@ -15573,7 +15577,7 @@ Debug.printf(Level.FINER, "pos: %1$d, %1$08x", stream.contentOffset);
 			return decodePgf(content, contentLength);
 		case 544368496:
 			return decodePgr(content, contentLength);
-		case 538995056:
+		case 538995056: // "pi  "
 			return decodePi(content, contentLength) || decodeBpl(content, contentLength);
 		case 540109168:
 		case 540174704:
