@@ -6,16 +6,18 @@
 
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
-import java.awt.image.IndexColorModel;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
+import java.util.concurrent.CountDownLatch;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
@@ -24,8 +26,8 @@ import javax.swing.JFrame;
 
 import net.sf.recoil.RECOIL;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import vavi.util.Debug;
 import vavi.util.properties.annotation.Property;
@@ -46,10 +48,25 @@ class Test1 {
     }
 
     @Property
+    String dir;
+
+    @Property
     String image = "src/test/resources/test.img";
 
     @Property
     String unknownImage = "src/test/resources/test.img";
+
+    @Property
+    String mkiImage;
+
+    @Property
+    String picImage;
+
+    @Property
+    String magImage;
+
+    @Property
+    String piImage;
 
     @BeforeEach
     void setup() throws IOException {
@@ -59,6 +76,7 @@ class Test1 {
     }
 
     @Test
+    @DisplayName("zim, prototype")
     @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
     void test1() throws Exception {
         RECOIL recoil = new RECOIL();
@@ -95,23 +113,29 @@ Debug.println("pixels: " + pixels.length + ", " + w * h);
         show(image, format);
     }
 
-    /** */
-    void show(BufferedImage image, String format) {
+    /** using cdl cause junit stops awt thread suddenly */
+    void show(BufferedImage image, String format) throws Exception {
+        CountDownLatch cdl = new CountDownLatch(1);
         JFrame frame = new JFrame(format);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         JComponent panel = new JComponent() {
-            @Override public void paintComponent(Graphics g) {
-                g.drawImage(image, 0, 0, this);
-            }
+            @Override public void paintComponent(Graphics g) { g.drawImage(image, 0, 0, frame.getWidth(), frame.getHeight(), 0, 0, image.getWidth(), image.getHeight(), this); }
         };
         panel.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
+        frame.addWindowListener(new WindowAdapter() {
+            @Override public void windowClosing(WindowEvent e) { cdl.countDown(); }
+        });
+        frame.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) { panel.setPreferredSize(new Dimension(frame.getWidth(), frame.getHeight())); }
+        });
         frame.getContentPane().add(panel);
         frame.pack();
         frame.setVisible(true);
-        while (true) Thread.yield();
+        cdl.await();
     }
 
     @Test
+    @DisplayName("zim, spi specifying format type")
     @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
     void test2() throws Exception {
 
@@ -124,6 +148,7 @@ Debug.println("pixels: " + pixels.length + ", " + w * h);
     }
 
     @Test
+    @DisplayName("zim, spi w/ image read param via system property")
     @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
     void test3() throws Exception {
         String type = "ZIM";
@@ -134,10 +159,12 @@ Debug.println("pixels: " + pixels.length + ", " + w * h);
     }
 
     @Test
+    @DisplayName("find unknown format")
     @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
     void test4() throws Exception {
         RECOIL recoil = new RECOIL();
         Path in = Paths.get(unknownImage);
+Debug.println("path: " + unknownImage);
         String type = recoil.trialDecode(Files.readAllBytes(in), (int) Files.size(in));
 Debug.println("done: " + type);
         if (type == null) throw new IllegalStateException("cannot decode");
@@ -157,11 +184,79 @@ if (i >= b.length) break;
     }
 
     @Test
+    @DisplayName("mag, unknown format via spi w/ guess")
     @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
     void test5() throws Exception {
+        String type = "MAG";
+        System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", type);
+        BufferedImage image = ImageIO.read(new File(this.magImage));
+
+        show(image, type);
+    }
+
+    @Test
+    @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
+    void test6() throws Exception {
+        Path dirPath = Paths.get(dir);
+        Files.list(dirPath)
+//                .filter(path ->
+//                        path.getFileName().toString().endsWith(".pic") ||
+//                        path.getFileName().toString().endsWith(".PIC"))
+                .forEach(path -> {
+            try {
+Debug.println("path: " + path);
+                RECOIL recoil = new RECOIL();
+                String type = recoil.trialDecode(Files.readAllBytes(path), (int) Files.size(path));
+Debug.println("done: " + type);
+                if (type == null) throw new IllegalStateException("cannot decode");
+                int w = recoil.getWidth();
+                int h = recoil.getHeight();
+Debug.println("size: " + w + "x" + h);
+                int[] pixels = recoil.getPixels();
+Debug.println("pixels: " + pixels.length + ", " + w * h);
+                BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+                int[] b = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
+                int i = 0;
+                for (int p : pixels) {
+                    b[i++] = 0xff000000 | p & 0xff0000 | p & 0xff00 | p & 0xff;
+                    if (i >= b.length) break;
+                }
+                show(image, type);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Test
+    @DisplayName("maki, spi w/ image read param via system property")
+    @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
+    void test7() throws Exception {
+        String type = "MKI";
+        System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", type);
+        BufferedImage image = ImageIO.read(new File(this.mkiImage));
+
+        show(image, type);
+    }
+
+    @Test
+    @DisplayName("pic, spi w/ image read param via system property")
+    @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
+    void test8() throws Exception {
         String type = "PIC";
         System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", type);
-        BufferedImage image = ImageIO.read(new File(this.unknownImage));
+        BufferedImage image = ImageIO.read(new File(this.picImage));
+
+        show(image, type);
+    }
+
+    @Test
+    @DisplayName("pi, spi w/ image read param via system property")
+    @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
+    void test9() throws Exception {
+        String type = "pi";
+        System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", type);
+        BufferedImage image = ImageIO.read(new File(this.piImage));
 
         show(image, type);
     }
