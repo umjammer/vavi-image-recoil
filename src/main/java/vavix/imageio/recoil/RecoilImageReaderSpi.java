@@ -115,5 +115,3 @@ Debug.println(Level.FINE, obj);
         return new RecoilImageReader(this);
     }
 }
-
-/* */

@@ -24,7 +24,7 @@ import vavi.util.Debug;
  */
 public class RecoilImageReadParam extends ImageReadParam {
 
-    /** */
+    /** case not sensitive */
     private String type = "ZIM";
 
     /** */
@@ -37,5 +37,3 @@ Debug.println(Level.FINE, "image type: " + this.type);
         return this.type;
     }
 }
-
-/* */

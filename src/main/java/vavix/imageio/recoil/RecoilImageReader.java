@@ -86,7 +86,7 @@ Debug.println(Level.FINE, "size: " + l);
             boolean r = recoil.decode("." + ((RecoilImageReadParam) param).getType(), baos.toByteArray(), baos.size());
             int w = recoil.getWidth();
             int h = recoil.getHeight();
-Debug.println("size: " + w + "x" + h);
+Debug.println(Level.FINE, "size: " + w + "x" + h);
             int[] pixels = recoil.getPixels();
             image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
             int[] buf = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
@@ -125,5 +125,3 @@ Debug.println(Level.FINE, "here");
         return new RecoilImageReadParam();
     }
 }
-
-/* */
