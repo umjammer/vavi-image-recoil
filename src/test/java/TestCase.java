@@ -14,10 +14,16 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.logging.Level;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
@@ -29,19 +35,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import vavi.util.ByteUtil;
 import vavi.util.Debug;
 import vavi.util.properties.annotation.Property;
 import vavi.util.properties.annotation.PropsEntity;
 
 
 /**
- * Test1.
+ * TestCase.
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 2022-10-28 nsano initial version <br>
  */
 @PropsEntity(url = "file:local.properties")
-class Test1 {
+class TestCase {
 
     static boolean localPropertiesExists() {
         return Files.exists(Paths.get("local.properties"));
@@ -67,6 +74,12 @@ class Test1 {
 
     @Property
     String piImage;
+
+    @Property
+    String davinchiImage;
+
+    @Property
+    String art88Image;
 
     @BeforeEach
     void setup() throws IOException {
@@ -120,7 +133,6 @@ Debug.println("pixels: " + pixels.length + ", " + w * h);
         JComponent panel = new JComponent() {
             @Override public void paintComponent(Graphics g) { g.drawImage(image, 0, 0, frame.getWidth(), frame.getHeight(), 0, 0, image.getWidth(), image.getHeight(), this); }
         };
-        panel.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
         frame.addWindowListener(new WindowAdapter() {
             @Override public void windowClosing(WindowEvent e) { cdl.countDown(); }
         });
@@ -129,6 +141,8 @@ Debug.println("pixels: " + pixels.length + ", " + w * h);
             public void componentResized(ComponentEvent e) { panel.setPreferredSize(new Dimension(frame.getWidth(), frame.getHeight())); }
         });
         frame.getContentPane().add(panel);
+Debug.printf("image: %dx%d", image.getWidth(), image.getHeight());
+        frame.getContentPane().setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
         frame.pack();
         frame.setVisible(true);
         cdl.await();
@@ -162,25 +176,40 @@ Debug.println("pixels: " + pixels.length + ", " + w * h);
     @DisplayName("find unknown format")
     @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
     void test4() throws Exception {
-        RECOIL recoil = new RECOIL();
-        Path in = Paths.get(unknownImage);
+        Path path = Paths.get(unknownImage);
 Debug.println("path: " + unknownImage);
-        String type = recoil.trialDecode(Files.readAllBytes(in), (int) Files.size(in));
-Debug.println("done: " + type);
-        if (type == null) throw new IllegalStateException("cannot decode");
-        int w = recoil.getWidth();
-        int h = recoil.getHeight();
-Debug.println("size: " + w + "x" + h);
-        int[] pixels = recoil.getPixels();
-Debug.println("pixels: " + pixels.length + ", " + w * h);
-        BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-        int[] b = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
-        int i = 0;
-        for (int p : pixels) {
-            b[i++] = 0xff000000 | p & 0xff0000 | p & 0xff00 | p & 0xff;
-if (i >= b.length) break;
+        guess(path);
+    }
+
+    /** find unknown format */
+    void guess(Path path) throws Exception {
+        RECOIL recoil = new RECOIL();
+        Set<String> types = recoil.trialDecode(Files.readAllBytes(path), (int) Files.size(path));
+Debug.println("done: " + types);
+        if (types.isEmpty()) throw new IllegalStateException("cannot decode");
+        for (String type : types) {
+            String ext;
+            if (type.contains(",")) {
+                ext = type.split(",")[1].toUpperCase();
+            } else {
+                ext = type.toUpperCase();
+            }
+Debug.println(ext);
+            System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", ext);
+            BufferedImage image = null;
+            try {
+                image = ImageIO.read(path.toFile());
+            } catch (Exception e) {
+Debug.println(Level.WARNING, ext + ": " + e.toString());
+                continue;
+            }
+            if (image == null || image.getWidth() < 640) { // expect pc88/98 image so 640x400 or 640x200
+Debug.println(Level.WARNING, ext + ": failed");
+                continue;
+            }
+Debug.println(type + " / " + types);
+            show(image, type);
         }
-        show(image, type);
     }
 
     @Test
@@ -195,33 +224,19 @@ if (i >= b.length) break;
     }
 
     @Test
+    @DisplayName("guess files in dir")
     @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
     void test6() throws Exception {
+        String ext = "PIC";
         Path dirPath = Paths.get(dir);
         Files.list(dirPath)
-//                .filter(path ->
-//                        path.getFileName().toString().endsWith(".pic") ||
-//                        path.getFileName().toString().endsWith(".PIC"))
+                .filter(path ->
+                        path.getFileName().toString().endsWith("." + ext.toLowerCase()) ||
+                        path.getFileName().toString().endsWith("." + ext.toUpperCase()))
                 .forEach(path -> {
             try {
 Debug.println("path: " + path);
-                RECOIL recoil = new RECOIL();
-                String type = recoil.trialDecode(Files.readAllBytes(path), (int) Files.size(path));
-Debug.println("done: " + type);
-                if (type == null) throw new IllegalStateException("cannot decode");
-                int w = recoil.getWidth();
-                int h = recoil.getHeight();
-Debug.println("size: " + w + "x" + h);
-                int[] pixels = recoil.getPixels();
-Debug.println("pixels: " + pixels.length + ", " + w * h);
-                BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-                int[] b = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
-                int i = 0;
-                for (int p : pixels) {
-                    b[i++] = 0xff000000 | p & 0xff0000 | p & 0xff00 | p & 0xff;
-                    if (i >= b.length) break;
-                }
-                show(image, type);
+                guess(path);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -257,6 +272,70 @@ Debug.println("pixels: " + pixels.length + ", " + w * h);
         String type = "pi";
         System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", type);
         BufferedImage image = ImageIO.read(new File(this.piImage));
+
+        show(image, type);
+    }
+
+    @Test
+    @DisplayName("files in dir")
+    @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
+    void test10() throws Exception {
+//        String type = "PIC";
+        String type = "IMG";
+        Path dirPath = Paths.get(dir);
+        Files.list(dirPath)
+                .filter(path ->
+                        path.getFileName().toString().endsWith("." + type.toLowerCase()) ||
+                        path.getFileName().toString().endsWith("." + type.toUpperCase()))
+                .forEach(path -> {
+            try {
+Debug.println("path: " + path);
+                System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", type);
+                BufferedImage image = ImageIO.read(path.toFile());
+
+                show(image, type);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Test
+    @DisplayName("davinchi, spi w/ image read param via system property")
+    @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
+    void test11() throws Exception {
+        String type = "img";
+        System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", type);
+        BufferedImage image = ImageIO.read(new File(this.davinchiImage));
+
+        show(image, type);
+    }
+
+    @Test
+    @DisplayName("type: method mapping table")
+    @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
+    void test12() throws Exception {
+        Files.readAllLines(Paths.get("tmp/recoil.tsv")).forEach(l -> {
+            String[] kv = l.split("\t");
+            String kt = kv[0].startsWith("0x") ? kv[0].substring(2) : String.format("%x", Integer.parseInt(kv[0]));
+            List<Byte> bl =  ByteUtil.toList(ByteUtil.hexStringToBytes(kt));
+            Collections.reverse(bl);
+            String k = new String(ByteUtil.toByteArray(bl), StandardCharsets.US_ASCII);
+            String[] vs = null;
+            if (kv.length > 1) {
+                vs = kv[1].split(" ");
+            }
+            System.err.println("\"" + k + "\": " + Arrays.toString(vs));
+        });
+    }
+
+    @Test
+    @DisplayName("artmaster88, spi w/ image read param via system property")
+    @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
+    void test13() throws Exception {
+        String type = "img";
+        System.setProperty("vavix.imageio.recoil.RecoilImageReadParam.type", type);
+        BufferedImage image = ImageIO.read(new File(this.art88Image));
 
         show(image, type);
     }
