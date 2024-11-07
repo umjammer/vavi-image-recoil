@@ -9,9 +9,8 @@ package vavix.imageio.recoil;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.logging.Level;
 import javax.imageio.ImageReader;
 import javax.imageio.spi.ImageReaderSpi;
@@ -29,8 +28,24 @@ import vavi.util.Debug;
  */
 public class RecoilImageReaderSpi extends ImageReaderSpi {
 
-    private static final String VendorName = "http://www.vavi.com";
-    private static final String Version = "6.3.1";
+    static {
+        try {
+            try (InputStream is = RecoilImageReaderSpi.class.getResourceAsStream("/META-INF/maven/vavi/vavi-image-recoil/pom.properties")) {
+                if (is != null) {
+                    Properties props = new Properties();
+                    props.load(is);
+                    Version = props.getProperty("version", "undefined in pom.properties");
+                } else {
+                    Version = System.getProperty("vavi.test.version", "undefined");
+                }
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static final String VendorName = "https://github.com/umjammer/vavi-image-recoil";
+    private static final String Version;
     private static final String ReaderClassName =
         "vavix.imageio.recoil.RecoilImageReader";
     private static final String[] Names = {
@@ -43,7 +58,7 @@ public class RecoilImageReaderSpi extends ImageReaderSpi {
         "image/x-zim"
     };
     static final String[] WriterSpiNames = {
-        /*"vavix.imageio.recoil.ReccoilMasterWriterSpi"*/
+        /* "vavix.imageio.recoil.ReccoilMasterWriterSpi" */
     };
     private static final boolean SupportsStandardStreamMetadataFormat = false;
     private static final String NativeStreamMetadataFormatName = null;
@@ -53,7 +68,7 @@ public class RecoilImageReaderSpi extends ImageReaderSpi {
     private static final boolean SupportsStandardImageMetadataFormat = false;
     private static final String NativeImageMetadataFormatName = "recoil";
     private static final String NativeImageMetadataFormatClassName =
-        /*"vavi.imageio.recoil.RecoilMasterMetaData"*/ null;
+        /* "vavi.imageio.recoil.RecoilMasterMetaData" */ null;
     private static final String[] ExtraImageMetadataFormatNames = null;
     private static final String[] ExtraImageMetadataFormatClassNames = null;
 
