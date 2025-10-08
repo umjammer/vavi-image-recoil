@@ -1,10 +1,18 @@
 // Generated automatically with "cito". Do not edit.
+
 package net.sf.recoil;
+
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.logging.Level;
+import java.util.HashSet;
+import java.util.Set;
 
 import vavi.util.Debug;
+import vavi.util.StringUtil;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -14,6 +22,8 @@ import vavi.util.Debug;
  */
 public class RECOIL
 {
+    private static final Logger logger = getLogger(RECOIL.class.getName());
+
 	/**
 	 * Constructs a decoder of images.
 	 * The decoder can be used for several images, one after another.
@@ -153,7 +163,7 @@ public class RECOIL
 		for (int i = filename.length(); --i >= 0;) {
 			int c = Character.toLowerCase(filename.charAt(i));
 			if (c == '.') {
-Debug.printf(Level.FINER, "%08x", ext | 0x20202020);
+logger.log(Level.TRACE, "%08x", ext | 0x20202020);
 				return ext | 0x20202020;
 			}
 			if (c <= ' ' || c > 'z' || ext >= 0x1000000)
@@ -3726,7 +3736,7 @@ Debug.println(Level.FINE, "decodeX68KPic: " + resolution);
 			}
 		}
         boolean r = rle.repeatCount == 0 && contentLength - rle.contentOffset < 256;
-Debug.println("(rle.repeatCount: " + rle.repeatCount + ", contentLength - rle.contentOffset: " + (contentLength - rle.contentOffset) + ", result: " + r);
+logger.log(Level.DEBUG, "rle.repeatCount: " + rle.repeatCount + ", contentLength - rle.contentOffset: " + (contentLength - rle.contentOffset) + ", result: " + r);
 		return r;
 	}
 
@@ -4074,12 +4084,12 @@ Debug.println("(rle.repeatCount: " + rle.repeatCount + ", contentLength - rle.co
 		byte[] data = new byte[512];
 		ZimStream stream = new ZimStream();
 		stream.content = content;
-Debug.printf(Level.FINER, "pos: %1$d, %1$08x", stream.contentOffset);
+logger.log(Level.TRACE, "pos: %1$d, %1$08x", stream.contentOffset);
 		stream.contentOffset = contentOffset;
 		stream.contentLength = contentLength;
 		int skip = stream.readWord();
 		stream.contentOffset += skip << 1;
-Debug.printf(Level.FINER, "pos: %1$d, %1$08x", stream.contentOffset);
+logger.log(Level.TRACE, "pos: %1$d, %1$08x", stream.contentOffset);
 		for (;;) {
 			int dot = stream.readWord();
 			switch (dot) {
@@ -4094,7 +4104,7 @@ Debug.printf(Level.FINER, "pos: %1$d, %1$08x", stream.contentOffset);
 			if (x < 0 || x >= width)
 				return false;
 			int y = stream.readWord();
-//Debug.println("y: " + y);
+//logger.log(Level.TRACE, "y: " + y);
 			if (y < 0 || y >= height)
 				return false;
 			int len = stream.readWord();
@@ -4205,7 +4215,7 @@ Debug.printf(Level.FINER, "pos: %1$d, %1$08x", stream.contentOffset);
 		// magic "Pi"
 		if (contentLength < 18 || content[0] != 80 || content[1] != 105)
 			return false;
-Debug.println(Level.FINE, "decodePi: " + contentLength);
+logger.log(Level.DEBUG, "decodePi: " + contentLength);
 		final PiStream s = new PiStream();
 		s.content = content;
 		s.contentOffset = 2;
@@ -4219,7 +4229,7 @@ Debug.println(Level.FINE, "decodePi: " + contentLength);
 		if (depth != 4 && depth != 8)
 			return false;
 		int resolution = getPiPlatform(content, contentOffset + 4, content[contentOffset + 1] == 2 && content[contentOffset + 2] == 1);
-Debug.println(Level.FINE, "resolution: " + resolution);
+logger.log(Level.DEBUG, "resolution: " + resolution);
 		contentOffset += 8 + ((content[contentOffset + 8] & 0xff) << 8) + (content[contentOffset + 9] & 0xff);
 		if (contentOffset + 6 >= contentLength)
 			return false;

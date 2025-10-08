@@ -9,15 +9,17 @@ package vavix.imageio.recoil;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.Locale;
 import java.util.Properties;
-import java.util.logging.Level;
 import javax.imageio.ImageReader;
 import javax.imageio.spi.ImageReaderSpi;
 import javax.imageio.stream.ImageInputStream;
 
 import net.sf.recoil.RECOIL;
-import vavi.util.Debug;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -27,6 +29,8 @@ import vavi.util.Debug;
  * @version 0.00 221029 nsano initial version <br>
  */
 public class RecoilImageReaderSpi extends ImageReaderSpi {
+
+    private static final Logger logger = getLogger(RecoilImageReaderSpi.class.getName());
 
     static {
         try {
@@ -112,15 +116,15 @@ public class RecoilImageReaderSpi extends ImageReaderSpi {
                 baos.write(b, 0, r);
             }
             int l = baos.size();
-Debug.println(Level.FINE, "size: " + l);
+logger.log(Level.DEBUG, "size: " + l);
             RECOIL recoil = new RECOIL();
             String format = new RecoilImageReadParam().getType();
-Debug.println(Level.FINE, "format: " + format);
+logger.log(Level.DEBUG, "format: " + format);
             boolean r = recoil.decode("." + format, baos.toByteArray(), baos.size());
-Debug.println(Level.FINE, "can decode: " + r);
+logger.log(Level.DEBUG, "can decode: " + r);
             return r;
         } else {
-Debug.println(Level.FINE, obj);
+logger.log(Level.DEBUG, obj);
             return false;
         }
     }
