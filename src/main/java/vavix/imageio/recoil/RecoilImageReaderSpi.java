@@ -9,16 +9,17 @@ package vavix.imageio.recoil;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.Locale;
-import java.util.logging.Level;
+import java.util.Properties;
 import javax.imageio.ImageReader;
 import javax.imageio.spi.ImageReaderSpi;
 import javax.imageio.stream.ImageInputStream;
 
 import net.sf.recoil.RECOIL;
-import vavi.util.Debug;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -29,8 +30,26 @@ import vavi.util.Debug;
  */
 public class RecoilImageReaderSpi extends ImageReaderSpi {
 
-    private static final String VendorName = "http://www.vavi.com";
-    private static final String Version = "6.3.1";
+    private static final Logger logger = getLogger(RecoilImageReaderSpi.class.getName());
+
+    static {
+        try {
+            try (InputStream is = RecoilImageReaderSpi.class.getResourceAsStream("/META-INF/maven/vavi/vavi-image-recoil/pom.properties")) {
+                if (is != null) {
+                    Properties props = new Properties();
+                    props.load(is);
+                    Version = props.getProperty("version", "undefined in pom.properties");
+                } else {
+                    Version = System.getProperty("vavi.test.version", "undefined");
+                }
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static final String VendorName = "https://github.com/umjammer/vavi-image-recoil";
+    private static final String Version;
     private static final String ReaderClassName =
         "vavix.imageio.recoil.RecoilImageReader";
     private static final String[] Names = {
@@ -43,7 +62,7 @@ public class RecoilImageReaderSpi extends ImageReaderSpi {
         "image/x-zim"
     };
     static final String[] WriterSpiNames = {
-        /*"vavix.imageio.recoil.ReccoilMasterWriterSpi"*/
+        /* "vavix.imageio.recoil.ReccoilMasterWriterSpi" */
     };
     private static final boolean SupportsStandardStreamMetadataFormat = false;
     private static final String NativeStreamMetadataFormatName = null;
@@ -53,7 +72,7 @@ public class RecoilImageReaderSpi extends ImageReaderSpi {
     private static final boolean SupportsStandardImageMetadataFormat = false;
     private static final String NativeImageMetadataFormatName = "recoil";
     private static final String NativeImageMetadataFormatClassName =
-        /*"vavi.imageio.recoil.RecoilMasterMetaData"*/ null;
+        /* "vavi.imageio.recoil.RecoilMasterMetaData" */ null;
     private static final String[] ExtraImageMetadataFormatNames = null;
     private static final String[] ExtraImageMetadataFormatClassNames = null;
 
@@ -97,15 +116,15 @@ public class RecoilImageReaderSpi extends ImageReaderSpi {
                 baos.write(b, 0, r);
             }
             int l = baos.size();
-Debug.println(Level.FINE, "size: " + l);
+logger.log(Level.DEBUG, "size: " + l);
             RECOIL recoil = new RECOIL();
             String format = new RecoilImageReadParam().getType();
-Debug.println(Level.FINE, "format: " + format);
+logger.log(Level.DEBUG, "format: " + format);
             boolean r = recoil.decode("." + format, baos.toByteArray(), baos.size());
-Debug.println(Level.FINE, "can decode: " + r);
+logger.log(Level.DEBUG, "can decode: " + r);
             return r;
         } else {
-Debug.println(Level.FINE, obj);
+logger.log(Level.DEBUG, obj);
             return false;
         }
     }
@@ -115,5 +134,3 @@ Debug.println(Level.FINE, obj);
         return new RecoilImageReader(this);
     }
 }
-
-/* */

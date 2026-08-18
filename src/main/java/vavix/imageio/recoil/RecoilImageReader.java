@@ -11,9 +11,10 @@ import java.awt.image.DataBufferInt;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.logging.Level;
 import javax.imageio.IIOException;
 import javax.imageio.ImageReadParam;
 import javax.imageio.ImageReader;
@@ -24,7 +25,8 @@ import javax.imageio.stream.ImageInputStream;
 
 import net.sf.recoil.RECOIL;
 import vavi.imageio.WrappedImageInputStream;
-import vavi.util.Debug;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -34,6 +36,8 @@ import vavi.util.Debug;
  * @version 0.00 221029 nsano initial version <br>
  */
 public class RecoilImageReader extends ImageReader {
+
+    private static final Logger logger = getLogger(RecoilImageReader.class.getName());
 
     /** */
     private IIOMetadata metadata;
@@ -80,13 +84,13 @@ public class RecoilImageReader extends ImageReader {
                 baos.write(b, 0, r);
             }
             int l = baos.size();
-Debug.println(Level.FINE, "size: " + l);
+logger.log(Level.DEBUG, "size: " + l);
 
             RECOIL recoil = new RECOIL();
             boolean r = recoil.decode("." + ((RecoilImageReadParam) param).getType(), baos.toByteArray(), baos.size());
             int w = recoil.getWidth();
             int h = recoil.getHeight();
-Debug.println("size: " + w + "x" + h);
+logger.log(Level.DEBUG, "size: " + w + "x" + h);
             int[] pixels = recoil.getPixels();
             image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
             int[] buf = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
@@ -113,7 +117,7 @@ Debug.println("size: " + w + "x" + h);
 
     @Override
     public Iterator<ImageTypeSpecifier> getImageTypes(int imageIndex) throws IIOException {
-Debug.println(Level.FINE, "here");
+logger.log(Level.DEBUG, "here");
         ImageTypeSpecifier specifier = null;
         java.util.List<ImageTypeSpecifier> l = new ArrayList<>();
         l.add(specifier);
@@ -125,5 +129,3 @@ Debug.println(Level.FINE, "here");
         return new RecoilImageReadParam();
     }
 }
-
-/* */

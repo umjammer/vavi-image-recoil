@@ -6,11 +6,11 @@
 
 package vavix.imageio.recoil;
 
-import java.awt.Dimension;
-import java.util.logging.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import javax.imageio.ImageReadParam;
 
-import vavi.util.Debug;
+import static java.lang.System.getLogger;
 
 
 /**
@@ -24,7 +24,9 @@ import vavi.util.Debug;
  */
 public class RecoilImageReadParam extends ImageReadParam {
 
-    /** */
+    private static final Logger logger = getLogger(RecoilImageReadParam.class.getName());
+
+    /** case not sensitive */
     private String type = "ZIM";
 
     /** */
@@ -33,9 +35,7 @@ public class RecoilImageReadParam extends ImageReadParam {
         if (type != null) {
             this.type = type;
         }
-Debug.println(Level.FINE, "image type: " + this.type);
+logger.log(Level.DEBUG, "image type: " + this.type);
         return this.type;
     }
 }
-
-/* */
