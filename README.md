@@ -1,7 +1,7 @@
 [![Release](https://jitpack.io/v/umjammer/vavi-image-recoil.svg)](https://jitpack.io/#umjammer/vavi-image-recoil)
 [![Java CI](https://github.com/umjammer/vavi-image-recoil/actions/workflows/maven.yml/badge.svg)](https://github.com/umjammer/vavi-image-recoil/actions/workflows/maven.yml)
-[![CodeQL](https://github.com/umjammer/vavi-image-recoil/actions/workflows/codeql.yml/badge.svg)](https://github.com/umjammer/vavi-image-recoil/actions/workflows/codeql-analysis.yml)
-![Java](https://img.shields.io/badge/Java-8-b07219)
+[![CodeQL](https://github.com/umjammer/vavi-image-recoil/actions/workflows/codeql.yml/badge.svg)](https://github.com/umjammer/vavi-image-recoil/actions/workflows/codeql.yml)
+![Java](https://img.shields.io/badge/Java-17-b07219)
 
 # vavi-image-recoil
 
@@ -52,13 +52,14 @@ https://jitpack.io/#umjammer/vavi-image-recoil
     BufferedImage image = ImageIO.read(Paths.get("/foo/bar.pi").toFile());
 ```
 
-## TODO
-
- * ~~ImageIO SPI~~
-
 ## References
 
  * https://github.com/pfusik/cito (.ci to .java (or many) compiler)
+ * https://telparia.com/fileFormatSamples/image/
+
+## TODO
+
+* ~~ImageIO SPI~~
 
 ---
 
